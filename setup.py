@@ -14,6 +14,7 @@ setup(
     install_requires=["mkdocs>=1", "pybtex>=0.22"],
     test_suite="nose.collector",
     tests_require=["nose"],
+    packages=find_packages(),
     entry_points={
         "mkdocs.plugins": [
             "bibtex = mkdocs_bibtex.plugin:BibTexPlugin"
