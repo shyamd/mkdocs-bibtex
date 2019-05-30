@@ -17,10 +17,10 @@ plugins:
       cite_style: "pandoc"
 ```
 
-`bib_file` - name of your bibtex file. Can be absolute path or relative path with the config file as the reference
-`bib_dir` - directory for bibtex files to load, same as above for path resolution
-`cite_style` - the way you place citations into text: `[@myRef]` is "pandoc" and `@myRef` is "plain"
-`bib_command` - the command for your bibliography, defaults to `\bibliography`
+- `bib_file` - name of your bibtex file. Can be absolute path or relative path with the config file as the reference
+- `bib_dir` - directory for bibtex files to load, same as above for path resolution
+- `cite_style` - the way you place citations into text: `[@myRef]` is "pandoc" and `@myRef` is "plain"
+- `bib_command` - the command for your bibliography, defaults to `\bibliography`
 
 ## MKDocs Markdown files
 
