@@ -78,7 +78,7 @@ class BibTexPlugin(BasePlugin):
             self.cite_regex = re.compile(r"\[\@(\w+)\]")
             self.insert_regex = r"\[@{}\]"
         else:
-            raise Exception("Invalid citation style: {}".format(cite_style))   
+            raise Exception("Invalid citation style: {}".format(cite_style))
 
         return config
 
@@ -102,17 +102,8 @@ class BibTexPlugin(BasePlugin):
             if cite_key in self.bib_data.entries
         ]
 
-        # 2. Convert all the references to text
-        style = Style()
-        backend = Backend()
-        references = OrderedDict()
-        for key, entry in citations:
-            formatted_entry = style.format_entry("", entry)
-            entry_text = formatted_entry.text.render(backend)
-            # Local reference list for this file
-            references[key] = entry_text
-            # Global reference list for all files
-            self.all_references[key] = entry_text
+        # 2. Convert all the citations to text references
+        references = self.format_citations(citations)
 
         # 3. Insert in numbers into the main markdown and build bibliography
         bibliography = []
@@ -127,13 +118,43 @@ class BibTexPlugin(BasePlugin):
         bibliography = "\n\n".join(bibliography)
         markdown = re.sub(re.escape(self.config["bib_command"]), bibliography, markdown)
 
-
         # 5. Build the full Bibliography and insert into the text
+        markdown = re.sub(
+            re.escape(self.config["full_bib_command"]), self.full_bibliography, markdown
+        )
+
+        return markdown
+
+    def format_citations(self, citations):
+        """
+        Formats references and adds them to the global registry
+
+        Args:
+            citations (dict): mapping of cite_key to entry
+
+        Returns OrderedDict of references
+        """
+        style = Style()
+        backend = Backend()
+        references = OrderedDict()
+        for key, entry in citations:
+            formatted_entry = style.format_entry("", entry)
+            entry_text = formatted_entry.text.render(backend)
+            # Local reference list for this file
+            references[key] = entry_text
+            # Global reference list for all files
+            self.all_references[key] = entry_text
+        return references
+
+    @property
+    def full_bibliography(self):
+        """
+        Returns the full bibliography text
+        """
         full_bibliography = []
-        for number,key in enumerate(self.all_references.keys()):
+
+        for number, key in enumerate(self.all_references.keys()):
             bibliography_text = "{}: {}".format(number + 1, references[key])
             full_bibliography.append(bibliography_text)
-        full_bibliography = "\n\n".join(full_bibliography)
-        markdown = re.sub(re.escape(self.config["full_bib_command"]), full_bibliography, markdown)
-        
-        return markdown
+
+        return "\n".join(full_bibliography)
