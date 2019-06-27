@@ -1,13 +1,14 @@
-import os.path
 import re
+import glob
+import os.path
 from collections import OrderedDict
 
 from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
 from mkdocs import utils
 
-from pybtex.style.formatting.unsrt import Style
-from pybtex.backends.markdown import Backend
+from pybtex.style.formatting.plain import Style as PlainStyle
+from pybtex.backends.markdown import Backend as MarkdownBackend
 from pybtex.database import parse_file, BibliographyData
 
 
@@ -52,24 +53,28 @@ class BibTexPlugin(BasePlugin):
         config_path = os.path.dirname(config.config_file_path)
 
         bibfiles = []
-        if self.config["bib_file"] is not None:
-            bibfiles.append(self.config["bib_file"])
-        elif self.config["bib_dir"] is not None:
-            bibfiles.extend(self.config["bib_dir"])
+
+        if config.get("bib_file", None) is not None:
+            bibfiles.append(get_path(config["bib_file"], config_path))
+        elif config.get("bib_dir", None) is not None:
+            bibfiles.extend(
+                glob.glob(
+                    get_path(os.path.join(config["bib_dir"], "*.bib"), config_path)
+                )
+            )
         else:
             raise Exception("Must supply a bibtex file or directory for bibtex files")
 
         # load bibliography data
         refs = {}
         for bibfile in bibfiles:
-            if not os.path.isabs(bibfile):
-                bibfile = os.path.abspath(os.path.join(config_path, bibfile))
-                bibdata = parse_file(bibfile)
-                refs.update(bibdata.entries)
+            bibfile = get_path(bibfile, config_path)
+            bibdata = parse_file(bibfile)
+            refs.update(bibdata.entries)
 
         self.bib_data = BibliographyData(entries=refs)
 
-        cite_style = self.config["cite_style"]
+        cite_style = config.get("cite_style", "pandoc")
         # Decide on how citations are entered into the markdown text
         if cite_style == "plain":
             self.cite_regex = re.compile(r"\@(\w+)")
@@ -116,11 +121,17 @@ class BibTexPlugin(BasePlugin):
 
         # 4. Insert in the bibliopgrahy text into the markdown
         bibliography = "\n\n".join(bibliography)
-        markdown = re.sub(re.escape(self.config["bib_command"]), bibliography, markdown)
+        markdown = re.sub(
+            re.escape(self.config.get("bib_command", "\\bibliography")),
+            bibliography,
+            markdown,
+        )
 
         # 5. Build the full Bibliography and insert into the text
         markdown = re.sub(
-            re.escape(self.config["full_bib_command"]), self.full_bibliography, markdown
+            re.escape(self.config.get("full_bib_command", "\\full_bibliography")),
+            self.full_bibliography,
+            markdown,
         )
 
         return markdown
@@ -134,12 +145,13 @@ class BibTexPlugin(BasePlugin):
 
         Returns OrderedDict of references
         """
-        style = Style()
-        backend = Backend()
+        style = PlainStyle()
+        backend = MarkdownBackend()
         references = OrderedDict()
         for key, entry in citations:
             formatted_entry = style.format_entry("", entry)
             entry_text = formatted_entry.text.render(backend)
+            entry_text = entry_text.replace("\n"," ")
             # Local reference list for this file
             references[key] = entry_text
             # Global reference list for all files
@@ -154,7 +166,14 @@ class BibTexPlugin(BasePlugin):
         full_bibliography = []
 
         for number, key in enumerate(self.all_references.keys()):
-            bibliography_text = "{}: {}".format(number + 1, references[key])
+            bibliography_text = "{}: {}".format(number + 1, self.all_references[key])
             full_bibliography.append(bibliography_text)
 
         return "\n".join(full_bibliography)
+
+
+def get_path(path, base_path):
+    if os.path.isabs(path):
+        return path
+    else:
+        return os.path.abspath(os.path.join(base_path, path))
