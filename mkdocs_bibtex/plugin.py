@@ -51,6 +51,17 @@ class BibTexPlugin(BasePlugin):
 
         self.bib_data = BibliographyData(entries=refs)
 
+        cite_style = self.config["cite_style"]
+        # Decide on how citations are entered into the markdown text
+        if cite_style == "plain":
+            self.cite_regex = re.compile(r"\@(\w+)")
+            self.insert_regex = r"\@{}"
+        elif cite_style == "pandoc":
+            self.cite_regex = re.compile(r"\[\@(\w+)\]")
+            self.insert_regex = r"\[@{}\]"
+        else:
+            raise Exception("Invalid citation style: {}".format(cite_style))   
+
         return config
 
     def on_page_markdown(self, markdown, page, config, files):
@@ -62,19 +73,7 @@ class BibTexPlugin(BasePlugin):
         2. 
         """
 
-        cite_style = self.config["cite_style"]
-        cite_regex = ""
-        insert_regex = ""
 
-        # Decide on how citations are entered into the markdown text
-        if cite_style == "plain":
-            cite_regex = re.compile(r"\@(\w+)")
-            insert_regex = r"\@{}"
-        elif cite_style == "pandoc":
-            cite_regex = re.compile(r"\[\@(\w+)\]")
-            insert_regex = r"\[@{}\]"
-        else:
-            raise Exception("Invalid citation style: {}".format(cite_style))
 
         # Grab all the cited keys in the markdown
         cite_keys = cite_regex.findall(markdown)
