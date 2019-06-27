@@ -12,6 +12,20 @@ from pybtex.database import parse_file, BibliographyData
 
 
 class BibTexPlugin(BasePlugin):
+    """
+    Allows the use of bibtex in markdown content for MKDocs
+
+    Options:
+        bib_file (string): path to a single bibtex file for entries
+        bib_dir (string): path to a directory of bibtex files for entries
+        cite_style (string): either "plain" or "pandoc" to define the cite key style
+                             defaults to "pandoc"
+            plain - @cite_key
+            pandoc - [@cite_key]
+        bib_command (string): command to place a bibliography relevant to just that file
+                              defaults to \bibliography
+        full_bib_command (string): command to place a full bibliography of all references 
+    """
 
     config_scheme = [
         ("bib_file", config_options.Type(utils.string_types, required=False)),
@@ -21,11 +35,15 @@ class BibTexPlugin(BasePlugin):
             "bib_command",
             config_options.Type(utils.string_types, default="\\bibliography"),
         ),
+        (
+            "full_bib_command",
+            config_options.Type(utils.string_types, default="\\full_bibliography"),
+        ),
     ]
 
     def __init__(self):
         self.bib_data = None
-        self.entries = OrderedDict()
+        self.all_references = OrderedDict()
 
     def on_config(self, config):
         """
