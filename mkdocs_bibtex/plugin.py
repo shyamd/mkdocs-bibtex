@@ -88,39 +88,52 @@ class BibTexPlugin(BasePlugin):
         If a local reference list is requested, this will render that list where requested
 
         1. Finds all cite keys
-        2. 
+        2. Convert all the corresponding bib entries into citations
+        3. Insert the ordered citation numbers into the markdown text
+        4. Insert the bibliography into the markdown
+        5. Insert teh full bibliograph into the markdown
         """
 
-
-
-        # Grab all the cited keys in the markdown
-        cite_keys = cite_regex.findall(markdown)
+        # 1. Grab all the cited keys in the markdown
+        cite_keys = self.cite_regex.findall(markdown)
         citations = [
             (cite_key, self.bib_data.entries[cite_key])
             for cite_key in cite_keys
             if cite_key in self.bib_data.entries
         ]
 
-        # Convert all the references to text
+        # 2. Convert all the references to text
         style = Style()
         backend = Backend()
         references = OrderedDict()
         for key, entry in citations:
             formatted_entry = style.format_entry("", entry)
             entry_text = formatted_entry.text.render(backend)
+            # Local reference list for this file
             references[key] = entry_text
-            self.entries[key] = entry_text
+            # Global reference list for all files
+            self.all_references[key] = entry_text
 
-        # Insert in numbers into the main markdown and build bibliography
+        # 3. Insert in numbers into the main markdown and build bibliography
         bibliography = []
         for number, key in enumerate(references.keys()):
             markdown = re.sub(
-                insert_regex.format(key), "[^{}]".format(number + 1), markdown
+                self.insert_regex.format(key), "[^{}]".format(number + 1), markdown
             )
             bibliography_text = "[^{}]: {}".format(number + 1, references[key])
             bibliography.append(bibliography_text)
 
+        # 4. Insert in the bibliopgrahy text into the markdown
         bibliography = "\n\n".join(bibliography)
         markdown = re.sub(re.escape(self.config["bib_command"]), bibliography, markdown)
 
+
+        # 5. Build the full Bibliography and insert into the text
+        full_bibliography = []
+        for number,key in enumerate(self.all_references.keys()):
+            bibliography_text = "{}: {}".format(number + 1, references[key])
+            full_bibliography.append(bibliography_text)
+        full_bibliography = "\n\n".join(full_bibliography)
+        markdown = re.sub(re.escape(self.config["full_bib_command"]), full_bibliography, markdown)
+        
         return markdown
