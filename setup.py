@@ -11,7 +11,7 @@ setup(
     author="Shyam Dwaraknath",
     author_email="shyamd@lbl.gov",
     license="BSD",
-    python_requires=">=3.7",
+    python_requires=">=3.5",
     install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22"],
     test_suite="nose.collector",
     tests_require=["nose"],
