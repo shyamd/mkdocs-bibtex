@@ -1,4 +1,4 @@
-# mkdocs-bibtex
+# mkdocs-bibtex [![Build Status](https://travis-ci.com/materialsproject/mkdocs-bibtex.svg?branch=master)](https://travis-ci.com/materialsproject/mkdocs-bibtex)
 A MkDocs plugin for citation management using bibtex
 
 
