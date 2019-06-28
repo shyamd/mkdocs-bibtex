@@ -13,6 +13,6 @@ install:
 before_script:
   - python setup.py develop
 script:
-  - nosetests --nocapture --with-coverage --cover-package=mkdocs-bibtex
+  - nosetests --nocapture --with-coverage mkdocs-bibtex
 after_success:
   - coveralls
