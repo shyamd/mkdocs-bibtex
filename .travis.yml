@@ -1,0 +1,18 @@
+language: python
+cache: pip
+python:
+  - "2.6"
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+install:
+  - pip install -r requirements.txt
+  - pip install nose python-coveralls
+before_script:
+  - python setup.py develop
+script:
+  - nosetests --nocapture --with-coverage --cover-package=mkdocs-bibtex
+after_success:
+  - coveralls
