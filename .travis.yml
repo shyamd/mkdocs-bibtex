@@ -15,7 +15,6 @@ deploy:
   provider: pypi
   user: shyamd
   distributions: sdist bdist_wheel
-  password:
-    secure: ICTf0d79cfY+vUHTugCkwgbLx723STXN4omnpw265Mgm4wODc4u7MTXrh+DauyoQp/B1+H0IxTPGdQdWjgh5QufqEEdcHyx17WuA+v5tlVDzKJooml48Z2WZl09VYUrtdIyHYjBpI6e5myNlvLOZzmflyOXA0ZxDkhJK3X79iw0euunpw8nBTh5y3KR2B+K2mixnjKMxCggSbOj+rYm+I+WVqkICMHtdjFf7SabWRt7K7skHwyFWzxaUW3Qezn33HIxcPaQZVkxo3PLp3/AZEQ+9ocuYAV5x8mxk3m6q2eZd20/Cq4/YEjLamIiYoQFyPZ1p0eHpEyPjBexkmHaldtFGj9R0Pn7JxcEAlvZOAHM68uaBulhrDNPDd/cq4PVOCLtCNZwqyN6LAsDNHi4BG2sQnz3axr6QwZ/CllcQYVBXymSaz3qoOoEP2R6ukAfxBk3zY+XHIa4Q3IgMxHWPAPIaBg9TnQ4JJvwrRu2l5KunnHAPDo2bbvJY+KHfMamhd2NOsP+x4xGCBDQcEMWWLswoV0YtCRvmskQhOGKg2ydlSH6/tA3lOR4dAQnQYDvoJ78HOyEY1+d25nYtNcHfPPjaQSuAOdEt2X2hS7A2+OEcq3r9Ql2v9stnepVPak54SxHaWgCrdKJuADXsxc0c8FFFVk5eFN3KtvMotgaER/g=
+  password: $PYPI_PASSWORD
   on:
     tags: true
