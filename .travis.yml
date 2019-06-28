@@ -1,18 +1,20 @@
 language: python
 cache: pip
 python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+- '3.5'
+- '3.6'
 install:
-  - pip install -r requirements.txt
-  - pip install nose python-coveralls
+- pip install -r requirements.txt
+- pip install nose python-coveralls
 before_script:
-  - python setup.py develop
+- python setup.py develop
 script:
-  - nosetests --nocapture --with-coverage mkdocs-bibtex
-after_success:
-  - coveralls
+- nosetests --nocapture
+deploy:
+  provider: pypi
+  user: shyamd
+  distributions: sdist bdist_wheel
+  password:
+    secure: CqOI1tDZUvrCZpzpLCJvADwrH+Kuu/P9zOW6CEvv8gyDNeheBLtztfsLDdmn46b95sjlxGUa55vf08TWEhUuwlT/TNj437HtcvI8ZtyO+2MsfbIa6dTkP+KrlPOZs/0GpWMRwjMbEg1N841Q3T2EHeX5fa4lyhXtMijbc6Ojwjv87tZuJCUVHTtrVFH0k74dRi5FxDHEKyzQHcpoMrUHWcjjHif88Gmh8T0hI1oU/nUKp0lSHL4d6/wXGR6cdwO+/4zse3WsiQim1JkzqBCdw38Rm7MJq0Gksg+iO8AFz4WFcYj2G8RrWtFoTJJO5Q5kKQTNrLIm4dTeNZ4Ub3XFVTp5n1Kgn8Gftg+WZNuGiky9zJd2j0aD9HCRgvcKg8ZNlYK4osTTSqXOay85QF2M2tWGgoU87WxJKal7Y6rWA1vaW/UqFtm53RlvYfSDuucI1WJncCMI8OUmLUs/PQBztCYF/fECz52A+TQvHO3x65RifAox1H5uZRd13zJ4Z77rRvC9MP/BRH3bSBtVkRSbjcZElNO7zGeHk4brOEdta3KEKx2xXfale4/Bwqq82Sja5eVVDc0bz1+Pd5wS4ZYst5Zb6jn7X2ZdDNPgl4n3salayeQRRtIIHwTAphm0RYtg5oRvRyfzZ/jGJJnipZEPAeWw7TK6hdaX9oe318bN3hE=
+  on:
+    tags: true
