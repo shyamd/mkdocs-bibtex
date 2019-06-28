@@ -12,7 +12,7 @@ setup(
     author_email="shyamd@lbl.gov",
     license="BSD",
     python_requires=">=3.7",
-    install_requires=["mkdocs>=1", "markdow>=3.1.1", "pybtex>=0.22"],
+    install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22"],
     test_suite="nose.collector",
     tests_require=["nose"],
     packages=find_packages(),
