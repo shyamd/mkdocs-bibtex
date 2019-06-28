@@ -1,3 +1,4 @@
+
 from setuptools import setup, find_packages
 
 
@@ -11,13 +12,9 @@ setup(
     author_email="shyamd@lbl.gov",
     license="BSD",
     python_requires=">=3.7",
-    install_requires=["mkdocs>=1", "pybtex>=0.22"],
+    install_requires=["mkdocs>=1", "markdow>=3.1.1", "pybtex>=0.22"],
     test_suite="nose.collector",
     tests_require=["nose"],
     packages=find_packages(),
-    entry_points={
-        "mkdocs.plugins": [
-            "bibtex = mkdocs_bibtex.plugin:BibTexPlugin"
-        ]
-    },
+    entry_points={"mkdocs.plugins": ["bibtex = mkdocs_bibtex.plugin:BibTexPlugin"]},
 )
