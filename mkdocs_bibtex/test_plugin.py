@@ -14,21 +14,23 @@ test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
 class TestPlugin(unittest.TestCase):
     def setUp(self):
         self.plugin = BibTexPlugin()
-        self.fake_config = Config([])
-        self.fake_config.config_file_path = test_files_dir
-        self.fake_config["bib_file"] = os.path.join(test_files_dir, "single.bib")
+        self.plugin.load_config(
+            options={"bib_file": os.path.join(test_files_dir, "single.bib")},
+            config_file_path=test_files_dir,
+        )
 
     def test_config_one_bibtex_file(self):
-        self.plugin.on_config(self.fake_config)
+        self.plugin.on_config(self.plugin.config)
         self.assertEqual(len(self.plugin.bib_data.entries), 1)
 
     def test_config_one_bibtex_dir(self):
         plugin = BibTexPlugin()
-        fake_config = Config([])
-        fake_config.config_file_path = test_files_dir
-        fake_config["bib_dir"] = os.path.join(test_files_dir, "multi_bib")
+        plugin.load_config(
+            options={"bib_dir": os.path.join(test_files_dir, "multi_bib")},
+            config_file_path=test_files_dir,
+        )
 
-        plugin.on_config(fake_config)
+        plugin.on_config(plugin.config)
         self.assertEqual(len(plugin.bib_data.entries), 2)
 
     def test_format_citations(self):
@@ -45,7 +47,7 @@ class TestPlugin(unittest.TestCase):
         self.assertIn("First Author and Second Author", self.plugin.full_bibliography)
 
     def test_on_page_markdown(self):
-        self.plugin.on_config(self.fake_config)
+        self.plugin.on_config(self.plugin.config)
         test_data = parse_file(os.path.join(test_files_dir, "single.bib"))
         test_markdown = "This is a citation. [@test]\n\n \\bibliography"
 
