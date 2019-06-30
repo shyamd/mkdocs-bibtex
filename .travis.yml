@@ -18,5 +18,6 @@ deploy:
   user: shyamd
   distributions: sdist bdist_wheel
   password: $PYPI_PASSWORD
+  skip_existing: true
   on:
     tags: true
