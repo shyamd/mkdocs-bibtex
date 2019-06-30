@@ -54,12 +54,12 @@ class BibTexPlugin(BasePlugin):
 
         bibfiles = []
 
-        if config.get("bib_file", None) is not None:
-            bibfiles.append(get_path(config["bib_file"], config_path))
-        elif config.get("bib_dir", None) is not None:
+        if self.config.get("bib_file", None) is not None:
+            bibfiles.append(get_path(self.config["bib_file"], config_path))
+        elif self.config.get("bib_dir", None) is not None:
             bibfiles.extend(
                 glob.glob(
-                    get_path(os.path.join(config["bib_dir"], "*.bib"), config_path)
+                    get_path(os.path.join(self.config["bib_dir"], "*.bib"), config_path)
                 )
             )
         else:
