@@ -4,13 +4,13 @@ from setuptools import setup, find_packages
 
 setup(
     name="mkdocs-bibtex",
-    version="0.2.1",
+    version="0.2.2",
     description="An MkDocs plugin that enables managing citations with BibTex",
     keywords="mkdocs python markdown bibtex",
     url="https://github.com/shyamd/mkdocs-bibtex/",
     author="Shyam Dwaraknath",
     author_email="shyamd@lbl.gov",
-    license="BSD",
+    license="BSD-3-Clause-LBNL",
     python_requires=">=3.5",
     install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22"],
     test_suite="nose.collector",
