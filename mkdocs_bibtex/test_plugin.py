@@ -1,9 +1,7 @@
 import unittest
 import os
-from os.path import join
 
 from mkdocs_bibtex import BibTexPlugin
-from mkdocs.config.base import Config
 
 from pybtex.database import parse_file
 
@@ -48,7 +46,6 @@ class TestPlugin(unittest.TestCase):
 
     def test_on_page_markdown(self):
         self.plugin.on_config(self.plugin.config)
-        test_data = parse_file(os.path.join(test_files_dir, "single.bib"))
         test_markdown = "This is a citation. [@test]\n\n \\bibliography"
 
         self.assertIn(

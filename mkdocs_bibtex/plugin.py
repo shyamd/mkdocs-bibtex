@@ -24,21 +24,15 @@ class BibTexPlugin(BasePlugin):
             pandoc - [@cite_key]
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
-        full_bib_command (string): command to place a full bibliography of all references 
+        full_bib_command (string): command to place a full bibliography of all references
     """
 
     config_scheme = [
         ("bib_file", config_options.Type(str, required=False)),
         ("bib_dir", config_options.Type(str, required=False)),
         ("cite_style", config_options.Type(str, default="pandoc")),
-        (
-            "bib_command",
-            config_options.Type(str, default="\\bibliography"),
-        ),
-        (
-            "full_bib_command",
-            config_options.Type(str, default="\\full_bibliography"),
-        ),
+        ("bib_command", config_options.Type(str, default="\\bibliography")),
+        ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
     ]
 
     def __init__(self):
@@ -150,7 +144,7 @@ class BibTexPlugin(BasePlugin):
         for key, entry in citations:
             formatted_entry = style.format_entry("", entry)
             entry_text = formatted_entry.text.render(backend)
-            entry_text = entry_text.replace("\n"," ")
+            entry_text = entry_text.replace("\n", " ")
             # Local reference list for this file
             references[key] = entry_text
             # Global reference list for all files
