@@ -10,7 +10,7 @@ on:
       - master
 
 jobs:
-  lint_and_test:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
