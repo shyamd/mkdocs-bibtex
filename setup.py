@@ -1,4 +1,3 @@
-
 from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
@@ -6,7 +5,8 @@ with open("README.md", "r") as fh:
 
 setup(
     name="mkdocs-bibtex",
-    version="0.2.2",
+    use_scm_version=True,
+    setup_requires=["setuptools_scm"],
     description="An MkDocs plugin that enables managing citations with BibTex",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -17,8 +17,7 @@ setup(
     license="BSD-3-Clause-LBNL",
     python_requires=">=3.5",
     install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22"],
-    test_suite="nose.collector",
-    tests_require=["nose"],
+    tests_require=["pytest"],
     packages=find_packages(),
     entry_points={"mkdocs.plugins": ["bibtex = mkdocs_bibtex.plugin:BibTexPlugin"]},
 )
