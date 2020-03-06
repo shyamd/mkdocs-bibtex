@@ -1,11 +1,15 @@
 
 from setuptools import setup, find_packages
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setup(
     name="mkdocs-bibtex",
     version="0.2.2",
     description="An MkDocs plugin that enables managing citations with BibTex",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     keywords="mkdocs python markdown bibtex",
     url="https://github.com/shyamd/mkdocs-bibtex/",
     author="Shyam Dwaraknath",
