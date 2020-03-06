@@ -5,7 +5,6 @@ from collections import OrderedDict
 
 from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
-from mkdocs import utils
 
 from pybtex.style.formatting.plain import Style as PlainStyle
 from pybtex.backends.markdown import Backend as MarkdownBackend
@@ -29,16 +28,16 @@ class BibTexPlugin(BasePlugin):
     """
 
     config_scheme = [
-        ("bib_file", config_options.Type(utils.string_types, required=False)),
-        ("bib_dir", config_options.Type(utils.string_types, required=False)),
-        ("cite_style", config_options.Type(utils.string_types, default="pandoc")),
+        ("bib_file", config_options.Type(str, required=False)),
+        ("bib_dir", config_options.Type(str, required=False)),
+        ("cite_style", config_options.Type(str, default="pandoc")),
         (
             "bib_command",
-            config_options.Type(utils.string_types, default="\\bibliography"),
+            config_options.Type(str, default="\\bibliography"),
         ),
         (
             "full_bib_command",
-            config_options.Type(utils.string_types, default="\\full_bibliography"),
+            config_options.Type(str, default="\\full_bibliography"),
         ),
     ]
 
