@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.com/materialsproject/mkdocs-bibtex.svg?branch=master)](https://travis-ci.com/materialsproject/mkdocs-bibtex)
+[![testing](https://github.com/shyamd/mkdocs-bibtex/workflows/testing/badge.svg)](https://github.com/shyamd/mkdocs-bibtex/actions?query=workflow%3Atesting)
+[![codecov](https://codecov.io/gh/shyamd/mkdocs-bibtex/branch/master/graph/badge.svg)](https://codecov.io/gh/shyamd/mkdocs-bibtex)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/shyamd/mkdocs-bibtex.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/shyamd/mkdocs-bibtex/context:python)
 
 # mkdocs-bibtex
 
