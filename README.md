@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/materialsproject/mkdocs-bibtex.svg?branch=master)](https://travis-ci.com/materialsproject/mkdocs-bibtex)
 
-# mkdocs-bibtex 
+# mkdocs-bibtex
 
 A [MkDocs](https://www.mkdocs.org/) plugin for citation management using bibtex.
 
@@ -37,5 +37,5 @@ plugins:
 In your markdown files:
 
 1. Add your citations as you would normally using either "plain" or "pandoc" style
-2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references. 
+2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references.
 3. Add in `\full_bibliography` or whatever you set your `full_bib_command` to where you want the full set of references. *Note*: This is not guaranteed to work yet since one issue is the order in which markdown files are processed. Might need to do something using the `on_files()` event first.
