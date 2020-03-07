@@ -1,4 +1,4 @@
-from .plugin import BibTexPlugin
+from mkdocs_bibtex.plugin import BibTexPlugin
 from pkg_resources import get_distribution, DistributionNotFound
 
 try:
