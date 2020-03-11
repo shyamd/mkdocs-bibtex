@@ -4,4 +4,4 @@ pytest-cov==2.8.1
 pycodestyle==2.5.0
 pydocstyle==5.0.2
 flake8==3.7.9
-mypy==0.761
+mypy==0.770
