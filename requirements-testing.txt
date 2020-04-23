@@ -1,5 +1,5 @@
 pre-commit==2.3.0
-pytest==5.3.5
+pytest==5.4.1
 pytest-cov==2.8.1
 pycodestyle==2.5.0
 pydocstyle==5.0.2
