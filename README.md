@@ -14,6 +14,10 @@ Install the plugin using pip:
 pip install mkdocs-bibtex
 ```
 
+This version relies on Pandoc through [pypandoc](https://pypi.org/project/pypandoc/). 
+Pypandoc provides Pandoc on many systems, otherwise, you have to install Pandoc manually, 
+see pypandoc documentation for more details. 
+
 Next, add the following lines to your `mkdocs.yml`:
 
 ```yml
@@ -21,23 +25,24 @@ plugins:
   - search
   - bibtex:
       bib_file: "refs.bib"
-      cite_style: "pandoc"
 ```
 
 > If you have no `plugins` entry in your config file yet, you'll likely also want to add the `search` plugin. MkDocs enables it by default if there is no `plugins` entry set.
 
 ## Options
 
-- `bib_file` - Name of your bibtex file. Either the absolute path or the path relative to `mkdocs.yml`
-- `bib_dir` - Directory for bibtex files to load, same as above for path resolution
-- `cite_style` - The way you place citations into text: "pandoc" for `[@myRef]` and "plain" for `@myRef`
-- `bib_command` - The command for your bibliography, defaults to `\bibliography`
-- `full_bib_command` - The command for your bibliography, defaults to `\full_bibliography`
+- `bib_file` - Name of your bibtex file. Either the absolute path or the path relative to `mkdocs.yml`.
+- `csl_file` - Name of your [CSL](https://citationstyles.org/) file. Either the absolute path or the path relative to `mkdocs.yml`
 
 ## Usage
 
-In your markdown files:
+In your markdown files, add your citations as you would normally using ["pandoc"](https://pandoc.org/MANUAL.html#citations) style. 
+Citations go inside square brackets and are separated by semicolons. 
+Each citation must have a key, composed of ‘@’ + the citation identifier from the database.
 
-1. Add your citations as you would normally using either "plain" or "pandoc" style
-2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references.
-3. Add in `\full_bibliography` or whatever you set your `full_bib_command` to where you want the full set of references. *Note*: This is not guaranteed to work yet since one issue is the order in which markdown files are processed. Might need to do something using the `on_files()` event first.
+If the style calls for a list of works cited, it will be placed in a div with id `refs`, if one exists:
+```markdown
+::: {#refs}
+:::
+```
+Otherwise, it will be placed at the end of the document.
