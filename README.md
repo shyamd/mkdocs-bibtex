@@ -33,6 +33,7 @@ plugins:
 - `cite_style` - The way you place citations into text: "pandoc" for `[@myRef]` and "plain" for `@myRef`
 - `bib_command` - The command for your bibliography, defaults to `\bibliography`
 - `full_bib_command` - The command for your bibliography, defaults to `\full_bibliography`
+- `csl_file` - Bibtex CSL file to format the citation with, defaults to None, using a built in plain format instead
 
 ## Usage
 
@@ -41,3 +42,4 @@ In your markdown files:
 1. Add your citations as you would normally using either "plain" or "pandoc" style
 2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references.
 3. Add in `\full_bibliography` or whatever you set your `full_bib_command` to where you want the full set of references. *Note*: This is not guaranteed to work yet since one issue is the order in which markdown files are processed. Might need to do something using the `on_files()` event first.
+4. (Optional) Setup `csl_file` to control the citation text formatting.
