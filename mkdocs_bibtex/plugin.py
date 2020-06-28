@@ -9,11 +9,12 @@ from mkdocs.plugins import BasePlugin
 from pybtex.style.formatting.plain import Style as PlainStyle
 from pybtex.backends.markdown import Backend as MarkdownBackend
 from pybtex.database import parse_file, BibliographyData
+import pypandoc
 
 
 class BibTexPlugin(BasePlugin):
     """
-    Allows the use of bibtex in markdown content for MKDocs
+    Allows the use of bibtex in markdown content for MKDocs.
 
     Options:
         bib_file (string): path to a single bibtex file for entries
@@ -25,6 +26,7 @@ class BibTexPlugin(BasePlugin):
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
         full_bib_command (string): command to place a full bibliography of all references
+        csl_file (string, optional): path to a CLS file, relative to mkdocs.yml.
     """
 
     config_scheme = [
@@ -33,6 +35,7 @@ class BibTexPlugin(BasePlugin):
         ("cite_style", config_options.Type(str, default="pandoc")),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
+        ("csl_file", config_options.Type(str, required=False)),
     ]
 
     def __init__(self):
@@ -75,6 +78,11 @@ class BibTexPlugin(BasePlugin):
         elif cite_style == "pandoc":
             self.cite_regex = re.compile(r"\[\@(\w+)\]")
             self.insert_regex = r"\[@{}\]"
+            csl_path = get_path(self.config.get("csl_file", None), config_path)
+            if csl_path is None:
+                raise Exception(
+                    "Must provide a citation style file for Pandoc formatting"
+                )
         else:
             raise Exception("Invalid citation style: {}".format(cite_style))
 
@@ -89,7 +97,7 @@ class BibTexPlugin(BasePlugin):
         2. Convert all the corresponding bib entries into citations
         3. Insert the ordered citation numbers into the markdown text
         4. Insert the bibliography into the markdown
-        5. Insert teh full bibliograph into the markdown
+        5. Insert the full bibliograph into the markdown
         """
 
         # 1. Grab all the cited keys in the markdown
@@ -166,7 +174,9 @@ class BibTexPlugin(BasePlugin):
 
 
 def get_path(path, base_path):
-    if os.path.isabs(path):
+    if path is None:
+        return None
+    elif os.path.isabs(path):
         return path
     else:
         return os.path.abspath(os.path.join(base_path, path))
