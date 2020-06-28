@@ -1,15 +1,15 @@
-import re
 import glob
 import os.path
+import re
+import tempfile
 from collections import OrderedDict
 
+import pypandoc
 from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
-
-from pybtex.style.formatting.plain import Style as PlainStyle
 from pybtex.backends.markdown import Backend as MarkdownBackend
-from pybtex.database import parse_file, BibliographyData
-import pypandoc
+from pybtex.database import BibliographyData, parse_file
+from pybtex.style.formatting.plain import Style as PlainStyle
 
 
 class BibTexPlugin(BasePlugin):
@@ -26,13 +26,13 @@ class BibTexPlugin(BasePlugin):
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
         full_bib_command (string): command to place a full bibliography of all references
-        csl_file (string, optional): path to a CLS file, relative to mkdocs.yml.
+        csl_file (string, optional): path to a CSL file, relative to mkdocs.yml.
     """
 
     config_scheme = [
         ("bib_file", config_options.Type(str, required=False)),
         ("bib_dir", config_options.Type(str, required=False)),
-        ("cite_style", config_options.Type(str, default="pandoc")),
+        ("cite_style", config_options.Type(str, default="plain")),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.Type(str, required=False)),
@@ -78,13 +78,10 @@ class BibTexPlugin(BasePlugin):
         elif cite_style == "pandoc":
             self.cite_regex = re.compile(r"\[\@(\w+)\]")
             self.insert_regex = r"\[@{}\]"
-            csl_path = get_path(self.config.get("csl_file", None), config_path)
-            if csl_path is None:
-                raise Exception(
-                    "Must provide a citation style file for Pandoc formatting"
-                )
         else:
             raise Exception("Invalid citation style: {}".format(cite_style))
+
+        self.csl_file = config.get("csl_file", None)
 
         return config
 
@@ -150,9 +147,12 @@ class BibTexPlugin(BasePlugin):
         backend = MarkdownBackend()
         references = OrderedDict()
         for key, entry in citations:
-            formatted_entry = style.format_entry("", entry)
-            entry_text = formatted_entry.text.render(backend)
-            entry_text = entry_text.replace("\n", " ")
+            if self.csl_file is not None:
+                entry_text = to_markdown_pandoc(entry, self.csl_file)
+            else:
+                formatted_entry = style.format_entry("", entry)
+                entry_text = formatted_entry.text.render(backend)
+                entry_text = entry_text.replace("\n", " ")
             # Local reference list for this file
             references[key] = entry_text
             # Global reference list for all files
@@ -180,3 +180,34 @@ def get_path(path, base_path):
         return path
     else:
         return os.path.abspath(os.path.join(base_path, path))
+
+
+def to_markdown_pandoc(entry, csl_path):
+    """
+    Converts the PyBtex entry into formatted markdown citation text
+    """
+    bibtex_string = BibliographyData(entries={entry.key: entry}).to_string("bibtex")
+    citation_text = """
+---
+nocite: '@*'
+---
+"""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bib_path = os.path.join(tmpdir, "temp.bib")
+        with open(bib_path, "w") as bibfile:
+            bibfile.write(bibtex_string)
+
+        # Call Pandoc.
+        markdown = pypandoc.convert_text(
+            source=citation_text,
+            to="markdown_strict-citations",
+            format="md",
+            extra_args=["--csl", csl_path, "--bibliography", bib_path],
+            filters=["pandoc-citeproc"],
+        )
+
+    # TODO: Perform this extraction better
+    markdown = markdown.split("\n")[0][2:]
+
+    return str(markdown)
