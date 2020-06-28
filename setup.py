@@ -16,7 +16,7 @@ setup(
     author_email="shyamd@lbl.gov",
     license="BSD-3-Clause-LBNL",
     python_requires=">=3.5",
-    install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22"],
+    install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22", "pypandoc>=1.5"],
     tests_require=["pytest"],
     packages=find_packages(),
     entry_points={"mkdocs.plugins": ["bibtex = mkdocs_bibtex.plugin:BibTexPlugin"]},
