@@ -112,9 +112,9 @@ class BibTexPlugin(BasePlugin):
         bibliography = []
         for number, key in enumerate(references.keys()):
             markdown = re.sub(
-                self.insert_regex.format(key), "[^{}]".format(number + 1), markdown
+                self.insert_regex.format(key), "[{}]".format(number + 1), markdown
             )
-            bibliography_text = "[^{}]: {}".format(number + 1, references[key])
+            bibliography_text = "[{}]: {}".format(number + 1, references[key])
             bibliography.append(bibliography_text)
 
         # 4. Insert in the bibliopgrahy text into the markdown
