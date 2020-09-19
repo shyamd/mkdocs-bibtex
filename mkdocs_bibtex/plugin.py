@@ -36,6 +36,7 @@ class BibTexPlugin(BasePlugin):
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.Type(str, required=False)),
+        ("full_bib_page", config_options.Type(str, required=False, default="references")),
     ]
 
     def __init__(self):
@@ -109,10 +110,13 @@ class BibTexPlugin(BasePlugin):
         references = self.format_citations(citations)
 
         # 3. Insert in numbers into the main markdown and build bibliography
+        full_bibliography_page = self.config.get("full_bib_page")
+        anchor = "<a href='" + full_bibliography_page + "#{}'>[{}]</a>"
         bibliography = []
         for number, key in enumerate(references.keys()):
+            formatted_anchor = anchor.format(key, number + 1)
             markdown = re.sub(
-                self.insert_regex.format(key), "[{}]".format(number + 1), markdown
+                self.insert_regex.format(key), formatted_anchor, markdown
             )
             bibliography_text = "[{}]: {}".format(number + 1, references[key])
             bibliography.append(bibliography_text)
@@ -166,8 +170,10 @@ class BibTexPlugin(BasePlugin):
         """
         full_bibliography = []
 
+        anchor = "<a id='{}'>{}</a>"
         for number, key in enumerate(self.all_references.keys()):
-            bibliography_text = "{}: {}".format(number + 1, self.all_references[key])
+            formatted_anchor = anchor.format('#' + key, number + 1)
+            bibliography_text = "{}: {}".format(formatted_anchor, self.all_references[key])
             full_bibliography.append(bibliography_text)
 
         return "\n".join(full_bibliography)

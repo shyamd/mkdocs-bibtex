@@ -62,6 +62,6 @@ class TestPlugin(unittest.TestCase):
         test_markdown = "This is a citation. [@test]\n\n \\bibliography"
 
         self.assertIn(
-            "[^1]: First Author and Second Author\. Test title\. *Testing Journal*, 2019\.",
+            "First Author and Second Author\. Test title\. *Testing Journal*, 2019\.",
             self.plugin.on_page_markdown(test_markdown, None, None, None),
         )
