@@ -15,7 +15,7 @@ setup(
     author="Shyam Dwaraknath",
     author_email="shyamd@lbl.gov",
     license="BSD-3-Clause-LBNL",
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22", "pypandoc>=1.5"],
     tests_require=["pytest"],
     packages=find_packages(),
