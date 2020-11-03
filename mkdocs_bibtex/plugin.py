@@ -76,7 +76,7 @@ class BibTexPlugin(BasePlugin):
             self.cite_regex = re.compile(r"\@(\w+)")
             self.insert_regex = r"\@{}"
         elif cite_style == "pandoc":
-            self.cite_regex = re.compile(r"\[\@(\w+)\]")
+            self.cite_regex = re.compile(r"\[\@((?:(?:\w+)[\-:]?)+)\]")
             self.insert_regex = r"\[@{}\]"
         else:
             raise Exception("Invalid citation style: {}".format(cite_style))
