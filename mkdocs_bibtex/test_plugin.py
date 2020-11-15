@@ -39,23 +39,12 @@ class TestPlugin(unittest.TestCase):
             self.plugin.format_citations(test_data.entries.items())["test"],
         )
 
-        self.plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
-        self.assertIn(
-            "Author, F. & Author, S",
-            self.plugin.format_citations(test_data.entries.items())["test"],
-        )
-        # TODO: Check CSL
-
     def test_full_bibliography(self):
         test_data = parse_file(os.path.join(test_files_dir, "single.bib"))
         self.plugin.csl_file = None
         self.plugin.format_citations(test_data.entries.items())
 
         self.assertIn("First Author and Second Author", self.plugin.full_bibliography)
-
-        self.plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
-        self.plugin.format_citations(test_data.entries.items())
-        self.assertIn("Author, F. & Author, S", self.plugin.full_bibliography)
 
     def test_on_page_markdown(self):
         self.plugin.on_config(self.plugin.config)
