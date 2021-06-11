@@ -34,6 +34,7 @@ plugins:
 - `bib_command` - The command for your bibliography, defaults to `\bibliography`
 - `full_bib_command` - The command for your bibliography, defaults to `\full_bibliography`
 - `csl_file` - Bibtex CSL file to format the citation with, defaults to None, using a built in plain format instead
+- `unescape_for_arithmatex` - Optional; set to `True` to avoid the `\(` `\)` [issue](https://github.com/shyamd/mkdocs-bibtex/issues/3]) with [pymdownx.arithmatex](https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/) 
 
 ## Usage
 
