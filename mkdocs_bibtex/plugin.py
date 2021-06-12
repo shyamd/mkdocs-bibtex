@@ -36,11 +36,13 @@ class BibTexPlugin(BasePlugin):
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.Type(str, required=False)),
+        ("unescape_for_arithmatex", config_options.Type(bool, required=False)),
     ]
 
     def __init__(self):
         self.bib_data = None
         self.all_references = OrderedDict()
+        self.unescape_for_arithmatex = False
 
     def on_config(self, config):
         """
@@ -70,7 +72,7 @@ class BibTexPlugin(BasePlugin):
 
         self.bib_data = BibliographyData(entries=refs)
 
-        cite_style = config.get("cite_style", "pandoc")
+        cite_style = self.config.get("cite_style", "pandoc")
         # Decide on how citations are entered into the markdown text
         if cite_style == "plain":
             self.cite_regex = re.compile(r"\@(\w+)")
@@ -81,7 +83,9 @@ class BibTexPlugin(BasePlugin):
         else:
             raise Exception("Invalid citation style: {}".format(cite_style))
 
-        self.csl_file = config.get("csl_file", None)
+        self.csl_file = self.config.get("csl_file", None)
+
+        self.unescape_for_arithmatex = self.config.get("unescape_for_arithmatex", False)
 
         return config
 
@@ -153,6 +157,8 @@ class BibTexPlugin(BasePlugin):
                 formatted_entry = style.format_entry("", entry)
                 entry_text = formatted_entry.text.render(backend)
                 entry_text = entry_text.replace("\n", " ")
+                if self.unescape_for_arithmatex:
+                    entry_text = entry_text.replace('\(', '(').replace('\)', ')')
             # Local reference list for this file
             references[key] = entry_text
             # Global reference list for all files
