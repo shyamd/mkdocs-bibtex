@@ -42,6 +42,7 @@ class BibTexPlugin(BasePlugin):
     def __init__(self):
         self.bib_data = None
         self.all_references = OrderedDict()
+        self.unescape_for_arithmatex = False
 
     def on_config(self, config):
         """
