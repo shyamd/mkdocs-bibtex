@@ -15,7 +15,7 @@ class TestPlugin(unittest.TestCase):
         self.plugin.load_config(
             options={"bib_file": os.path.join(test_files_dir, "single.bib")},
             config_file_path=test_files_dir,
-        )        
+        )
 
     def test_unescape_for_arithmatex(self):
         test_data = parse_file(os.path.join(test_files_dir, "parenthesis.bib"))
