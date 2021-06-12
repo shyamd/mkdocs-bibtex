@@ -20,7 +20,7 @@ class TestPlugin(unittest.TestCase):
     def test_unescape_for_arithmatex(self):
         test_data = parse_file(os.path.join(test_files_dir, "parenthesis.bib"))
         self.plugin.csl_file = None
-        
+
         self.plugin.unescape_for_arithmatex = True
         self.assertIn(
             "First Author and Second Author\. Test Title (TT)\. *Testing Journal (TJ)*, 2019",
