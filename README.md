@@ -22,7 +22,11 @@ plugins:
   - bibtex:
       bib_file: "refs.bib"
       cite_style: "pandoc"
+markdown_extensions:
+  - footnotes
 ```
+
+The footnotes extension is how citations are linked for now.
 
 > If you have no `plugins` entry in your config file yet, you'll likely also want to add the `search` plugin. MkDocs enables it by default if there is no `plugins` entry set.
 
