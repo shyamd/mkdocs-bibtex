@@ -13,6 +13,8 @@ Install the plugin using pip:
 ```
 pip install mkdocs-bibtex
 ```
+> If you're having trouble with pandoc, try installing the conda-forge version of pypandoc: `conda install -c conda-forge pypandoc` which will install a version with built in pandoc binaries
+
 
 Next, add the following lines to your `mkdocs.yml`:
 
