@@ -209,8 +209,7 @@ nocite: '@*'
             source=citation_text,
             to="markdown_strict-citations",
             format="md",
-            extra_args=["--csl", csl_path, "--bibliography", bib_path],
-            filters=["pandoc-citeproc"],
+            extra_args=["--csl", csl_path, "--bibliography", bib_path, "--citeproc"],
         )
 
     # TODO: Perform this extraction better
