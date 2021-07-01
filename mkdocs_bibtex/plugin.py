@@ -1,6 +1,5 @@
-import glob
-import os.path
 import re
+from pathlib import Path
 import tempfile
 from collections import OrderedDict
 
@@ -30,12 +29,15 @@ class BibTexPlugin(BasePlugin):
     """
 
     config_scheme = [
-        ("bib_file", config_options.Type(str, required=False)),
-        ("bib_dir", config_options.Type(str, required=False)),
-        ("cite_style", config_options.Type(str, default="plain")),
+        ("bib_file", config_options.File(exists=True, required=False)),
+        ("bib_dir", config_options.Dir(exists=True, required=False)),
+        (
+            "cite_style",
+            config_options.Choice(choices=["plain", "pandoc"], default="plain"),
+        ),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
-        ("csl_file", config_options.Type(str, required=False)),
+        ("csl_file", config_options.File(exists=True, required=False)),
         ("unescape_for_arithmatex", config_options.Type(bool, required=False)),
     ]
 
@@ -48,25 +50,19 @@ class BibTexPlugin(BasePlugin):
         """
         Loads bibliography on load of config
         """
-        config_path = os.path.dirname(config.config_file_path)
 
         bibfiles = []
 
         if self.config.get("bib_file", None) is not None:
-            bibfiles.append(get_path(self.config["bib_file"], config_path))
+            bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
-            bibfiles.extend(
-                glob.glob(
-                    get_path(os.path.join(self.config["bib_dir"], "*.bib"), config_path)
-                )
-            )
+            bibfiles.extend(Path(self.config["bib_dir"]).glob("*.bib"))
         else:
             raise Exception("Must supply a bibtex file or directory for bibtex files")
 
         # load bibliography data
         refs = {}
         for bibfile in bibfiles:
-            bibfile = get_path(bibfile, config_path)
             bibdata = parse_file(bibfile)
             refs.update(bibdata.entries)
 
@@ -158,7 +154,7 @@ class BibTexPlugin(BasePlugin):
                 entry_text = formatted_entry.text.render(backend)
                 entry_text = entry_text.replace("\n", " ")
                 if self.unescape_for_arithmatex:
-                    entry_text = entry_text.replace('\(', '(').replace('\)', ')')
+                    entry_text = entry_text.replace("\(", "(").replace("\)", ")")
             # Local reference list for this file
             references[key] = entry_text
             # Global reference list for all files
@@ -179,13 +175,7 @@ class BibTexPlugin(BasePlugin):
         return "\n".join(full_bibliography)
 
 
-def get_path(path, base_path):
-    if path is None:
-        return None
-    elif os.path.isabs(path):
-        return path
-    else:
-        return os.path.abspath(os.path.join(base_path, path))
+
 
 
 def to_markdown_pandoc(entry, csl_path):
@@ -200,7 +190,7 @@ nocite: '@*'
 """
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        bib_path = os.path.join(tmpdir, "temp.bib")
+        bib_path = Path(tmpdir).joinpath("temp.bib")
         with open(bib_path, "w") as bibfile:
             bibfile.write(bibtex_string)
 
