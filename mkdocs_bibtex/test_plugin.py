@@ -24,13 +24,13 @@ class TestPlugin(unittest.TestCase):
         self.plugin.unescape_for_arithmatex = True
         self.assertIn(
             "First Author and Second Author\. Test Title (TT)\. *Testing Journal (TJ)*, 2019",
-            self.plugin.format_citations(test_data.entries.items())["test"]
+            self.plugin.format_citations(test_data.entries.items())["test"],
         )
 
         self.plugin.unescape_for_arithmatex = False
         self.assertIn(
             "First Author and Second Author\. Test Title \(TT\)\. *Testing Journal \(TJ\)*, 2019",
-            self.plugin.format_citations(test_data.entries.items())["test"]
+            self.plugin.format_citations(test_data.entries.items())["test"],
         )
 
     def test_config_one_bibtex_file(self):
@@ -61,6 +61,20 @@ class TestPlugin(unittest.TestCase):
             self.plugin.format_citations(test_data.entries.items())["test"],
         )
         # TODO: Check CSL
+
+    def test_long_citation(self):
+        test_data = parse_file(os.path.join(test_files_dir, "long_cite.bib"))
+        self.plugin.csl_file = None
+        self.assertIn(
+            "Benjamin L\\. De Bivort and Bruno Van Swinderen",
+            self.plugin.format_citations(test_data.entries.items())["Bivort2016"],
+        )
+
+        self.plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
+        self.assertIn(
+            "De Bivort, B. L. & Van Swinderen",
+            self.plugin.format_citations(test_data.entries.items())["Bivort2016"],
+        )
 
     def test_full_bibliography(self):
         test_data = parse_file(os.path.join(test_files_dir, "single.bib"))
