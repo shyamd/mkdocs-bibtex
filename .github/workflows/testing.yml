@@ -63,7 +63,7 @@ jobs:
 
     - uses: r-lib/actions/setup-pandoc@v1
       with:
-        pandoc-version: ${{ matrix.pandoc-version }} 
+        pandoc-version: ${{ matrix.pandoc-version }}
 
     - name: Install Python dependencies
       run: |
@@ -79,7 +79,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
-        
+
   merge-deps:
     needs:
       - lint

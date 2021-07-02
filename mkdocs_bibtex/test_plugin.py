@@ -24,13 +24,13 @@ class TestPlugin(unittest.TestCase):
         self.plugin.unescape_for_arithmatex = True
         self.assertIn(
             "First Author and Second Author\. Test Title (TT)\. *Testing Journal (TJ)*, 2019",
-            self.plugin.format_citations(test_data.entries.items())["test"]
+            self.plugin.format_citations(test_data.entries.items())["test"],
         )
 
         self.plugin.unescape_for_arithmatex = False
         self.assertIn(
             "First Author and Second Author\. Test Title \(TT\)\. *Testing Journal \(TJ\)*, 2019",
-            self.plugin.format_citations(test_data.entries.items())["test"]
+            self.plugin.format_citations(test_data.entries.items())["test"],
         )
 
     def test_config_one_bibtex_file(self):
