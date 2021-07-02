@@ -50,7 +50,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: [3.6, 3.7, 3.8]
-        pandoc-verison: [2.9.2, 2.14.0.3]
+        pandoc-version: [2.9.2, 2.14.0.3]
     runs-on: ${{ matrix.os }}
 
     steps:
