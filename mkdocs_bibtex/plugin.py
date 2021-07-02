@@ -175,35 +175,49 @@ class BibTexPlugin(BasePlugin):
         return "\n".join(full_bibliography)
 
 
-
-
-
 def to_markdown_pandoc(entry, csl_path):
     """
     Converts the PyBtex entry into formatted markdown citation text
     """
     bibtex_string = BibliographyData(entries={entry.key: entry}).to_string("bibtex")
-    citation_text = """
+    if tuple(int(ver) for ver in pypandoc.get_pandoc_version().split(".")) >= (
+        2,
+        11,
+    ):
+        markdown = pypandoc.convert_text(
+            source=bibtex_string,
+            to="markdown-citations",
+            format="bibtex",
+            extra_args=[
+                "--citeproc",
+                "--csl",
+                csl_path,
+            ],
+        )
+
+        citation_regex = re.compile(
+            r"\{\.csl-left-margin\}\[(.*)\]\{\.csl-right-inline\}"
+        )
+        citation = citation_regex.findall(" ".join(markdown.split("\n")))[0]
+    else:
+        # Older citeproc-filter version of pandoc
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bib_path = Path(tmpdir).joinpath("temp.bib")
+            with open(bib_path, "w") as bibfile:
+                bibfile.write(bibtex_string)
+            citation_text = """
 ---
 nocite: '@*'
 ---
 """
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        bib_path = Path(tmpdir).joinpath("temp.bib")
-        with open(bib_path, "w") as bibfile:
-            bibfile.write(bibtex_string)
+            markdown = pypandoc.convert_text(
+                source=citation_text,
+                to="markdown_strict-citations",
+                format="md",
+                extra_args=["--csl", csl_path, "--bibliography", bib_path],
+                filters=["pandoc-citeproc"],
+            )
 
-        # Call Pandoc.
-        markdown = pypandoc.convert_text(
-            source=citation_text,
-            to="markdown_strict-citations",
-            format="md",
-            extra_args=["--csl", csl_path, "--bibliography", bib_path],
-            filters=["pandoc-citeproc"],
-        )
-
-    # TODO: Perform this extraction better
-    markdown = markdown.split("\n")[0][2:]
-
-    return str(markdown)
+        citation = " ".join(markdown[4:].split("\n"))
+    return citation
