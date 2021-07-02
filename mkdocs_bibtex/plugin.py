@@ -219,5 +219,5 @@ nocite: '@*'
                 filters=["pandoc-citeproc"],
             )
 
-        citation = " ".join(markdown[4:].split("\n"))
+        citation = markdown[4:]
     return citation
