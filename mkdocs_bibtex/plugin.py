@@ -213,7 +213,7 @@ nocite: '@*'
 
             markdown = pypandoc.convert_text(
                 source=citation_text,
-                to="markdown_strict-citations",
+                to="markdown_strict",
                 format="md",
                 extra_args=["--csl", csl_path, "--bibliography", bib_path],
                 filters=["pandoc-citeproc"],
