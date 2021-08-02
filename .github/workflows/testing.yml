@@ -79,27 +79,3 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
-
-  merge-deps:
-    needs:
-      - lint
-      - test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Merge me!
-        uses: ridedott/merge-me-action@master
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  auto-gen-release:
-    if: github.repository_owner == 'shyamd'
-    needs:
-      - lint
-      - test
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.SEMVER_BUMP_TOKEN }}
-    steps:
-      - uses: rymndhng/release-on-push-action@v0.20.0
-        with:
-          bump_version_scheme: norelease
