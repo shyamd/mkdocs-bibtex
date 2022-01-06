@@ -196,16 +196,16 @@ def to_markdown_pandoc(entry, csl_path):
         )
 
         # This should cut off the pandoc preamble and ending triple colons
-        markdown = "\n".join(markdown.split("\n")[2:-2])
+        markdown = " ".join(markdown.split("\n")[2:-2])
 
         citation_regex = re.compile(
             r"\{\.csl-left-margin\}\[(.*)\]\{\.csl-right-inline\}"
         )
         try:
 
-            citation = citation_regex.findall(" ".join(markdown.split("\n")))[0]
+            citation = citation_regex.findall(markdown)[0]
         except IndexError:
-            citation = " ".join(markdown.split("\n"))
+            citation = markdown
     else:
         # Older citeproc-filter version of pandoc
         with tempfile.TemporaryDirectory() as tmpdir:
