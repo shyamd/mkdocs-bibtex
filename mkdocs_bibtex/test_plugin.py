@@ -87,6 +87,12 @@ class TestPlugin(unittest.TestCase):
         self.plugin.format_citations(test_data.entries.items())
         self.assertIn("Author, F. & Author, S", self.plugin.full_bibliography)
 
+        self.plugin.csl_file = os.path.join(
+            test_files_dir, "springer-basic-author-date.csl"
+        )
+        self.plugin.format_citations(test_data.entries.items())
+        self.assertIn("Author F, Author S", self.plugin.full_bibliography)
+
     def test_on_page_markdown(self):
         self.plugin.on_config(self.plugin.config)
         test_markdown = "This is a citation. [@test]\n\n \\bibliography"
