@@ -226,5 +226,6 @@ nocite: '@*'
                 filters=["pandoc-citeproc"],
             )
 
-        citation = markdown.replace("\n", " ")[4:]
+        citation_regex = re.compile(r"(?:1\.)?(.*)")
+        citation = citation_regex.findall(markdown.replace("\n", " "))[0]
     return citation
