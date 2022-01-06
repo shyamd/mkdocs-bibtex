@@ -10,4 +10,3 @@ repos:
       rev: stable
       hooks:
       - id: black
-        language_version: python3.7
