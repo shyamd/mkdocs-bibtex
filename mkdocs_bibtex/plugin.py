@@ -18,10 +18,6 @@ class BibTexPlugin(BasePlugin):
     Options:
         bib_file (string): path to a single bibtex file for entries
         bib_dir (string): path to a directory of bibtex files for entries
-        cite_style (string): either "plain" or "pandoc" to define the cite key style
-                             defaults to "pandoc"
-            plain - @cite_key
-            pandoc - [@cite_key]
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
         full_bib_command (string): command to place a full bibliography of all references
@@ -31,10 +27,6 @@ class BibTexPlugin(BasePlugin):
     config_scheme = [
         ("bib_file", config_options.File(exists=True, required=False)),
         ("bib_dir", config_options.Dir(exists=True, required=False)),
-        (
-            "cite_style",
-            config_options.Choice(choices=["plain", "pandoc"], default="plain"),
-        ),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.File(exists=True, required=False)),
@@ -68,17 +60,10 @@ class BibTexPlugin(BasePlugin):
 
         self.bib_data = BibliographyData(entries=refs)
 
-        cite_style = self.config.get("cite_style", "pandoc")
-        # Decide on how citations are entered into the markdown text
-        if cite_style == "plain":
-            self.cite_regex = re.compile(r"\@(\w+)")
-            self.insert_regex = r"\@{}"
-        elif cite_style == "pandoc":
-            self.cite_regex = re.compile(r"\[\@((?:(?:\w+)[\-:]?)+)\]")
-            self.insert_regex = r"\[@{}\]"
-        else:
-            raise Exception("Invalid citation style: {}".format(cite_style))
-
+        
+        self.cite_regex = re.compile(r"\[\@((?:(?:\w+)[\-:]?)+)\]")
+        self.insert_regex = r"\[@{}\]"
+        
         self.csl_file = self.config.get("csl_file", None)
 
         self.unescape_for_arithmatex = self.config.get("unescape_for_arithmatex", False)
