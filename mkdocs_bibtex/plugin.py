@@ -75,9 +75,13 @@ class BibTexPlugin(BasePlugin):
         Parses the markdown for each page, extracting the bibtex references
         If a local reference list is requested, this will render that list where requested
 
-        1. Finds all cite keys
-        2. Convert all the corresponding bib entries into citations
-        3. Insert the ordered citation numbers into the markdown text
+        1. Finds all cite keys (may include multiple citation references)
+        2. Convert all cite keys to citation quads: 
+            (full cite key,
+            induvidual cite key,
+            citation key in corresponding style,
+            citation for induvidual cite key)
+        3. Insert formatted cite keys into text
         4. Insert the bibliography into the markdown
         5. Insert the full bibliograph into the markdown
         """
