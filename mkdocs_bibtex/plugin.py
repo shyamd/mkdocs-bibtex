@@ -87,27 +87,16 @@ class BibTexPlugin(BasePlugin):
         """
 
         # 1. Grab all the cited keys in the markdown
-        cite_keys = self.cite_regex.findall(markdown)
-        citations = [
-            (cite_key, self.bib_data.entries[cite_key])
-            for cite_key in cite_keys
-            if cite_key in self.bib_data.entries
-        ]
+        cite_keys = find_cite_keys(markdown)
 
         # 2. Convert all the citations to text references
-        references = self.format_citations(citations)
+        citation_quads = self.format_citations(cite_keys)
 
         # 3. Insert in numbers into the main markdown and build bibliography
-        bibliography = []
-        for number, key in enumerate(references.keys()):
-            markdown = re.sub(
-                self.insert_regex.format(key), "[^{}]".format(number + 1), markdown
-            )
-            bibliography_text = "[^{}]: {}".format(number + 1, references[key])
-            bibliography.append(bibliography_text)
+        markdown = insert_citation_keys(citation_quads,markdown)
 
         # 4. Insert in the bibliopgrahy text into the markdown
-        bibliography = "\n\n".join(bibliography)
+        bibliography = format_bibliography(citation_quads)
         markdown = re.sub(
             re.escape(self.config.get("bib_command", "\\bibliography")),
             bibliography,
