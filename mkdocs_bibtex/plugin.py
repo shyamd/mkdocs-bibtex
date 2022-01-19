@@ -60,10 +60,6 @@ class BibTexPlugin(BasePlugin):
 
         self.bib_data = BibliographyData(entries=refs)
 
-        
-        self.cite_regex = re.compile(r"\[\@((?:(?:\w+)[\-:]?)+)\]")
-        self.insert_regex = r"\[@{}\]"
-        
         self.csl_file = self.config.get("csl_file", None)
 
         self.unescape_for_arithmatex = self.config.get("unescape_for_arithmatex", False)
@@ -112,32 +108,17 @@ class BibTexPlugin(BasePlugin):
 
         return markdown
 
-    def format_citations(self, citations):
+    def format_citations(self, cite_keys):
         """
-        Formats references and adds them to the global registry
+        Formats references into citation quads and adds them to the global registry
 
         Args:
-            citations (dict): mapping of cite_key to entry
+            cite_keys (list): List of full cite_keys that maybe compound keys
 
-        Returns OrderedDict of references
+        Returns:
+            citation_quads: quad tupples of the citation inforamtion
         """
-        style = PlainStyle()
-        backend = MarkdownBackend()
-        references = OrderedDict()
-        for key, entry in citations:
-            if self.csl_file is not None:
-                entry_text = to_markdown_pandoc(entry, self.csl_file)
-            else:
-                formatted_entry = style.format_entry("", entry)
-                entry_text = formatted_entry.text.render(backend)
-                entry_text = entry_text.replace("\n", " ")
-                if self.unescape_for_arithmatex:
-                    entry_text = entry_text.replace("\(", "(").replace("\)", ")")
-            # Local reference list for this file
-            references[key] = entry_text
-            # Global reference list for all files
-            self.all_references[key] = entry_text
-        return references
+        pass
 
     @property
     def full_bibliography(self):
@@ -207,3 +188,47 @@ nocite: '@*'
         citation_regex = re.compile(r"(?:1\.)?(.*)")
         citation = citation_regex.findall(markdown.replace("\n", " "))[0]
     return citation
+
+
+
+def find_cite_keys(markdown):
+    """
+    Finds the cite keys in the markdown text
+    This function can handle multiple keys in a single reference
+
+    Args:
+        markdown (str): the markdown text to be extract citation
+                        keys from
+    """
+
+    cite_regex = re.compile(r"\[((?:@\w+;{0,1}\s*)+)\]")
+    cite_keys = cite_regex.findall(markdown)
+    return list(cite_keys)
+
+
+def insert_citation_keys(citation_quads,markdown):
+    """
+    Insert citations into the markdown text replacing
+    the old citation keys
+
+    Args:
+        citation_quads (tuple): a quad tuple of all citation info
+        markdown (str): the markdown text to modify
+
+    Returns:
+        markdown (str): the modified Markdown
+    """
+    pass
+
+
+def format_bibliography(citation_quads):
+    """
+    Generates a bibliography from the citation quads
+
+    Args:
+        citation_quads (tuple): a quad tuple of all citation info
+    
+    Returns:
+        markdown (str): the Markdown string for the bibliography
+    """
+    pass
