@@ -47,82 +47,71 @@ def test_bibtex_loading_bibdir():
     assert len(plugin.bib_data.entries) == 2
 
 
-@pytest.mark.xfail()
 def test_format_citations(plugin):
     plugin.csl_file = None
 
     assert (
         "[@test]",
-        "@test",
-        "1.",
-        "First Author and Second Author",
-    ) == plugin.format_citations(["@test"])[0]
+        "test",
+        "1",
+        "First Author and Second Author\\. Test title\\. *Testing Journal*, 2019\\.",
+    ) == plugin.format_citations(["[@test]"])[0]
 
-    # Test arithmatex compatability formatting
     assert (
         "[@test2]",
-        "@test2",
-        "1.",
-        "First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019",
-    ) == plugin.format_citations(["@test2"])
-
-    plugin.unescape_for_arithmatex = True
-    assert (
-        "[@test2]",
-        "@test2",
-        "1.",
-        "First Author and Second Author\\. Test Title (TT)\\. *Testing Journal (TJ)*, 2019",
-    ) == plugin.format_citations(["@test2"])
-
-    plugin.unescape_for_arithmatex = False
+        "test2",
+        "1",
+        "First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019\\.",
+    ) == plugin.format_citations(["[@test2]"])[0]
 
     # Test compound citation
     assert [
         (
             "[@test; @test2]",
-            "@test",
-            "1.",
-            "First Author and Second Author",
+            "test",
+            "1",
+            "First Author and Second Author\\. Test title\\. *Testing Journal*, 2019\\.",
         ),
         (
             "[@test; @test2]",
-            "@test2",
-            "2.",
-            "First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019",
+            "test2",
+            "1",
+            "First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019\\.",
         ),
-    ] == plugin.format_citations(["@test; @test2"])
+    ] == plugin.format_citations(["[@test; @test2]"])
 
     # test long citation
-
-    plugin.csl_file = None
     assert (
-        "@Biovort2016",
-        "@Biovort2016",
+        "[@Bivort2016]",
+        "Bivort2016",
         "1",
-        "Benjamin L\\. De Bivort and Bruno Van Swinderen",
-    ) == plugin.format_citations(["Bivort2016"])
+        "Benjamin L\\. De Bivort and Bruno Van Swinderen\\. Evidence for selective attention in the insect brain\\. *Current Opinion in Insect Science*, 15:1–7, 2016\\. [doi:10\\.1016/j\\.cois\\.2016\\.02\\.007](https://doi.org/10.1016/j.cois.2016.02.007)\\.",
+    ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
     # Test formatting using a CSL style
     plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
     assert (
-        "@test",
-        "@test",
-        "1.",
-        "Author, F. & Author, S",
-    ) == plugin.format_citations(["@test"])
-
-    plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
-    assert (
-        "@Biovort2016",
-        "@Biovort2016",
+        "[@test]",
+        "test",
         "1",
-        "De Bivort, B. L. & Van Swinderen",
-    ) == plugin.format_citations(["Bivort2016"])
+        "First Author and Second Author\\. Test title\\. *Testing Journal*, 2019\\.",
+    ) == plugin.format_citations(["[@test]"])[0]
 
+    assert (
+        "[@Bivort2016]",
+        "Bivort2016",
+        "1",
+        "Benjamin L\\. De Bivort and Bruno Van Swinderen\\. Evidence for selective attention in the insect brain\\. *Current Opinion in Insect Science*, 15:1–7, 2016\\. [doi:10\\.1016/j\\.cois\\.2016\\.02\\.007](https://doi.org/10.1016/j.cois.2016.02.007)\\.",
+    ) == plugin.format_citations(["[@Bivort2016]"])[0]
+
+    # Test a CSL that outputs references in a different style
     plugin.csl_file = os.path.join(test_files_dir, "springer-basic-author-date.csl")
-    assert ("@test", "@test", "1", "Author F, Author S") == plugin.format_citations(
-        ["@test"]
-    )
+    assert (
+        "[@test]",
+        "test",
+        "1",
+        "First Author and Second Author\\. Test title\\. *Testing Journal*, 2019\\.",
+    ) == plugin.format_citations(["[@test]"])[0]
 
 
 def test_find_cite_keys():
@@ -225,4 +214,14 @@ def test_format_pandoc(entries):
     assert (
         citations["test2"]
         == "Author, F. & Author, S. Test Title (TT). *Testing Journal (TJ)* **1**, (2019)."
+    )
+
+
+def test_on_page_markdown(plugin):
+    plugin.on_config(plugin.config)
+    test_markdown = "This is a citation. [@test]\n\n \\bibliography"
+
+    assert (
+        "[^1]: First Author and Second Author\\. Test title\\. *Testing Journal*, 2019\\."
+        in plugin.on_page_markdown(test_markdown, None, None, None)
     )
