@@ -85,7 +85,7 @@ def test_format_citations(plugin):
         "[@Bivort2016]",
         "Bivort2016",
         "1",
-        "Benjamin L\\. De Bivort and Bruno Van Swinderen\\. Evidence for selective attention in the insect brain\\. *Current Opinion in Insect Science*, 15:1–7, 2016\\. [doi:10\\.1016/j\\.cois\\.2016\\.02\\.007](https://doi.org/10.1016/j.cois.2016.02.007)\\.",
+        "Benjamin L\\. De Bivort and Bruno Van Swinderen\\. Evidence for selective attention in the insect brain\\. *Current Opinion in Insect Science*, 15:1–7, 2016\\. [doi:10\\.1016/j\\.cois\\.2016\\.02\\.007](https://doi.org/10.1016/j.cois.2016.02.007)\\.",  # noqa: E501
     ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
     # Test formatting using a CSL style
@@ -101,7 +101,7 @@ def test_format_citations(plugin):
         "[@Bivort2016]",
         "Bivort2016",
         "1",
-        "Benjamin L\\. De Bivort and Bruno Van Swinderen\\. Evidence for selective attention in the insect brain\\. *Current Opinion in Insect Science*, 15:1–7, 2016\\. [doi:10\\.1016/j\\.cois\\.2016\\.02\\.007](https://doi.org/10.1016/j.cois.2016.02.007)\\.",
+        "Benjamin L\\. De Bivort and Bruno Van Swinderen\\. Evidence for selective attention in the insect brain\\. *Current Opinion in Insect Science*, 15:1–7, 2016\\. [doi:10\\.1016/j\\.cois\\.2016\\.02\\.007](https://doi.org/10.1016/j.cois.2016.02.007)\\.",  # noqa: E501
     ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
     # Test a CSL that outputs references in a different style
@@ -149,7 +149,7 @@ def test_insert_citation_keys():
                     "[@test; @test2]",
                     "@test2",
                     "2",
-                    "First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019",
+                    "First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019",  # noqa: E501
                 ),
             ],
             "[@test; @test2]",

@@ -82,7 +82,7 @@ def _convert_pandoc_new(bibtex_string, csl_path):
     return citation
 
 
-def _convert_pandoc_legacy(bibtex_string, csl_file):
+def _convert_pandoc_legacy(bibtex_string, csl_path):
     """
     Converts the PyBtex entry into formatted markdown citation text
     using pandoc version older than 2.11
