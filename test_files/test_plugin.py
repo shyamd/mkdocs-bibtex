@@ -205,7 +205,6 @@ def test_format_pandoc(entries):
     assert all(k in citations for k in entries)
     assert all(entry != citations[k] for k, entry in entries.items())
 
-    print(citations)
     assert (
         citations["test"]
         == "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019)."

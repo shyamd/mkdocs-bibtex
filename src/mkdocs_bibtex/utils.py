@@ -79,7 +79,7 @@ def _convert_pandoc_new(bibtex_string, csl_path):
         citation = citation_regex.findall(markdown.replace("\n", " "))[0]
     except IndexError:
         citation = markdown
-    return citation
+    return citation.strip()
 
 
 def _convert_pandoc_legacy(bibtex_string, csl_path):
@@ -107,7 +107,7 @@ nocite: '@*'
 
     citation_regex = re.compile(r"[\d\.\\\s]*(.*)")
     citation = citation_regex.findall(markdown.replace("\n", " "))[0]
-    return citation
+    return citation.strip()
 
 
 def find_cite_keys(markdown):
