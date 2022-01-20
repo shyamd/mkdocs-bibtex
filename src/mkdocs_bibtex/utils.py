@@ -28,7 +28,9 @@ def format_simple(entries):
         entry_text = formatted_entry.text.render(backend)
         entry_text = entry_text.replace("\n", " ")
         # Local reference list for this file
-        citations[key] = entry_text
+        citations[key] = (
+            entry_text.replace("\\(", "(").replace("\\)", ")").replace("\\.", ".")
+        )
     return citations
 
 
