@@ -1,14 +1,18 @@
 import re
-from pathlib import Path
-import tempfile
 from collections import OrderedDict
+from pathlib import Path
 
-import pypandoc
 from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
-from pybtex.backends.markdown import Backend as MarkdownBackend
 from pybtex.database import BibliographyData, parse_file
-from pybtex.style.formatting.plain import Style as PlainStyle
+
+from mkdocs_bibtex.utils import (
+    find_cite_keys,
+    format_bibliography,
+    format_pandoc,
+    format_simple,
+    insert_citation_keys,
+)
 
 
 class BibTexPlugin(BasePlugin):
@@ -30,7 +34,6 @@ class BibTexPlugin(BasePlugin):
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.File(exists=True, required=False)),
-        ("unescape_for_arithmatex", config_options.Type(bool, required=False)),
     ]
 
     def __init__(self):
@@ -62,8 +65,6 @@ class BibTexPlugin(BasePlugin):
 
         self.csl_file = self.config.get("csl_file", None)
 
-        self.unescape_for_arithmatex = self.config.get("unescape_for_arithmatex", False)
-
         return config
 
     def on_page_markdown(self, markdown, page, config, files):
@@ -72,7 +73,7 @@ class BibTexPlugin(BasePlugin):
         If a local reference list is requested, this will render that list where requested
 
         1. Finds all cite keys (may include multiple citation references)
-        2. Convert all cite keys to citation quads: 
+        2. Convert all cite keys to citation quads:
             (full cite key,
             induvidual cite key,
             citation key in corresponding style,
@@ -89,7 +90,7 @@ class BibTexPlugin(BasePlugin):
         citation_quads = self.format_citations(cite_keys)
 
         # 3. Insert in numbers into the main markdown and build bibliography
-        markdown = insert_citation_keys(citation_quads,markdown)
+        markdown = insert_citation_keys(citation_quads, markdown)
 
         # 4. Insert in the bibliopgrahy text into the markdown
         bibliography = format_bibliography(citation_quads)
@@ -118,117 +119,43 @@ class BibTexPlugin(BasePlugin):
         Returns:
             citation_quads: quad tupples of the citation inforamtion
         """
-        pass
+
+        # Deal with arithmatex fix at some point
+ 
+
+        # 1. First collect any unformated references
+        entries = {}
+        for key_set in cite_keys:
+            for key in key_set.strip().strip("]").strip("[").split(";"):
+                key = key.strip().strip("@")
+                if key not in self.all_references:
+                    entries[key] = self.bib_data.entries[key]
+
+        # 2. Format entries
+        if self.csl_file:
+            self.all_references.update(format_pandoc(entries, self.csl_file))
+        else:
+            self.all_references.update(format_simple(entries))
+
+        # 3. Construct quads
+        quads = []
+        for key_set in cite_keys:
+            for key in key_set.strip().strip("]").strip("[").split(";"):
+                key = key.strip().strip("@")
+                ref = self.all_references[key]
+                quads.append((key_set, key, "1", self.all_references[key]))
+
+        return quads
 
     @property
     def full_bibliography(self):
         """
         Returns the full bibliography text
         """
-        full_bibliography = []
 
-        for number, key in enumerate(self.all_references.keys()):
-            bibliography_text = "{}: {}".format(number + 1, self.all_references[key])
-            full_bibliography.append(bibliography_text)
+        bibliography = []
+        for number, (key, citation) in enumerate(self.all_references.items()):
+            bibliography_text = "[^{}]: {}".format(number, citation)
+            bibliography.append(bibliography_text)
 
-        return "\n".join(full_bibliography)
-
-
-def to_markdown_pandoc(entry, csl_path):
-    """
-    Converts the PyBtex entry into formatted markdown citation text
-    """
-    bibtex_string = BibliographyData(entries={entry.key: entry}).to_string("bibtex")
-    if tuple(int(ver) for ver in pypandoc.get_pandoc_version().split(".")) >= (
-        2,
-        11,
-    ):
-        markdown = pypandoc.convert_text(
-            source=bibtex_string,
-            to="markdown-citations",
-            format="bibtex",
-            extra_args=[
-                "--citeproc",
-                "--csl",
-                csl_path,
-            ],
-        )
-
-        # This should cut off the pandoc preamble and ending triple colons
-        markdown = " ".join(markdown.split("\n")[2:-2])
-
-        citation_regex = re.compile(
-            r"\{\.csl-left-margin\}\[(.*)\]\{\.csl-right-inline\}"
-        )
-        try:
-
-            citation = citation_regex.findall(markdown)[0]
-        except IndexError:
-            citation = markdown
-    else:
-        # Older citeproc-filter version of pandoc
-        with tempfile.TemporaryDirectory() as tmpdir:
-            bib_path = Path(tmpdir).joinpath("temp.bib")
-            with open(bib_path, "w") as bibfile:
-                bibfile.write(bibtex_string)
-            citation_text = """
----
-nocite: '@*'
----
-"""
-
-            markdown = pypandoc.convert_text(
-                source=citation_text,
-                to="markdown_strict",
-                format="md",
-                extra_args=["--csl", csl_path, "--bibliography", bib_path],
-                filters=["pandoc-citeproc"],
-            )
-
-        citation_regex = re.compile(r"(?:1\.)?(.*)")
-        citation = citation_regex.findall(markdown.replace("\n", " "))[0]
-    return citation
-
-
-
-def find_cite_keys(markdown):
-    """
-    Finds the cite keys in the markdown text
-    This function can handle multiple keys in a single reference
-
-    Args:
-        markdown (str): the markdown text to be extract citation
-                        keys from
-    """
-
-    cite_regex = re.compile(r"\[((?:@\w+;{0,1}\s*)+)\]")
-    cite_keys = cite_regex.findall(markdown)
-    return list(cite_keys)
-
-
-def insert_citation_keys(citation_quads,markdown):
-    """
-    Insert citations into the markdown text replacing
-    the old citation keys
-
-    Args:
-        citation_quads (tuple): a quad tuple of all citation info
-        markdown (str): the markdown text to modify
-
-    Returns:
-        markdown (str): the modified Markdown
-    """
-    pass
-
-
-def format_bibliography(citation_quads):
-    """
-    Generates a bibliography from the citation quads
-
-    Args:
-        citation_quads (tuple): a quad tuple of all citation info
-    
-    Returns:
-        markdown (str): the Markdown string for the bibliography
-    """
-    pass
+        return "\n".join(bibliography)
