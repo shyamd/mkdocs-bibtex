@@ -189,7 +189,6 @@ def test_format_simple(entries):
     assert all(k in citations for k in entries)
     assert all(entry != citations[k] for k, entry in entries.items())
 
-    print(citations)
     assert (
         citations["test"]
         == "First Author and Second Author\\. Test title\\. *Testing Journal*, 2019\\."
