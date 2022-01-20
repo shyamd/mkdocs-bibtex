@@ -18,6 +18,7 @@ setup(
     python_requires=">=3.6",
     install_requires=["mkdocs>=1", "markdown>=3.1.1", "pybtex>=0.22", "pypandoc>=1.5"],
     tests_require=["pytest"],
-    packages=find_packages(),
+    packages=find_packages("src"),
+    package_dir={"": "src"},
     entry_points={"mkdocs.plugins": ["bibtex = mkdocs_bibtex.plugin:BibTexPlugin"]},
 )
