@@ -23,7 +23,6 @@ plugins:
   - search
   - bibtex:
       bib_file: "refs.bib"
-      cite_style: "pandoc"
 markdown_extensions:
   - footnotes
 ```
@@ -36,17 +35,15 @@ The footnotes extension is how citations are linked for now.
 
 - `bib_file` - Name of your bibtex file. Either the absolute path or the path relative to `mkdocs.yml`
 - `bib_dir` - Directory for bibtex files to load, same as above for path resolution
-- `cite_style` - The way you place citations into text: "pandoc" for `[@myRef]` and "plain" for `@myRef`
 - `bib_command` - The command for your bibliography, defaults to `\bibliography`
-- `full_bib_command` - The command for your bibliography, defaults to `\full_bibliography`
+- `full_bib_command` - The command for your full bibliography, defaults to `\full_bibliography`
 - `csl_file` - Bibtex CSL file to format the citation with, defaults to None, using a built in plain format instead
-- `unescape_for_arithmatex` - Optional; set to `True` to avoid the `\(` `\)` [issue](https://github.com/shyamd/mkdocs-bibtex/issues/3) with [pymdownx.arithmatex](https://facelessuser.github.io/pymdown-extensions/extensions/arithmatex/)
 
 ## Usage
 
 In your markdown files:
 
-1. Add your citations as you would normally using either "plain" or "pandoc" style
+1. Add your citations as you would if you used pandoc, IE: `[@first_cite;@second_cite]`
 2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references.
-3. Add in `\full_bibliography` or whatever you set your `full_bib_command` to where you want the full set of references. *Note*: This is not guaranteed to work yet since one issue is the order in which markdown files are processed. Might need to do something using the `on_files()` event first.
+3. Add in `\full_bibliography` or whatever you set your `full_bib_command` to where you want the full set of references. *Note*: This is not work just right since this plugin can't dictate the orer in which files are processed. The best way to ensure the file with the full bibliography gets processed last is to use numbers in front of file/folder names to enforce an order of processing, IE: `01_my_first_file.md`
 4. (Optional) Setup `csl_file` to control the citation text formatting.
