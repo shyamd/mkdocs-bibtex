@@ -2,9 +2,14 @@ import os
 
 import pytest
 
-from mkdocs_bibtex.plugin import BibTexPlugin
-from mkdocs_bibtex.utils import (find_cite_keys, format_bibliography,
-                                 insert_citation_keys)
+from mkdocs_bibtex.plugin import BibTexPlugin, parse_file
+from mkdocs_bibtex.utils import (
+    find_cite_keys,
+    format_bibliography,
+    insert_citation_keys,
+    format_simple,
+    format_pandoc,
+)
 
 module_dir = os.path.dirname(os.path.abspath(__file__))
 test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
@@ -19,6 +24,12 @@ def plugin():
     )
     plugin.on_config(plugin.config)
     return plugin
+
+
+@pytest.fixture
+def entries():
+    bibdata = parse_file(os.path.join(test_files_dir, "test.bib"))
+    return bibdata.entries
 
 
 def test_bibtex_loading_bibfile(plugin):
@@ -180,4 +191,38 @@ def test_format_bibliography():
     assert (
         "[^2]: First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019"
         in bib
+    )
+
+
+def test_format_simple(entries):
+    citations = format_simple(entries)
+
+    assert all(k in citations for k in entries)
+    assert all(entry != citations[k] for k, entry in entries.items())
+
+    print(citations)
+    assert (
+        citations["test"]
+        == "First Author and Second Author\\. Test title\\. *Testing Journal*, 2019\\."
+    )
+    assert (
+        citations["test2"]
+        == "First Author and Second Author\\. Test Title \\(TT\\)\\. *Testing Journal \\(TJ\\)*, 2019\\."
+    )
+
+
+def test_format_pandoc(entries):
+    citations = format_pandoc(entries, os.path.join(test_files_dir, "nature.csl"))
+
+    assert all(k in citations for k in entries)
+    assert all(entry != citations[k] for k, entry in entries.items())
+
+    print(citations)
+    assert (
+        citations["test"]
+        == "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019)."
+    )
+    assert (
+        citations["test2"]
+        == "Author, F. & Author, S. Test Title (TT). *Testing Journal (TJ)* **1**, (2019)."
     )

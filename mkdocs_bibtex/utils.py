@@ -1,65 +1,112 @@
 import re
 import tempfile
+from collections import OrderedDict
 from itertools import groupby
 from pathlib import Path
 
 import pypandoc
+from pybtex.backends.markdown import Backend as MarkdownBackend
 from pybtex.database import BibliographyData
+from pybtex.style.formatting.plain import Style as PlainStyle
 
 
-def to_markdown_pandoc(entry, csl_path):
+def format_simple(entries):
+    """
+    Format the entries using a simple built in style
+
+    Args:
+        entries (dict): dictionary of entries
+
+    Returns:
+        references (dict): dictionary of citation texts
+    """
+    style = PlainStyle()
+    backend = MarkdownBackend()
+    citations = OrderedDict()
+    for key, entry in entries.items():
+        formatted_entry = style.format_entry("", entry)
+        entry_text = formatted_entry.text.render(backend)
+        entry_text = entry_text.replace("\n", " ")
+        # Local reference list for this file
+        citations[key] = entry_text
+    return citations
+
+
+def format_pandoc(entries, csl_path):
+    """
+    Format the entries using pandoc
+
+    Args:
+        entries (dict): dictionary of entries
+        csl_path (str): path to formatting CSL Fle
+    Returns:
+        references (dict): dictionary of citation texts
+    """
+    pandoc_version = tuple(int(ver) for ver in pypandoc.get_pandoc_version().split("."))
+    citations = OrderedDict()
+    for key, entry in entries.items():
+        bibtex_string = BibliographyData(entries={entry.key: entry}).to_string("bibtex")
+        if pandoc_version >= (2, 11):
+            citations[key] = _convert_pandoc_new(bibtex_string, csl_path)
+        else:
+            citations[key] = _convert_pandoc_legacy(bibtex_string, csl_path)
+
+    return citations
+
+
+def _convert_pandoc_new(bibtex_string, csl_path):
     """
     Converts the PyBtex entry into formatted markdown citation text
+    using pandoc version 2.11 or newer
     """
-    bibtex_string = BibliographyData(entries={entry.key: entry}).to_string("bibtex")
-    if tuple(int(ver) for ver in pypandoc.get_pandoc_version().split(".")) >= (
-        2,
-        11,
-    ):
-        markdown = pypandoc.convert_text(
-            source=bibtex_string,
-            to="markdown-citations",
-            format="bibtex",
-            extra_args=[
-                "--citeproc",
-                "--csl",
-                csl_path,
-            ],
-        )
+    markdown = pypandoc.convert_text(
+        source=bibtex_string,
+        to="markdown-citations",
+        format="bibtex",
+        extra_args=[
+            "--citeproc",
+            "--csl",
+            csl_path,
+        ],
+    )
 
-        # This should cut off the pandoc preamble and ending triple colons
-        markdown = " ".join(markdown.split("\n")[2:-2])
+    # This should cut off the pandoc preamble and ending triple colons
+    markdown = " ".join(markdown.split("\n")[2:-2])
 
-        citation_regex = re.compile(
-            r"\{\.csl-left-margin\}\[(.*)\]\{\.csl-right-inline\}"
-        )
-        try:
+    citation_regex = re.compile(r"\{\.csl-left-margin\}\[(.*)\]\{\.csl-right-inline\}")
+    try:
 
-            citation = citation_regex.findall(markdown)[0]
-        except IndexError:
-            citation = markdown
-    else:
-        # Older citeproc-filter version of pandoc
-        with tempfile.TemporaryDirectory() as tmpdir:
-            bib_path = Path(tmpdir).joinpath("temp.bib")
-            with open(bib_path, "w") as bibfile:
-                bibfile.write(bibtex_string)
-            citation_text = """
+        citation = citation_regex.findall(markdown)[0]
+    except IndexError:
+        citation = markdown
+    return citation
+
+
+def _convert_pandoc_legacy(bibtex_string, csl_file):
+    """
+    Converts the PyBtex entry into formatted markdown citation text
+    using pandoc version older than 2.11
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bib_path = Path(tmpdir).joinpath("temp.bib")
+        with open(bib_path, "w") as bibfile:
+            bibfile.write(bibtex_string)
+        citation_text = """
 ---
 nocite: '@*'
 ---
 """
 
-            markdown = pypandoc.convert_text(
-                source=citation_text,
-                to="markdown_strict",
-                format="md",
-                extra_args=["--csl", csl_path, "--bibliography", bib_path],
-                filters=["pandoc-citeproc"],
-            )
+        markdown = pypandoc.convert_text(
+            source=citation_text,
+            to="markdown_strict",
+            format="md",
+            extra_args=["--csl", csl_path, "--bibliography", bib_path],
+            filters=["pandoc-citeproc"],
+        )
 
-        citation_regex = re.compile(r"(1\.)?(.*)")
-        citation = citation_regex.findall(markdown.replace("\n", " "))[0]
+    citation_regex = re.compile(r"(1\.)?(.*)")
+    citation = citation_regex.findall(markdown.replace("\n", " "))[0]
     return citation
 
 
