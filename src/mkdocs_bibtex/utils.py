@@ -76,7 +76,7 @@ def _convert_pandoc_new(bibtex_string, csl_path):
     citation_regex = re.compile(r"\{\.csl-left-margin\}\[(.*)\]\{\.csl-right-inline\}")
     try:
 
-        citation = citation_regex.findall(markdown)[0]
+        citation = citation_regex.findall(markdown.replace("\n", " "))[0]
     except IndexError:
         citation = markdown
     return citation
