@@ -105,7 +105,7 @@ nocite: '@*'
             filters=["pandoc-citeproc"],
         )
 
-    citation_regex = re.compile(r"([\d\.\\]+)\s+(.*)")
+    citation_regex = re.compile(r"(?:[\d\.\\]+)\s+(.*)")
     citation = citation_regex.findall(markdown.replace("\n", " "))[0]
     return citation
 
