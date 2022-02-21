@@ -123,7 +123,7 @@ class BibTexPlugin(BasePlugin):
         # Deal with arithmatex fix at some point
 
         # 1. First collect any unformated references
-        entries = {}
+        entries = OrderedDict()
         for key_set in cite_keys:
             for key in key_set.strip().strip("]").strip("[").split(";"):
                 key = key.strip().strip("@")
