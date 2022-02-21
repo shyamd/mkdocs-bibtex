@@ -223,3 +223,7 @@ def test_on_page_markdown(plugin):
         "[^1]: First Author and Second Author. Test title. *Testing Journal*, 2019."
         in plugin.on_page_markdown(test_markdown, None, None, None)
     )
+
+    test_markdown = "This is a citation. [@test] This is another citation [@test2]\n\n \\bibliography"
+    # ensure there are two items in bibliography
+    assert "[^2]:" in plugin.on_page_markdown(test_markdown, None, None, None)
