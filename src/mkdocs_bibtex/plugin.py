@@ -138,10 +138,10 @@ class BibTexPlugin(BasePlugin):
 
         # 3. Construct quads
         quads = []
-        for key_set in cite_keys:
+        for n, key_set in enumerate(cite_keys):
             for key in key_set.strip().strip("]").strip("[").split(";"):
                 key = key.strip().strip("@")
-                quads.append((key_set, key, "1", self.all_references[key]))
+                quads.append((key_set, key, str(n + 1), self.all_references[key]))
 
         return quads
 
