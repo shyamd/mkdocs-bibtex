@@ -141,11 +141,7 @@ def insert_citation_keys(citation_quads, markdown):
     """
 
     # Renumber quads if using numbers for citation links
-    if all(quad[2].isnumeric() for quad in citation_quads):
-        citation_quads = [
-            (quad[0], quad[1], str(n + 1), quad[2])
-            for n, quad in enumerate(citation_quads)
-        ]
+
 
     grouped_quads = [list(g) for _, g in groupby(citation_quads, key=lambda x: x[0])]
     for quad_group in grouped_quads:
