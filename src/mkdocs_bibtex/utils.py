@@ -142,7 +142,6 @@ def insert_citation_keys(citation_quads, markdown):
 
     # Renumber quads if using numbers for citation links
 
-
     grouped_quads = [list(g) for _, g in groupby(citation_quads, key=lambda x: x[0])]
     for quad_group in grouped_quads:
         full_citation = quad_group[0][0]  # the first key in the whole citation

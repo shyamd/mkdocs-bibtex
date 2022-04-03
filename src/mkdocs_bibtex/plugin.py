@@ -129,8 +129,8 @@ class BibTexPlugin(BasePlugin):
             for key_set in cite_keys
             for key in key_set.strip().strip("]").strip("[").split(";")
         ]
-        keys = list(OrderedDict.fromkeys([k for _,k in pairs]).keys())
-        numbers = {k: str(n+1) for n,k in enumerate(keys)}
+        keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
+        numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
         # 2. Collect any unformatted reference keys
         for _, key in pairs:
@@ -144,7 +144,10 @@ class BibTexPlugin(BasePlugin):
             self.all_references.update(format_simple(entries))
 
         # 4. Construct quads
-        quads = [(key_set, key, numbers[key], self.all_references[key]) for key_set, key in pairs]
+        quads = [
+            (key_set, key, numbers[key], self.all_references[key])
+            for key_set, key in pairs
+        ]
         return quads
 
     @property
