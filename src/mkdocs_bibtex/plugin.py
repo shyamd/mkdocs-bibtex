@@ -122,27 +122,32 @@ class BibTexPlugin(BasePlugin):
 
         # Deal with arithmatex fix at some point
 
-        # 1. First collect any unformated references
+        # 1. Extract the keys from the keyset
         entries = OrderedDict()
-        for key_set in cite_keys:
-            for key in key_set.strip().strip("]").strip("[").split(";"):
-                key = key.strip().strip("@")
-                if key not in self.all_references:
-                    entries[key] = self.bib_data.entries[key]
+        pairs = [
+            [key_set, key.strip().strip("@")]
+            for key_set in cite_keys
+            for key in key_set.strip().strip("]").strip("[").split(";")
+        ]
+        keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
+        numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
-        # 2. Format entries
+        # 2. Collect any unformatted reference keys
+        for _, key in pairs:
+            if key not in self.all_references:
+                entries[key] = self.bib_data.entries[key]
+
+        # 3. Format entries
         if self.csl_file:
             self.all_references.update(format_pandoc(entries, self.csl_file))
         else:
             self.all_references.update(format_simple(entries))
 
-        # 3. Construct quads
-        quads = []
-        for n, key_set in enumerate(cite_keys):
-            for key in key_set.strip().strip("]").strip("[").split(";"):
-                key = key.strip().strip("@")
-                quads.append((key_set, key, str(n + 1), self.all_references[key]))
-
+        # 4. Construct quads
+        quads = [
+            (key_set, key, numbers[key], self.all_references[key])
+            for key_set, key in pairs
+        ]
         return quads
 
     @property

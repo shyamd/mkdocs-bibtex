@@ -75,7 +75,7 @@ def test_format_citations(plugin):
         (
             "[@test; @test2]",
             "test2",
-            "1",
+            "2",
             "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019.",
         ),
     ] == plugin.format_citations(["[@test; @test2]"])
@@ -224,6 +224,17 @@ def test_on_page_markdown(plugin):
         in plugin.on_page_markdown(test_markdown, None, None, None)
     )
 
-    test_markdown = "This is a citation. [@test] This is another citation [@test2]\n\n \\bibliography"
+    test_markdown = "This is a citation. [@test2] This is another citation [@test]\n\n \\bibliography"
     # ensure there are two items in bibliography
+
     assert "[^2]:" in plugin.on_page_markdown(test_markdown, None, None, None)
+
+    # Ensure if an item is referenced multiple times, it only shows up as one reference
+    test_markdown = "This is a citation. [@test] This is another citation [@test]\n\n \\bibliography"
+
+    assert "[^2]" not in plugin.on_page_markdown(test_markdown, None, None, None)
+
+    # Ensure item only shows up once even if used in multiple places as both a compound and lone cite key
+    test_markdown = "This is a citation. [@test; @test2] This is another citation [@test]\n\n \\bibliography"
+
+    assert "[^3]" not in plugin.on_page_markdown(test_markdown, None, None, None)
