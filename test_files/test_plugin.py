@@ -75,7 +75,7 @@ def test_format_citations(plugin):
         (
             "[@test; @test2]",
             "test2",
-            "1",
+            "2",
             "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019.",
         ),
     ] == plugin.format_citations(["[@test; @test2]"])
