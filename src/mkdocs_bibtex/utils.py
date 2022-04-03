@@ -124,7 +124,7 @@ def find_cite_keys(markdown):
 
     cite_regex = re.compile(r"(\[(?:@\w+;{0,1}\s*)+\])")
     cite_keys = cite_regex.findall(markdown)
-    return list(cite_keys)
+    return list(OrderedDict.fromkeys(cite_keys).keys())
 
 
 def insert_citation_keys(citation_quads, markdown):
