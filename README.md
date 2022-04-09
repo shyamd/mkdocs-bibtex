@@ -36,7 +36,9 @@ The footnotes extension is how citations are linked for now.
 - `bib_file` - Name of your bibtex file. Either the absolute path or the path relative to `mkdocs.yml`
 - `bib_dir` - Directory for bibtex files to load, same as above for path resolution
 - `bib_command` - The command for your bibliography, defaults to `\bibliography`
+- `bib_by_default` - Automatically appends `bib_command` to every markdown page, defaults to `true`
 - `full_bib_command` - The command for your full bibliography, defaults to `\full_bibliography`
+- `full_bib_by_default` - Automatically appends `full_bib_command` to every markdown page, defaults to `false`
 - `csl_file` - Bibtex CSL file to format the citation with, defaults to None, using a built in plain format instead
 
 ## Usage
@@ -44,6 +46,6 @@ The footnotes extension is how citations are linked for now.
 In your markdown files:
 
 1. Add your citations as you would if you used pandoc, IE: `[@first_cite;@second_cite]`
-2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references.
+2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references (if `bib_by_default` is set to true this gets added automatically).
 3. Add in `\full_bibliography` or whatever you set your `full_bib_command` to where you want the full set of references. *Note*: This is not work just right since this plugin can't dictate the orer in which files are processed. The best way to ensure the file with the full bibliography gets processed last is to use numbers in front of file/folder names to enforce an order of processing, IE: `01_my_first_file.md`
 4. (Optional) Setup `csl_file` to control the citation text formatting.
