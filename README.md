@@ -38,7 +38,6 @@ The footnotes extension is how citations are linked for now.
 - `bib_command` - The command for your bibliography, defaults to `\bibliography`
 - `bib_by_default` - Automatically appends `bib_command` to every markdown page, defaults to `true`
 - `full_bib_command` - The command for your full bibliography, defaults to `\full_bibliography`
-- `full_bib_by_default` - Automatically appends `full_bib_command` to every markdown page, defaults to `false`
 - `csl_file` - Bibtex CSL file to format the citation with, defaults to None, using a built in plain format instead
 
 ## Usage

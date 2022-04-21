@@ -27,8 +27,6 @@ class BibTexPlugin(BasePlugin):
         bib_by_default (bool): automatically appends bib_command to markdown pages
                                by default, defaults to true
         full_bib_command (string): command to place a full bibliography of all references
-        full_bib_by_default (bool): automatically appends full_bib_command to markdown
-                                    pages by default, defaults to false
         csl_file (string, optional): path to a CSL file, relative to mkdocs.yml.
     """
 
@@ -38,7 +36,6 @@ class BibTexPlugin(BasePlugin):
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
-        ("full_bib_by_default", config_options.Type(bool, default=False)),
         ("csl_file", config_options.File(exists=True, required=False)),
     ]
 
@@ -110,9 +107,6 @@ class BibTexPlugin(BasePlugin):
         )
 
         # 5. Build the full Bibliography and insert into the text
-        if self.config.get("full_bib_by_default"):
-            markdown += "\n" + self.config.get("full_bib_command", "\\full_bibliography")
-
         markdown = re.sub(
             re.escape(self.config.get("full_bib_command", "\\full_bibliography")),
             self.full_bibliography,
