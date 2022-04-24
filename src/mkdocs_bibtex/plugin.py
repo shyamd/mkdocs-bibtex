@@ -99,7 +99,7 @@ class BibTexPlugin(BasePlugin):
         bib_command = self.config.get("bib_command", "\\bibliography")
 
         if self.config.get("bib_by_default"):
-            markdown += f'\n{bib_command}'
+            markdown += f"\n{bib_command}"
 
         bibliography = format_bibliography(citation_quads)
         markdown = re.sub(
@@ -110,7 +110,7 @@ class BibTexPlugin(BasePlugin):
 
         # 5. Build the full Bibliography and insert into the text
         full_bib_command = self.config.get("full_bib_command", "\\full_bibliography")
-        
+
         markdown = re.sub(
             re.escape(full_bib_command),
             self.full_bibliography,
