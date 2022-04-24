@@ -217,6 +217,9 @@ def test_format_pandoc(entries):
 
 def test_on_page_markdown(plugin):
     plugin.on_config(plugin.config)
+    # run test with bib_by_default set to False
+    plugin.config["bib_by_default"] = False
+
     test_markdown = "This is a citation. [@test]\n\n \\bibliography"
 
     assert (
@@ -224,10 +227,17 @@ def test_on_page_markdown(plugin):
         in plugin.on_page_markdown(test_markdown, None, None, None)
     )
 
-    test_markdown = "This is a citation. [@test2] This is another citation [@test]\n\n \\bibliography"
     # ensure there are two items in bibliography
+    test_markdown = "This is a citation. [@test2] This is another citation [@test]\n\n \\bibliography"
 
     assert "[^2]:" in plugin.on_page_markdown(test_markdown, None, None, None)
+
+    # ensure bib_by_default is working
+    plugin.config["bib_by_default"] = True
+    test_markdown = "This is a citation. [@test]"
+
+    assert "[^1]:" in plugin.on_page_markdown(test_markdown, None, None, None)
+    plugin.config["bib_by_default"] = False
 
     # Ensure if an item is referenced multiple times, it only shows up as one reference
     test_markdown = "This is a citation. [@test] This is another citation [@test]\n\n \\bibliography"

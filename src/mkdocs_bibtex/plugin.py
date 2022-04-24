@@ -24,6 +24,8 @@ class BibTexPlugin(BasePlugin):
         bib_dir (string): path to a directory of bibtex files for entries
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
+        bib_by_default (bool): automatically appends bib_command to markdown pages
+                               by default, defaults to true
         full_bib_command (string): command to place a full bibliography of all references
         csl_file (string, optional): path to a CSL file, relative to mkdocs.yml.
     """
@@ -32,6 +34,7 @@ class BibTexPlugin(BasePlugin):
         ("bib_file", config_options.File(exists=True, required=False)),
         ("bib_dir", config_options.Dir(exists=True, required=False)),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
+        ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.File(exists=True, required=False)),
     ]
@@ -93,16 +96,23 @@ class BibTexPlugin(BasePlugin):
         markdown = insert_citation_keys(citation_quads, markdown)
 
         # 4. Insert in the bibliopgrahy text into the markdown
+        bib_command = self.config.get("bib_command", "\\bibliography")
+
+        if self.config.get("bib_by_default"):
+            markdown += f"\n{bib_command}"
+
         bibliography = format_bibliography(citation_quads)
         markdown = re.sub(
-            re.escape(self.config.get("bib_command", "\\bibliography")),
+            re.escape(bib_command),
             bibliography,
             markdown,
         )
 
         # 5. Build the full Bibliography and insert into the text
+        full_bib_command = self.config.get("full_bib_command", "\\full_bibliography")
+
         markdown = re.sub(
-            re.escape(self.config.get("full_bib_command", "\\full_bibliography")),
+            re.escape(full_bib_command),
             self.full_bibliography,
             markdown,
         )
