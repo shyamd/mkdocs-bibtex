@@ -35,6 +35,8 @@ The footnotes extension is how citations are linked for now.
 
 - `bib_file` - Name of your bibtex file. Either the absolute path or the path relative to `mkdocs.yml`
 - `bib_dir` - Directory for bibtex files to load, same as above for path resolution
+- `bib_url` - The URL for an external bibtex file, such as `https://api.zotero.org/*/items?format=bibtex`
+- `bib_url_path` - Where to store the contents of `bib_url` if `bib_url` is used, defaults to `references.bib`
 - `bib_command` - The command for your bibliography, defaults to `\bibliography`
 - `bib_by_default` - Automatically appends `bib_command` to every markdown page, defaults to `true`
 - `full_bib_command` - The command for your full bibliography, defaults to `\full_bibliography`

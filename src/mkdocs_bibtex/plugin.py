@@ -1,4 +1,5 @@
 import re
+import requests
 from collections import OrderedDict
 from pathlib import Path
 
@@ -22,6 +23,8 @@ class BibTexPlugin(BasePlugin):
     Options:
         bib_file (string): path to a single bibtex file for entries
         bib_dir (string): path to a directory of bibtex files for entries
+        bib_url (url): link to an external bib file (https://api.zotero.org/*/items?format=bibtex)
+        bib_url_path (string): path to store the bib file specified in bib_url
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
         bib_by_default (bool): automatically appends bib_command to markdown pages
@@ -34,6 +37,8 @@ class BibTexPlugin(BasePlugin):
         ("bib_file", config_options.File(exists=True, required=False)),
         ("bib_dir", config_options.Dir(exists=True, required=False)),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
+        ("bib_url", config_options.URL(required=False)),
+        ("bib_url_path", config_options.Type(str, default="references.bib")),
         ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.File(exists=True, required=False)),
@@ -55,6 +60,19 @@ class BibTexPlugin(BasePlugin):
             bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
             bibfiles.extend(Path(self.config["bib_dir"]).glob("*.bib"))
+        elif self.config.get("bib_url", None) is not None:
+            try:
+                dl = requests.get(self.config.get("bib_url", None))
+                if dl.status_code == 500:
+                    raise Exception("Status Code: 500")
+            except Exception as e:
+                raise Exception(f"Problems fetching external bib file. ({e})")
+            path = self.config.get("bib_url_path", "references.bib")
+            # (Over)write external .bib to specified path
+            file = open(path, 'w+')
+            file.write(dl.text)
+            file.close()
+            bibfiles.append(path)
         else:
             raise Exception("Must supply a bibtex file or directory for bibtex files")
 
