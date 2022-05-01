@@ -5,4 +5,4 @@ pycodestyle==2.8.0
 pydocstyle==6.1.1
 flake8==4.0.1
 mypy==0.812;python_version<"3.9"
-mypy==0.931;python_version>"3.8"
+mypy==0.950;python_version>"3.8"
