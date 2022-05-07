@@ -33,14 +33,12 @@ The footnotes extension is how citations are linked for now.
 
 ## Options
 
-- `bib_file` - Name of your bibtex file. Either the absolute path or the path relative to `mkdocs.yml`
+- `bib_file` - Path or url to a single bibtex file. Path can be either absolute or relative to `mkdocs.yml`. Example URL: `https://api.zotero.org/*/items?format=bibtex`
 - `bib_dir` - Directory for bibtex files to load, same as above for path resolution
-- `bib_url` - The URL for an external bibtex file, such as `https://api.zotero.org/*/items?format=bibtex`
-- `bib_url_path` - Where to store the contents of `bib_url` if `bib_url` is used, defaults to `references.bib`
-- `bib_command` - The command for your bibliography, defaults to `\bibliography`
-- `bib_by_default` - Automatically appends `bib_command` to every markdown page, defaults to `true`
-- `full_bib_command` - The command for your full bibliography, defaults to `\full_bibliography`
-- `csl_file` - Bibtex CSL file to format the citation with, defaults to None, using a built in plain format instead
+- `bib_command` - The command to render your bibliography, defaults to `\bibliography`
+- `bib_by_default` - Automatically appends the `bib_command` to the bottom of every markdown document, defaults to `true`
+- `full_bib_command` - The command to render your full bibliography, defaults to `\full_bibliography`
+- `csl_file` - Path or url to a bibtex CSL file to format your citations with, defaults to None, using a built in plain format instead.
 
 ## Usage
 

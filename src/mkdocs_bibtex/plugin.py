@@ -1,5 +1,5 @@
 import re
-import requests
+import validators
 from collections import OrderedDict
 from pathlib import Path
 
@@ -13,6 +13,7 @@ from mkdocs_bibtex.utils import (
     format_pandoc,
     format_simple,
     insert_citation_keys,
+    tempfile_from_url,
 )
 
 
@@ -21,27 +22,24 @@ class BibTexPlugin(BasePlugin):
     Allows the use of bibtex in markdown content for MKDocs.
 
     Options:
-        bib_file (string): path to a single bibtex file for entries
+        bib_file (string): path or url to a single bibtex file for entries,
+                           url example: https://api.zotero.org/*/items?format=bibtex
         bib_dir (string): path to a directory of bibtex files for entries
-        bib_url (url): link to an external bib file (https://api.zotero.org/*/items?format=bibtex)
-        bib_url_path (string): path to store the bib file specified in bib_url
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
         bib_by_default (bool): automatically appends bib_command to markdown pages
                                by default, defaults to true
         full_bib_command (string): command to place a full bibliography of all references
-        csl_file (string, optional): path to a CSL file, relative to mkdocs.yml.
+        csl_file (string, optional): path or url to a CSL file, relative to mkdocs.yml.
     """
 
     config_scheme = [
-        ("bib_file", config_options.File(exists=True, required=False)),
+        ("bib_file", config_options.Type(str, required=False)),
         ("bib_dir", config_options.Dir(exists=True, required=False)),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
-        ("bib_url", config_options.URL(required=False)),
-        ("bib_url_path", config_options.Type(str, default="references.bib")),
         ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
-        ("csl_file", config_options.File(exists=True, required=False)),
+        ("csl_file", config_options.Type(str, default='')),
     ]
 
     def __init__(self):
@@ -56,23 +54,16 @@ class BibTexPlugin(BasePlugin):
 
         bibfiles = []
 
+        # Set bib_file from either url or path
         if self.config.get("bib_file", None) is not None:
-            bibfiles.append(self.config["bib_file"])
+            is_url = validators.url(self.config["bib_file"])
+            # if bib_file is a valid URL, cache it with tempfile
+            if is_url:
+                bibfiles.append(tempfile_from_url(self.config["bib_file"], '.bib'))
+            else:
+                bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
             bibfiles.extend(Path(self.config["bib_dir"]).glob("*.bib"))
-        elif self.config.get("bib_url", None) is not None:
-            try:
-                dl = requests.get(self.config.get("bib_url", None))
-                if dl.status_code == 500:
-                    raise Exception("Status Code: 500")
-            except Exception as e:
-                raise Exception(f"Problems fetching external bib file. ({e})")
-            path = self.config.get("bib_url_path", "references.bib")
-            # (Over)write external .bib to specified path
-            file = open(path, 'w+')
-            file.write(dl.text)
-            file.close()
-            bibfiles.append(path)
         else:
             raise Exception("Must supply a bibtex file or directory for bibtex files")
 
@@ -84,7 +75,12 @@ class BibTexPlugin(BasePlugin):
 
         self.bib_data = BibliographyData(entries=refs)
 
-        self.csl_file = self.config.get("csl_file", None)
+        # Set CSL from either url or path (or empty)
+        is_url = validators.url(self.config["csl_file"])
+        if is_url:
+            self.csl_file = tempfile_from_url(self.config["csl_file"], '.csl')
+        else:
+            self.csl_file = self.config.get("csl_file", None)
 
         return config
 

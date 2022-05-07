@@ -1,4 +1,5 @@
 import re
+import requests
 import tempfile
 from collections import OrderedDict
 from itertools import groupby
@@ -168,3 +169,21 @@ def format_bibliography(citation_quads):
         bibliography.append(bibliography_text)
 
     return "\n".join(bibliography)
+
+
+def tempfile_from_url(url, suffix='.bib'):
+    attempts = 3
+    while attempts > 0:
+        try:
+            dl = requests.get(url)
+            if dl.status_code != 200:
+                raise Exception(f"Status Code: {dl.status_code}")
+            file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
+            file.write(dl.text)
+            file.close()
+            return file.name
+        except Exception as e:
+            attempts -= 1
+            if attempts == 0:
+                raise Exception(f"Encountered issues while trying to download {url}, {e}")
+            continue
