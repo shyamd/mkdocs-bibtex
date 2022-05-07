@@ -36,6 +36,17 @@ def test_bibtex_loading_bibfile(plugin):
     assert len(plugin.bib_data.entries) == 3
 
 
+def test_bibtex_loading_bib_url():
+    plugin = BibTexPlugin()
+    plugin.load_config(
+        options={"bib_file": "https://raw.githubusercontent.com/shyamd/mkdocs-bibtex/master/test_files/test.bib"},
+        config_file_path=test_files_dir,
+    )
+
+    plugin.on_config(plugin.config)
+    assert len(plugin.bib_data.entries) == 3
+
+
 def test_bibtex_loading_bibdir():
     plugin = BibTexPlugin()
     plugin.load_config(

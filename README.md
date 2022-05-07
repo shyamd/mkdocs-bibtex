@@ -13,6 +13,7 @@ Install the plugin using pip:
 ```
 pip install mkdocs-bibtex
 ```
+> *Note:* This plugin requires pandoc to be installed on your system.<br>
 > If you're having trouble with pandoc, try installing the conda-forge version of pypandoc: `conda install -c conda-forge pypandoc` which will install a version with built in pandoc binaries
 
 
@@ -33,18 +34,18 @@ The footnotes extension is how citations are linked for now.
 
 ## Options
 
-- `bib_file` - Path or url to a single bibtex file. Path can be either absolute or relative to `mkdocs.yml`. Example URL: `https://api.zotero.org/*/items?format=bibtex`
+- `bib_file` - The path or url to a single bibtex file. Path can either be absolute or relative to `mkdocs.yml`. Example URL: `https://api.zotero.org/*/items?format=bibtex`
 - `bib_dir` - Directory for bibtex files to load, same as above for path resolution
-- `bib_command` - The command to render your bibliography, defaults to `\bibliography`
-- `bib_by_default` - Automatically appends the `bib_command` to the bottom of every markdown document, defaults to `true`
-- `full_bib_command` - The command to render your full bibliography, defaults to `\full_bibliography`
-- `csl_file` - Path or url to a bibtex CSL file to format your citations with, defaults to None, using a built in plain format instead.
+- `bib_command` - The syntax to render your bibliography, defaults to `\bibliography`
+- `bib_by_default` - Automatically append the `bib_command` at the end of every markdown document, defaults to `true`
+- `full_bib_command` - The syntax to render your entire bibliography, defaults to `\full_bibliography`
+- `csl_file` - The path or url to a bibtex CSL file, specifying your citation format. Defaults to `None`, which renders in a plain format. A registry of citation styles can be found here: https://github.com/citation-style-language/styles
 
 ## Usage
 
 In your markdown files:
 
 1. Add your citations as you would if you used pandoc, IE: `[@first_cite;@second_cite]`
-2. Add in `\bibliography` or whatever you set your `bib_command` to where you want your references (if `bib_by_default` is set to true this gets added automatically).
-3. Add in `\full_bibliography` or whatever you set your `full_bib_command` to where you want the full set of references. *Note*: This is not work just right since this plugin can't dictate the orer in which files are processed. The best way to ensure the file with the full bibliography gets processed last is to use numbers in front of file/folder names to enforce an order of processing, IE: `01_my_first_file.md`
-4. (Optional) Setup `csl_file` to control the citation text formatting.
+2. Add `\bibliography`, or the value of `bib_command`, to the doc you want your references rendered (if `bib_by_default` is set to true this is automatically applied for every page).
+3. (Optional) Add `\full_bibliography`, or the value of `full_bib_command`, to where you want the full bibliography rendered. *Note*: This is currently not working properly, since this plugin can't dictate the order in which files are processed. The best way to ensure the file with the full bibliography gets processed last is to use numbers in front of file/folder names to enforce the order of processing, IE: `01_my_first_file.md`
+4. (Optional) Configure the `csl_file` option to dictate the citation text formatting.
