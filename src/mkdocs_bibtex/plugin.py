@@ -142,6 +142,14 @@ class BibTexPlugin(BasePlugin):
         keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
+        # Remove non-existant citation keys from pairs
+        i = 0
+        while i < len(pairs):
+            if pairs[i][1] not in self.bib_data.entries:
+                pairs.pop(i)
+                continue
+            i += 1
+
         # 2. Collect any unformatted reference keys
         for _, key in pairs:
             if key not in self.all_references:
