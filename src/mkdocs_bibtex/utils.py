@@ -124,32 +124,36 @@ def find_cite_keys(markdown):
 
     """
     regex explanation:
-    - first group: (?:(?:\[([^@]*)) |\[(?=@))
-    - second group: ((?:@\w*(?:; ){0,1})+)
-    - third group: (?:[^\]\n]{0,1} {0,1})([^\]\n]*)
+    - first group: everything.
+    - second group: (?:(?:\[([^@]*)) |\[(?=@))
+    - third group: ((?:@\w*(?:; ){0,1})+)
+    - fourth group: (?:[^\]\n]{0,1} {0,1})([^\]\n]*)
     - End: \]
 
-    The first group captures the prefix, which is everything between '[' and ' @' (whitespace)
-    The second group captures the citekey(s), from '@' to any symbol that isnt '; '
-    The third group captures anything after the citekeys, excluding the leading whitespace
-    (The non-capturing group removes any symbols or spaces between the citekey and suffix)
+    The first group captures the entire block, as is
+    The second group captures the prefix, which is everything between '[' and ' @' (whitespace)
+    The third group captures the citekey(s), from '@' to any symbol that isnt '; '
+    The fourth group captures anything after the citekeys, excluding the leading whitespace
+    (The non-capturing group removes any symbols or whitespaces between the citekey and suffix)
 
-    Matches [see @author; @doe my suffix here]
-        [0] prefix: 'see:'
-        [1] citekeys: '@author; @doe' (';' separated)
-        [2] suffix: 'my suffix here'
+    Matches for [see @author; @doe my suffix here]
+        [0] entire block: '[see @author; @doe my suffix here]'
+        [1] prefix: 'see'
+        [2] citekeys: '@author; @doe' (';' separated)
+        [3] suffix: 'my suffix here'
 
     Does NOT match: [mail@example.com]
     DOES match [mail @example.com] as [mail][@example][com]
     """
-    cite_regex = re.compile(r"(?:(?:\[([^@]*)) |\[(?=@))((?:@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\]")
+    cite_regex = re.compile(r"((?:(?:\[([^@]*)) |\[(?=@))((?:@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\])")
     citation_blocks = cite_regex.findall(markdown)
 
     cite_keys = []
     for citations in citation_blocks:
-        # cite_prefix = citations[0]  # unused
-        cite_key = citations[1]
-        # cite_suffix = citations[2]  # unused
+        # cite_block = citations[0]   # unused
+        # cite_prefix = citations[1]  # unused
+        cite_key = citations[2]
+        # cite_suffix = citations[3]  # unused
         cite_keys.append(f'[{cite_key}]')
 
     return list(OrderedDict.fromkeys(cite_keys).keys())
