@@ -239,6 +239,11 @@ def test_on_page_markdown(plugin):
     assert "[^1]:" in plugin.on_page_markdown(test_markdown, None, None, None)
     plugin.config["bib_by_default"] = False
 
+    # ensure nonexistant citekeys are removed correctly
+    test_markdown = "A non-existant citekey. [@i_do_not_exist]"
+
+    assert "[@i_do_not_exist]" in plugin.on_page_markdown(test_markdown, None, None, None)
+
     # Ensure if an item is referenced multiple times, it only shows up as one reference
     test_markdown = "This is a citation. [@test] This is another citation [@test]\n\n \\bibliography"
 
