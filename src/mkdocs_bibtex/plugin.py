@@ -12,6 +12,7 @@ from mkdocs_bibtex.utils import (
     format_pandoc,
     format_simple,
     insert_citation_keys,
+    add_affixes,
 )
 
 
@@ -155,8 +156,7 @@ class BibTexPlugin(BasePlugin):
         # 2. Collect any unformatted reference keys
         for fullcite, key, prefix, suffix in pairs:
             if key not in self.all_references:
-                # Missing some magic here i reckon.
-                entries[key] = self.bib_data.entries[key]
+                entries[key] = add_affixes(self.bib_data.entries[key], fullcite, prefix, suffix)
 
         # 3. Format entries
         if self.csl_file:

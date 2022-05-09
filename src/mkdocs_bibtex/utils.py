@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pypandoc
 from pybtex.backends.markdown import Backend as MarkdownBackend
-from pybtex.database import BibliographyData
+from pybtex.database import BibliographyData  # , parse_string
 from pybtex.style.formatting.plain import Style as PlainStyle
 
 
@@ -196,3 +196,44 @@ def format_bibliography(citation_quads):
         bibliography.append(bibliography_text)
 
     return "\n".join(bibliography)
+
+
+def add_affix(entry, type, value, data):
+    try:
+        entry.fields[type] = value.findall(data)[0]
+        return entry
+    except Exception:
+        return entry
+
+
+def add_affixes(entry, fullcite, prefix, suffix):
+    if prefix is not None:
+        entry.fields['note'] = prefix
+
+    # I figure something like this should work
+    # parse_string(fullcite, 'bibtex')
+
+    pages = re.compile(r"(?:p. (\d+-{0,1}\d+))")  # p. nn(-nn)
+    # book = re.compile(r"(?:book (\d+-{0,1}\d+))")  # book nn(-nn)
+    # chapter = re.compile(r"(?:ch. (\d+-{0,1}\d+))")  # ch. nn(-nn)
+    """
+    column = ''
+    figure = ''
+    folio = ''
+    issue = ''
+    line = ''
+    note = ''
+    opus = ''
+    paragraph = ''
+    part = ''
+    section = ''
+    sub_verbo = ''
+    volume = ''
+    verse = ''
+    """
+
+    entry = add_affix(entry, 'pages', pages, suffix)
+    # entry = add_affix(entry, 'book', book, suffix)
+    # entry = add_affix(entry, 'chapter', chapter, suffix)
+
+    return entry
