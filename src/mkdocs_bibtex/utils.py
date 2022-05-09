@@ -146,17 +146,13 @@ def find_cite_keys(markdown):
     DOES match [mail @example.com] as [mail][@example][com]
     """
     cite_regex = re.compile(r"((?:(?:\[([^@]*)) |\[(?=@))((?:@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\])")
-    citation_blocks = cite_regex.findall(markdown)
+    citation_blocks = re.finditer(cite_regex, markdown)
 
-    cite_keys = []
-    for citations in citation_blocks:
-        # cite_block = citations[0]   # unused
-        # cite_prefix = citations[1]  # unused
-        cite_key = citations[2]
-        # cite_suffix = citations[3]  # unused
-        cite_keys.append(f'[{cite_key}]')
-
-    return list(OrderedDict.fromkeys(cite_keys).keys())
+    cite_keys = [
+        ([x.group(1), x.group(2), x.group(3), x.group(4)])
+        for x in citation_blocks
+    ]
+    return cite_keys
 
 
 def insert_citation_keys(citation_quads, markdown):

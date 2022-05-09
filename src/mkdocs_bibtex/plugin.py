@@ -135,24 +135,27 @@ class BibTexPlugin(BasePlugin):
         # 1. Extract the keys from the keyset
         entries = OrderedDict()
         pairs = [
-            [key_set, key.strip().strip("@")]
+            # [0]: full_citation, [1]: citekey, [2]: prefix, [3]: suffix
+            [key_set[0], key.replace('@', '').strip(), key_set[1], key_set[3]]
             for key_set in cite_keys
-            for key in key_set.strip().strip("]").strip("[").split(";")
+            for key in key_set[2].split(';')
         ]
-        keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
+        keys = list(OrderedDict.fromkeys([key for fullcite, key, prefix, suffix in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
-        # Remove non-existant citation keys from pairs
+        # Remove non-existant cite_keys from pairs
         i = 0
         while i < len(pairs):
+            # pairs[i][1] = citekey
             if pairs[i][1] not in self.bib_data.entries:
                 pairs.pop(i)
                 continue
             i += 1
 
         # 2. Collect any unformatted reference keys
-        for _, key in pairs:
+        for fullcite, key, prefix, suffix in pairs:
             if key not in self.all_references:
+                # Missing some magic here i reckon.
                 entries[key] = self.bib_data.entries[key]
 
         # 3. Format entries
@@ -163,10 +166,11 @@ class BibTexPlugin(BasePlugin):
 
         # 4. Construct quads
         quads = [
-            (key_set, key, numbers[key], self.all_references[key])
-            for key_set, key in pairs
+            (key[0], key[1], numbers[key[1]], self.all_references[key[1]])
+            for key in pairs
         ]
-        return quads
+        # Remove duplicate quads before returning
+        return list(dict.fromkeys(quads))
 
     @property
     def full_bibliography(self):
