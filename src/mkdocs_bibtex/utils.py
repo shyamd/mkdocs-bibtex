@@ -1,4 +1,5 @@
 import re
+import requests
 import tempfile
 from collections import OrderedDict
 from itertools import groupby
@@ -168,3 +169,20 @@ def format_bibliography(citation_quads):
         bibliography.append(bibliography_text)
 
     return "\n".join(bibliography)
+
+
+def tempfile_from_url(url, suffix):
+    for i in range(3):
+        try:
+            dl = requests.get(url)
+            if dl.status_code != 200:
+                raise RuntimeError(f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}")
+
+            file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
+            file.write(dl.text)
+            file.close()
+            return file.name
+
+        except requests.exceptions.RequestException:
+            pass
+    raise RuntimeError(f"Couldn't successfully download the url: {url}")
