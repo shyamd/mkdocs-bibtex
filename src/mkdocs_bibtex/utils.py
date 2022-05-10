@@ -183,5 +183,6 @@ def tempfile_from_url(url, suffix):
             file.close()
             return file.name
 
-        except RequestException:
-            raise RuntimeError(f"Couldn't successfully download the url: {url}")
+        except RequestException as e:
+            pass
+    raise RuntimeError(f"Couldn't successfully download the url: {url}")
