@@ -128,7 +128,7 @@ class BibTexPlugin(BasePlugin):
             cite_keys (list): List of full cite_keys that maybe compound keys
 
         Returns:
-            citation_quads: quad tupples of the citation inforamtion
+            citation_quads: quad tuples of the citation inforamtion
         """
 
         # Deal with arithmatex fix at some point
@@ -136,12 +136,12 @@ class BibTexPlugin(BasePlugin):
         # 1. Extract the keys from the keyset
         entries = OrderedDict()
         pairs = [
-            # [0]: full_citation, [1]: citekey, [2]: prefix, [3]: suffix
-            [key_set[0], key.replace('@', '').strip(), key_set[1], key_set[3]]
+            # [0]: full_citation, [1]: citekey
+            [key_set[0], key.replace('@', '').strip()]
             for key_set in cite_keys
-            for key in key_set[2].split(';')
+            for key in key_set[1].split(';')
         ]
-        keys = list(OrderedDict.fromkeys([key for fullcite, key, prefix, suffix in pairs]).keys())
+        keys = list(OrderedDict.fromkeys([key for _, key in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
         # Remove non-existant cite_keys from pairs
@@ -154,9 +154,9 @@ class BibTexPlugin(BasePlugin):
             i += 1
 
         # 2. Collect any unformatted reference keys
-        for fullcite, key, prefix, suffix in pairs:
+        for fullcite, key in pairs:
             if key not in self.all_references:
-                entries[key] = add_affixes(self.bib_data.entries[key], fullcite, prefix, suffix)
+                entries[key] = add_affixes(self.bib_data.entries[key], fullcite, key)
 
         # 3. Format entries
         if self.csl_file:

@@ -149,7 +149,8 @@ def find_cite_keys(markdown):
     citation_blocks = re.finditer(cite_regex, markdown)
 
     cite_keys = [
-        ([x.group(1), x.group(2), x.group(3), x.group(4)])
+        # fullcite, citekeys
+        ([x.group(1), x.group(3)])
         for x in citation_blocks
     ]
     return cite_keys
@@ -172,7 +173,7 @@ def insert_citation_keys(citation_quads, markdown):
 
     grouped_quads = [list(g) for _, g in groupby(citation_quads, key=lambda x: x[0])]
     for quad_group in grouped_quads:
-        full_citation = quad_group[0][0]  # the first key in the whole citation
+        full_citation = quad_group[0][0]  # the full citation block
         replacement_citaton = "".join(["[^{}]".format(quad[2]) for quad in quad_group])
         markdown = markdown.replace(full_citation, replacement_citaton)
 
@@ -198,15 +199,17 @@ def format_bibliography(citation_quads):
     return "\n".join(bibliography)
 
 
-def add_affix(entry, type, value, data):
+def add_affix(entry, type, regex, data):
     try:
-        entry.fields[type] = value.findall(data)[0]
+        entry.fields[type] = regex.findall(data)[0]
         return entry
     except Exception:
         return entry
 
 
-def add_affixes(entry, fullcite, prefix, suffix):
+def add_affixes(entry, fullcite, key):
+    prefix = fullcite.split(key)[0].strip('[').strip('@')
+    suffix = fullcite.split(key)[1].strip(']').strip('@')
     if prefix is not None:
         entry.fields['note'] = prefix
 
