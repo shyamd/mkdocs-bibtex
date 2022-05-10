@@ -182,7 +182,6 @@ def tempfile_from_url(url, suffix):
             file.write(dl.text)
             file.close()
             return file.name
-            
-        except RequestException as e:
-        	pass
-	raise RuntimeError(f"Couldn't successfully download the url: {url}")
+
+        except RequestException:
+            raise RuntimeError(f"Couldn't successfully download the url: {url}")
