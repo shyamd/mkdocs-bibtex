@@ -171,7 +171,7 @@ def format_bibliography(citation_quads):
     return "\n".join(bibliography)
 
 
-def tempfile_from_url(url, suffix='.bib'):
+def tempfile_from_url(url, suffix):
     attempts = 3
     while attempts > 0:
         try:
