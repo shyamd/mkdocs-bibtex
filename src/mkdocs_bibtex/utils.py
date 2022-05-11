@@ -1,4 +1,5 @@
 import re
+import requests
 import tempfile
 from collections import OrderedDict
 from itertools import groupby
@@ -6,7 +7,7 @@ from pathlib import Path
 
 import pypandoc
 from pybtex.backends.markdown import Backend as MarkdownBackend
-from pybtex.database import BibliographyData  # , parse_string
+from pybtex.database import BibliographyData
 from pybtex.style.formatting.plain import Style as PlainStyle
 
 
@@ -199,7 +200,27 @@ def format_bibliography(citation_quads):
     return "\n".join(bibliography)
 
 
+def tempfile_from_url(url, suffix):
+    for i in range(3):
+        try:
+            dl = requests.get(url)
+            if dl.status_code != 200:
+                raise RuntimeError(f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}")
+
+            file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
+            file.write(dl.text)
+            file.close()
+            return file.name
+
+        except requests.exceptions.RequestException:
+            pass
+    raise RuntimeError(f"Couldn't successfully download the url: {url}")
+
+
 def add_affix(entry, type, regex, data):
+    """
+    Temporary function, will hopefully use Pandoc instead.
+    """
     try:
         entry.fields[type] = regex.findall(data)[0]
         return entry
@@ -208,35 +229,16 @@ def add_affix(entry, type, regex, data):
 
 
 def add_affixes(entry, fullcite, key):
+    """
+    Temporary function, will hopefully use Pandoc instead.
+    """
     prefix = fullcite.split(key)[0].strip('[').strip('@')
     suffix = fullcite.split(key)[1].strip(']').strip('@')
     if prefix is not None:
         entry.fields['note'] = prefix
 
-    # I figure something like this should work
-    # parse_string(fullcite, 'bibtex')
-
     pages = re.compile(r"(?:p. (\d+-{0,1}\d+))")  # p. nn(-nn)
-    # book = re.compile(r"(?:book (\d+-{0,1}\d+))")  # book nn(-nn)
-    # chapter = re.compile(r"(?:ch. (\d+-{0,1}\d+))")  # ch. nn(-nn)
-    """
-    column = ''
-    figure = ''
-    folio = ''
-    issue = ''
-    line = ''
-    note = ''
-    opus = ''
-    paragraph = ''
-    part = ''
-    section = ''
-    sub_verbo = ''
-    volume = ''
-    verse = ''
-    """
 
     entry = add_affix(entry, 'pages', pages, suffix)
-    # entry = add_affix(entry, 'book', book, suffix)
-    # entry = add_affix(entry, 'chapter', chapter, suffix)
 
     return entry
