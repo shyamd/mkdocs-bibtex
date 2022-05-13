@@ -114,8 +114,8 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
             ],
         )
 
-    # Return only the citation text
-    return markdown.split("\r\n")[0].split("\n")[0]
+    # Return only the citation text (first line)
+    return markdown.split("\n")[0].strip()
 
 
 def _convert_pandoc_legacy(bibtex_string, csl_path):

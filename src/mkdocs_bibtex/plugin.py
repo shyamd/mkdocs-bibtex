@@ -195,7 +195,7 @@ class BibTexPlugin(BasePlugin):
             for cite_block, key in pairs
         ]
 
-        # Remove duplicate quads before returning when creating a list
+        # List the quads in order to remove duplicate entries
         return list(dict.fromkeys(quads))
 
     @property
