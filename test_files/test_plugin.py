@@ -129,6 +129,12 @@ def test_find_cite_blocks():
     assert find_cite_blocks("[@test]") == ["[@test]"]
     assert find_cite_blocks("[@test; @test2]") == ["[@test; @test2]"]
     assert find_cite_blocks("[@test]\n [@test; @test2]") == ["[@test]", "[@test; @test2]"]
+    # Affixes
+    assert find_cite_blocks("[see @test]") == ["[see @test]"]
+    assert find_cite_blocks("[@test, p. 15]") == ["[@test, p. 15]"]
+    assert find_cite_blocks("[see @test, p. 15]") == ["[see @test, p. 15]"]
+    # Invalid blocks
+    assert find_cite_blocks("[ @test]") is not True
 
 
 def test_insert_citation_keys():
@@ -250,7 +256,7 @@ def test_on_page_markdown(plugin):
     assert "[^1]:" in plugin.on_page_markdown(test_markdown, None, None, None)
     plugin.config["bib_by_default"] = False
 
-    # ensure nonexistant citekeys are removed correctly
+    # ensure nonexistant citekeys are removed correctly (not replaced)
     test_markdown = "A non-existant citekey. [@i_do_not_exist]"
 
     assert "[@i_do_not_exist]" in plugin.on_page_markdown(test_markdown, None, None, None)
@@ -264,3 +270,66 @@ def test_on_page_markdown(plugin):
     test_markdown = "This is a citation. [@test; @test2] This is another citation [@test]\n\n \\bibliography"
 
     assert "[^3]" not in plugin.on_page_markdown(test_markdown, None, None, None)
+
+
+def test_inline_citations():
+    plugin = BibTexPlugin()
+    plugin.load_config(
+        options={"csl_file": os.path.join(test_files_dir, "springer-basic-author-date.csl"),
+                 "bib_file": os.path.join(test_files_dir, 'test_inline.bib'),
+                 "cite_inline": True},
+        config_file_path=test_files_dir,
+    )
+    plugin.on_config(plugin.config)
+
+    # Ensure inline citation works
+    quads = [("[@test]", None, "1", None)]
+    test_markdown = 'Hello[@test]'
+    result = "Hello (Author 2019)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
+                                          bib=plugin.bib_data.to_string("bibtex"))
+
+    # Ensure prefixes work
+    quads = [("[see @test]", None, "1", None)]
+    test_markdown = 'Hello[see @test]'
+    result = "Hello (see Author 2019)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
+                                          bib=plugin.bib_data.to_string("bibtex"))
+
+    # Ensure page numbers work
+    quads = [("[@Bivort2016, p. 15]", None, "1", None)]
+    test_markdown = '[@Bivort2016, p. 15]'
+    result = " (De Bivort and Van Swinderen 2016, p. 15)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
+                                          bib=plugin.bib_data.to_string("bibtex"))
+
+    # Ensure prefixes and suffixes work
+    quads = [("[see @test, pp. 123]", None, "1", None)]
+    test_markdown = 'Hello[see @test, pp. 123]'
+    result = "Hello (see Author 2019, p. 123)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
+                                          bib=plugin.bib_data.to_string("bibtex"))
+
+    # Ensure multi references work
+    quads = [("[@test; @Bivort2016]", None, "1", None),
+             ("[@test; @Bivort2016]", None, "2", None)]
+    test_markdown = '[@test; @Bivort2016]'
+    result = " (De Bivort and Van Swinderen 2016; Author 2019)[^1][^2]"
+    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
+                                          bib=plugin.bib_data.to_string("bibtex"))
+
+    # Ensure multi reference with page numbers
+    quads = [("[@test, p. 12; @Bivort2016, p. 15]", None, "1", None),
+             ("[@test, p. 12; @Bivort2016, p. 15]", None, "2", None)]
+    test_markdown = '[@test, p. 12; @Bivort2016, p. 15]'
+    result = " (De Bivort and Van Swinderen 2016, p. 15; Author 2019, p. 12)[^1][^2]"
+    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
+                                          bib=plugin.bib_data.to_string("bibtex"))
+
+    # Ensure multiple, singular references works
+    quads = [("[@test]", None, "1", None),
+             ("[see @Bivort2016, p. 123]", None, "2", None)]
+    test_markdown = 'Hello[@test] World [see @Bivort2016, p. 123]'
+    result = "Hello (Author 2019)[^1] World (see De Bivort and Van Swinderen 2016, p. 123)[^2]"
+    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
+                                          bib=plugin.bib_data.to_string("bibtex"))
