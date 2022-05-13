@@ -146,14 +146,23 @@ nocite: '@*'
     return citation.strip()
 
 
-def find_cite_keys(markdown):
+def extract_cite_keys(cite_block):
     """
-    Finds the cite keys in the markdown text
-    This function can handle multiple keys in a single reference
+    Extract just the keys from a citation block
+    """
+    cite_regex = re.compile(r"@(\w*)")
+    cite_keys = re.findall(cite_regex, cite_block)
+
+    return cite_keys
+
+
+def find_cite_blocks(markdown):
+    """
+    Finds entire cite blocks in the markdown text
 
     Args:
         markdown (str): the markdown text to be extract citation
-                        keys from
+                        blocks from
     """
 
     """
@@ -180,15 +189,14 @@ def find_cite_keys(markdown):
     DOES match [mail @example.com] as [mail][@example][com]
     """
     cite_regex = re.compile(r"((?:(?:\[([^@]*)) |\[(?=@))((?:@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\])")
-    citation_blocks = re.finditer(cite_regex, markdown)
 
-    cite_keys = [
-        # fullcite, citekeys
-        ([x.group(1), x.group(3)])
-        for x in citation_blocks
+    citation_blocks = [
+        # We only care about the block (group 1)
+        (matches.group(1))
+        for matches in re.finditer(cite_regex, markdown)
     ]
 
-    return cite_keys
+    return citation_blocks
 
 
 def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
@@ -214,7 +222,11 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
         # if cite_inline is true, convert full_citation with pandoc and add to replacement_citaton
         if csl and bib:
             inline_citation = _convert_pandoc_citekey(bib, csl, full_citation)
-            replacement_citaton = f"{inline_citation}{replacement_citaton}"
+            replacement_citaton = f" {inline_citation}{replacement_citaton}"
+
+            # Make sure inline citations doesn't get an extra whitespace by
+            # replacing it with whitespace added first
+            markdown = markdown.replace(f" {full_citation}", replacement_citaton)
 
         markdown = markdown.replace(full_citation, replacement_citaton)
 

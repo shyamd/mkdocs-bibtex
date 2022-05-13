@@ -8,7 +8,8 @@ from mkdocs.plugins import BasePlugin
 from pybtex.database import BibliographyData, parse_file
 
 from mkdocs_bibtex.utils import (
-    find_cite_keys,
+    find_cite_blocks,
+    extract_cite_keys,
     format_bibliography,
     format_pandoc,
     format_simple,
@@ -108,7 +109,7 @@ class BibTexPlugin(BasePlugin):
         """
 
         # 1. Grab all the cited keys in the markdown
-        cite_keys = find_cite_keys(markdown)
+        cite_keys = find_cite_blocks(markdown)
 
         # 2. Convert all the citations to text references
         citation_quads = self.format_citations(cite_keys)
@@ -161,18 +162,17 @@ class BibTexPlugin(BasePlugin):
         # 1. Extract the keys from the keyset
         entries = OrderedDict()
         pairs = [
-            # [0]: full_citation, [1]: citekey
-            [key_set[0], key.replace('@', '').strip()]
-            for key_set in cite_keys
-            for key in key_set[1].split(';')
+            [cite_block, key]
+            for cite_block in cite_keys
+            for key in extract_cite_keys(cite_block)
         ]
         keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
-        # Remove non-existant cite_keys from pairs
+        # Remove non-existant keys from pairs
         i = 0
         while i < len(pairs):
-            # pairs[i][1] = citekey
+            # pairs[i][1] = key
             if pairs[i][1] not in self.bib_data.entries:
                 pairs.pop(i)
                 continue
@@ -191,11 +191,11 @@ class BibTexPlugin(BasePlugin):
 
         # 4. Construct quads
         quads = [
-            (key[0], key[1], numbers[key[1]], self.all_references[key[1]])
-            for key in pairs
+            (cite_block, key, numbers[key], self.all_references[key])
+            for cite_block, key in pairs
         ]
 
-        # Remove duplicate quads before returning
+        # Remove duplicate quads before returning when creating a list
         return list(dict.fromkeys(quads))
 
     @property

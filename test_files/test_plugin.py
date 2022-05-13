@@ -4,7 +4,7 @@ import pytest
 
 from mkdocs_bibtex.plugin import BibTexPlugin, parse_file
 from mkdocs_bibtex.utils import (
-    find_cite_keys,
+    find_cite_blocks,
     format_bibliography,
     insert_citation_keys,
     format_simple,
@@ -66,14 +66,14 @@ def test_format_citations(plugin):
         "test",
         "1",
         "First Author and Second Author. Test title. *Testing Journal*, 2019.",
-    ) == plugin.format_citations([["[@test]", "@test"]])[0]
+    ) == plugin.format_citations(["[@test]"])[0]
 
     assert (
         "[@test2]",
         "test2",
         "1",
         "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019.",
-    ) == plugin.format_citations([["[@test2]", "@test2"]])[0]
+    ) == plugin.format_citations(["[@test2]"])[0]
 
     # Test compound citation
     assert [
@@ -89,7 +89,7 @@ def test_format_citations(plugin):
             "2",
             "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019.",
         ),
-    ] == plugin.format_citations([["[@test; @test2]", "@test; @test2"]])
+    ] == plugin.format_citations(["[@test; @test2]"])
 
     # test long citation
     assert (
@@ -97,7 +97,7 @@ def test_format_citations(plugin):
         "Bivort2016",
         "1",
         "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007).",  # noqa: E501
-    ) == plugin.format_citations([["[@Bivort2016]", "@Bivort2016"]])[0]
+    ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
     # Test formatting using a CSL style
     plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
@@ -106,14 +106,14 @@ def test_format_citations(plugin):
         "test",
         "1",
         "First Author and Second Author. Test title. *Testing Journal*, 2019.",
-    ) == plugin.format_citations([["[@test]", "@test"]])[0]
+    ) == plugin.format_citations(["[@test]"])[0]
 
     assert (
         "[@Bivort2016]",
         "Bivort2016",
         "1",
         "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007).",  # noqa: E501
-    ) == plugin.format_citations([["[@Bivort2016]", "@Bivort2016"]])[0]
+    ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
     # Test a CSL that outputs references in a different style
     plugin.csl_file = os.path.join(test_files_dir, "springer-basic-author-date.csl")
@@ -122,14 +122,13 @@ def test_format_citations(plugin):
         "test",
         "1",
         "First Author and Second Author. Test title. *Testing Journal*, 2019.",
-    ) == plugin.format_citations([["[@test]", "@test"]])[0]
+    ) == plugin.format_citations(["[@test]"])[0]
 
 
-def test_find_cite_keys():
-    assert find_cite_keys("[@test]") == [['[@test]', '@test']]
-    assert find_cite_keys("[@test; @test2]") == [['[@test; @test2]', '@test; @test2']]
-    assert find_cite_keys("[@test]\n [@test; @test2]") == [['[@test]', '@test'],
-                                                           ['[@test; @test2]', '@test; @test2']]
+def test_find_cite_blocks():
+    assert find_cite_blocks("[@test]") == ["[@test]"]
+    assert find_cite_blocks("[@test; @test2]") == ["[@test; @test2]"]
+    assert find_cite_blocks("[@test]\n [@test; @test2]") == ["[@test]", "[@test; @test2]"]
 
 
 def test_insert_citation_keys():
