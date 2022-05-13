@@ -1,6 +1,7 @@
 import os
 
 import pytest
+import pypandoc
 
 from mkdocs_bibtex.plugin import BibTexPlugin, parse_file
 from mkdocs_bibtex.utils import (
@@ -273,6 +274,12 @@ def test_on_page_markdown(plugin):
 
 
 def test_inline_citations():
+    pandoc_version = pypandoc.get_pandoc_version()
+    pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
+    if pandoc_version_tuple <= (2, 11):
+        pytest.skip(f"Unsupported version of pandoc (v{pandoc_version}) installed.")
+        return
+
     plugin = BibTexPlugin()
     plugin.load_config(
         options={"csl_file": os.path.join(test_files_dir, "springer-basic-author-date.csl"),
