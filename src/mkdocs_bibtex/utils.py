@@ -85,6 +85,39 @@ def _convert_pandoc_new(bibtex_string, csl_path):
     return citation.strip()
 
 
+def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
+    """
+    Uses pandoc to convert a markdown citation key reference
+    to a rendered markdown citation in the given CSL format.
+
+        Limitation (atleast for harvard.csl): multiple citekeys
+        REQUIRE a '; ' separator to render correctly:
+            - [see @test; @test2] Works
+            - [see @test and @test2] Doesn't work
+    """
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bib_path = Path(tmpdir).joinpath("temp.bib")
+        with open(bib_path, "w") as bibfile:
+            bibfile.write(bibtex_string)
+
+        markdown = pypandoc.convert_text(
+            source=fullcite,
+            to="markdown-citations",
+            format="markdown",
+            extra_args=[
+                "--citeproc",
+                "--csl",
+                csl_path,
+                "--bibliography",
+                bib_path
+            ],
+        )
+
+    # Return only the citation text
+    return markdown.split("\r\n")[0].split("\n")[0]
+
+
 def _convert_pandoc_legacy(bibtex_string, csl_path):
     """
     Converts the PyBtex entry into formatted markdown citation text
@@ -154,10 +187,11 @@ def find_cite_keys(markdown):
         ([x.group(1), x.group(3)])
         for x in citation_blocks
     ]
+
     return cite_keys
 
 
-def insert_citation_keys(citation_quads, markdown):
+def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
     """
     Insert citations into the markdown text replacing
     the old citation keys
@@ -176,6 +210,12 @@ def insert_citation_keys(citation_quads, markdown):
     for quad_group in grouped_quads:
         full_citation = quad_group[0][0]  # the full citation block
         replacement_citaton = "".join(["[^{}]".format(quad[2]) for quad in quad_group])
+
+        # if cite_inline is true, convert full_citation with pandoc and add to replacement_citaton
+        if csl and bib:
+            inline_citation = _convert_pandoc_citekey(bib, csl, full_citation)
+            replacement_citaton = f"{inline_citation}{replacement_citaton}"
+
         markdown = markdown.replace(full_citation, replacement_citaton)
 
     return markdown
@@ -215,30 +255,3 @@ def tempfile_from_url(url, suffix):
         except requests.exceptions.RequestException:
             pass
     raise RuntimeError(f"Couldn't successfully download the url: {url}")
-
-
-def add_affix(entry, type, regex, data):
-    """
-    Temporary function, will hopefully use Pandoc instead.
-    """
-    try:
-        entry.fields[type] = regex.findall(data)[0]
-        return entry
-    except Exception:
-        return entry
-
-
-def add_affixes(entry, fullcite, key):
-    """
-    Temporary function, will hopefully use Pandoc instead.
-    """
-    prefix = fullcite.split(key)[0].strip('[').strip('@')
-    suffix = fullcite.split(key)[1].strip(']').strip('@')
-    if prefix is not None:
-        entry.fields['note'] = prefix
-
-    pages = re.compile(r"(?:p. (\d+-{0,1}\d+))")  # p. nn(-nn)
-
-    entry = add_affix(entry, 'pages', pages, suffix)
-
-    return entry

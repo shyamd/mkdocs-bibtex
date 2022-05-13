@@ -14,7 +14,6 @@ from mkdocs_bibtex.utils import (
     format_simple,
     insert_citation_keys,
     tempfile_from_url,
-    add_affixes,
 )
 
 
@@ -32,6 +31,7 @@ class BibTexPlugin(BasePlugin):
                                by default, defaults to true
         full_bib_command (string): command to place a full bibliography of all references
         csl_file (string, optional): path or url to a CSL file, relative to mkdocs.yml.
+        cite_inline (bool): Whether or not to render inline citations, requires CSL, defaults to false
     """
 
     config_scheme = [
@@ -41,6 +41,7 @@ class BibTexPlugin(BasePlugin):
         ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.Type(str, default='')),
+        ("cite_inline", config_options.Type(bool, default=False)),
     ]
 
     def __init__(self):
@@ -83,6 +84,11 @@ class BibTexPlugin(BasePlugin):
         else:
             self.csl_file = self.config.get("csl_file", None)
 
+        # Toggle whether or not to render citations inline (Requires CSL)
+        self.cite_inline = self.config.get("cite_inline", False)
+        if self.cite_inline and not self.csl_file:
+            raise Exception("Must supply a CSL file in order to use cite_inline")
+
         return config
 
     def on_page_markdown(self, markdown, page, config, files):
@@ -107,8 +113,13 @@ class BibTexPlugin(BasePlugin):
         # 2. Convert all the citations to text references
         citation_quads = self.format_citations(cite_keys)
 
-        # 3. Insert in numbers into the main markdown and build bibliography
-        markdown = insert_citation_keys(citation_quads, markdown)
+        # 3. Convert cited keys to citation,
+        # or a footnote reference if inline_cite is false.
+        if self.cite_inline:
+            markdown = insert_citation_keys(citation_quads, markdown, csl=self.csl_file,
+                                            bib=self.bib_data.to_string("bibtex"))
+        else:
+            markdown = insert_citation_keys(citation_quads, markdown)
 
         # 4. Insert in the bibliopgrahy text into the markdown
         bib_command = self.config.get("bib_command", "\\bibliography")
@@ -155,7 +166,7 @@ class BibTexPlugin(BasePlugin):
             for key_set in cite_keys
             for key in key_set[1].split(';')
         ]
-        keys = list(OrderedDict.fromkeys([key for _, key in pairs]).keys())
+        keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
         # Remove non-existant cite_keys from pairs
@@ -168,9 +179,9 @@ class BibTexPlugin(BasePlugin):
             i += 1
 
         # 2. Collect any unformatted reference keys
-        for fullcite, key in pairs:
+        for _, key in pairs:
             if key not in self.all_references:
-                entries[key] = add_affixes(self.bib_data.entries[key], fullcite, key)
+                entries[key] = self.bib_data.entries[key]
 
         # 3. Format entries
         if self.csl_file:
@@ -183,6 +194,7 @@ class BibTexPlugin(BasePlugin):
             (key[0], key[1], numbers[key[1]], self.all_references[key[1]])
             for key in pairs
         ]
+
         # Remove duplicate quads before returning
         return list(dict.fromkeys(quads))
 
