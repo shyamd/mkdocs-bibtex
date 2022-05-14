@@ -117,8 +117,8 @@ class BibTexPlugin(BasePlugin):
         # 3. Convert cited keys to citation,
         # or a footnote reference if inline_cite is false.
         if self.cite_inline:
-            markdown = insert_citation_keys(citation_quads, markdown, csl=self.csl_file,
-                                            bib=self.bib_data.to_string("bibtex"))
+            markdown = insert_citation_keys(citation_quads, markdown, self.csl_file,
+                                            self.bib_data.to_string("bibtex"))
         else:
             markdown = insert_citation_keys(citation_quads, markdown)
 

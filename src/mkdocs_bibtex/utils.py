@@ -95,7 +95,6 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
             - [see @test; @test2] Works
             - [see @test and @test2] Doesn't work
     """
-
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir).joinpath("temp.bib")
         with open(bib_path, "w") as bibfile:
@@ -114,8 +113,9 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
             ],
         )
 
-    # Return only the citation text (first line)
-    return markdown.split("\n")[0].strip()
+    # Return only the citation text (first line(s))
+    # remove any extra linebreaks to accommodate large author names
+    return markdown.split(":::")[0].replace("\r\n", "").replace("\n", "").strip()
 
 
 def _convert_pandoc_legacy(bibtex_string, csl_path):
@@ -163,32 +163,30 @@ def find_cite_blocks(markdown):
     Args:
         markdown (str): the markdown text to be extract citation
                         blocks from
-    """
 
-    """
     regex explanation:
-    - first group: everything.
-    - second group: (?:(?:\[([^@]*)) |\[(?=@))
-    - third group: ((?:@\w*(?:; ){0,1})+)
-    - fourth group: (?:[^\]\n]{0,1} {0,1})([^\]\n]*)
-    - End: \]
+    - first group  (1): everything. (the only thing we need)
+    - second group (2): (?:(?:\[(-{0,1}[^@]*)) |\[(?=-{0,1}@))
+    - third group  (3): ((?:-{0,1}@\w*(?:; ){0,1})+)
+    - fourth group (4): (?:[^\]\n]{0,1} {0,1})([^\]\n]*)
 
-    The first group captures the entire block, as is
-    The second group captures the prefix, which is everything between '[' and ' @' (whitespace)
-    The third group captures the citekey(s), from '@' to any symbol that isnt '; '
+    The first group captures the entire cite block, as is
+    The second group captures the prefix, which is everything between '[' and ' @| -@'
+    The third group captures the citekey(s), ';' separated (affixes NOT supported)
     The fourth group captures anything after the citekeys, excluding the leading whitespace
     (The non-capturing group removes any symbols or whitespaces between the citekey and suffix)
 
     Matches for [see @author; @doe my suffix here]
         [0] entire block: '[see @author; @doe my suffix here]'
         [1] prefix: 'see'
-        [2] citekeys: '@author; @doe' (';' separated)
+        [2] citekeys: '@author; @doe'
         [3] suffix: 'my suffix here'
 
     Does NOT match: [mail@example.com]
     DOES match [mail @example.com] as [mail][@example][com]
     """
-    cite_regex = re.compile(r"((?:(?:\[([^@]*)) |\[(?=@))((?:@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\])")
+    r = r"((?:(?:\[(-{0,1}[^@]*)) |\[(?=-{0,1}@))((?:-{0,1}@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\])"
+    cite_regex = re.compile(r)
 
     citation_blocks = [
         # We only care about the block (group 1)
