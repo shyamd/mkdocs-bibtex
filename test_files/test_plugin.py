@@ -130,10 +130,13 @@ def test_find_cite_blocks():
     assert find_cite_blocks("[@test]") == ["[@test]"]
     assert find_cite_blocks("[@test; @test2]") == ["[@test; @test2]"]
     assert find_cite_blocks("[@test]\n [@test; @test2]") == ["[@test]", "[@test; @test2]"]
+    # Suppressed authors
+    assert find_cite_blocks("[-@test]") == ["[-@test]"]
     # Affixes
     assert find_cite_blocks("[see @test]") == ["[see @test]"]
     assert find_cite_blocks("[@test, p. 15]") == ["[@test, p. 15]"]
     assert find_cite_blocks("[see @test, p. 15]") == ["[see @test, p. 15]"]
+    assert find_cite_blocks("[see -@test, p. 15]") == ["[see -@test, p. 15]"]
     # Invalid blocks
     assert find_cite_blocks("[ @test]") is not True
 

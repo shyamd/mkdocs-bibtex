@@ -170,13 +170,7 @@ class BibTexPlugin(BasePlugin):
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
         # Remove non-existant keys from pairs
-        i = 0
-        while i < len(pairs):
-            # pairs[i][1] = key
-            if pairs[i][1] not in self.bib_data.entries:
-                pairs.pop(i)
-                continue
-            i += 1
+        pairs = [p for p in pairs if p[1] in self.bib_data.entries]
 
         # 2. Collect any unformatted reference keys
         for _, key in pairs:

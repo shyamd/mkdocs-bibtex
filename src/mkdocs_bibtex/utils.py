@@ -219,23 +219,19 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
 
         # if cite_inline is true, convert full_citation with pandoc and add to replacement_citaton
         if csl and bib:
-            try:
-                # Verify that the pandoc installation is newer than 2.11
-                pandoc_version = pypandoc.get_pandoc_version()
-                pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
-                if pandoc_version_tuple <= (2, 11):
-                    raise Exception(f"Your version of pandoc (v{pandoc_version}) is incompatible with "
-                                    "the cite_inline feature.")
+            # Verify that the pandoc installation is newer than 2.11
+            pandoc_version = pypandoc.get_pandoc_version()
+            pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
+            if pandoc_version_tuple <= (2, 11):
+                raise RuntimeError(f"Your version of pandoc (v{pandoc_version}) is "
+                                   "incompatible with the cite_inline feature.")
 
-                inline_citation = _convert_pandoc_citekey(bib, csl, full_citation)
-                replacement_citaton = f" {inline_citation}{replacement_citaton}"
+            inline_citation = _convert_pandoc_citekey(bib, csl, full_citation)
+            replacement_citaton = f" {inline_citation}{replacement_citaton}"
 
-                # Make sure inline citations doesn't get an extra whitespace by
-                # replacing it with whitespace added first
-                markdown = markdown.replace(f" {full_citation}", replacement_citaton)
-
-            except Exception as e:
-                print(f'WARNING: {e}')
+            # Make sure inline citations doesn't get an extra whitespace by
+            # replacing it with whitespace added first
+            markdown = markdown.replace(f" {full_citation}", replacement_citaton)
 
         markdown = markdown.replace(full_citation, replacement_citaton)
 
