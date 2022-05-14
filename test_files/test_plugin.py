@@ -273,70 +273,80 @@ def test_on_page_markdown(plugin):
     assert "[^3]" not in plugin.on_page_markdown(test_markdown, None, None, None)
 
 
-def test_inline_citations():
+def test_inline_citations(plugin):
+    plugin.config["bib_file"] = os.path.join(test_files_dir, "test.bib")
+    plugin.config["csl_file"] = os.path.join(test_files_dir, "springer-basic-author-date.csl")
+    plugin.config["cite_inline"] = True
+
+    plugin.on_config(plugin.config)
+
     pandoc_version = pypandoc.get_pandoc_version()
     pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
     if pandoc_version_tuple <= (2, 11):
         pytest.skip(f"Unsupported version of pandoc (v{pandoc_version}) installed.")
-        return
-
-    plugin = BibTexPlugin()
-    plugin.load_config(
-        options={"csl_file": os.path.join(test_files_dir, "springer-basic-author-date.csl"),
-                 "bib_file": os.path.join(test_files_dir, 'test_inline.bib'),
-                 "cite_inline": True},
-        config_file_path=test_files_dir,
-    )
-    plugin.on_config(plugin.config)
 
     # Ensure inline citation works
     quads = [("[@test]", None, "1", None)]
     test_markdown = 'Hello[@test]'
-    result = "Hello (Author 2019)[^1]"
-    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
-                                          bib=plugin.bib_data.to_string("bibtex"))
+    result = "Hello (Author and Author 2019)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
 
-    # Ensure prefixes work
+    # Ensure suppressed authors works
+    quads = [("[-@test]", None, "1", None)]
+    test_markdown = 'Suppressed [-@test]'
+    result = "Suppressed (2019)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
+
+    # Ensure affixes work
     quads = [("[see @test]", None, "1", None)]
     test_markdown = 'Hello[see @test]'
-    result = "Hello (see Author 2019)[^1]"
-    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
-                                          bib=plugin.bib_data.to_string("bibtex"))
+    result = "Hello (see Author and Author 2019)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
 
-    # Ensure page numbers work
-    quads = [("[@Bivort2016, p. 15]", None, "1", None)]
-    test_markdown = '[@Bivort2016, p. 15]'
-    result = " (De Bivort and Van Swinderen 2016, p. 15)[^1]"
-    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
-                                          bib=plugin.bib_data.to_string("bibtex"))
+    quads = [("[@test, p. 123]", None, "1", None)]
+    test_markdown = '[@test, p. 123]'
+    result = " (Author and Author 2019, p. 123)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
 
-    # Ensure prefixes and suffixes work
-    quads = [("[see @test, pp. 123]", None, "1", None)]
-    test_markdown = 'Hello[see @test, pp. 123]'
-    result = "Hello (see Author 2019, p. 123)[^1]"
-    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
-                                          bib=plugin.bib_data.to_string("bibtex"))
+    # Combined
+    quads = [("[see @test, p. 123]", None, "1", None)]
+    test_markdown = 'Hello[see @test, p. 123]'
+    result = "Hello (see Author and Author 2019, p. 123)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
+
+    # Combined, suppressed author
+    quads = [("[see -@test, p. 123]", None, "1", None)]
+    test_markdown = 'Suppressed [see -@test, p. 123]'
+    result = "Suppressed (see 2019, p. 123)[^1]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
 
     # Ensure multi references work
     quads = [("[@test; @Bivort2016]", None, "1", None),
              ("[@test; @Bivort2016]", None, "2", None)]
     test_markdown = '[@test; @Bivort2016]'
-    result = " (De Bivort and Van Swinderen 2016; Author 2019)[^1][^2]"
-    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
-                                          bib=plugin.bib_data.to_string("bibtex"))
+    # CSL defines the order, this ordering is therefore expected with springer.csl
+    result = " (De Bivort and Van Swinderen 2016; Author and Author 2019)[^1][^2]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
 
-    # Ensure multi reference with page numbers
     quads = [("[@test, p. 12; @Bivort2016, p. 15]", None, "1", None),
              ("[@test, p. 12; @Bivort2016, p. 15]", None, "2", None)]
     test_markdown = '[@test, p. 12; @Bivort2016, p. 15]'
-    result = " (De Bivort and Van Swinderen 2016, p. 15; Author 2019, p. 12)[^1][^2]"
-    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
-                                          bib=plugin.bib_data.to_string("bibtex"))
+    # CSL defines the order, this ordering is therefore expected with springer.csl
+    result = " (De Bivort and Van Swinderen 2016, p. 15; Author and Author 2019, p. 12)[^1][^2]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
 
-    # Ensure multiple, singular references works
+    # Ensure multiple inline references works
     quads = [("[@test]", None, "1", None),
              ("[see @Bivort2016, p. 123]", None, "2", None)]
     test_markdown = 'Hello[@test] World [see @Bivort2016, p. 123]'
-    result = "Hello (Author 2019)[^1] World (see De Bivort and Van Swinderen 2016, p. 123)[^2]"
-    assert result == insert_citation_keys(quads, test_markdown, csl=plugin.csl_file,
-                                          bib=plugin.bib_data.to_string("bibtex"))
+    result = "Hello (Author and Author 2019)[^1] World (see De Bivort and Van Swinderen 2016, p. 123)[^2]"
+    assert result == insert_citation_keys(quads, test_markdown, plugin.csl_file,
+                                          plugin.bib_data.to_string("bibtex"))
