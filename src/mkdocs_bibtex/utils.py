@@ -85,6 +85,39 @@ def _convert_pandoc_new(bibtex_string, csl_path):
     return citation.strip()
 
 
+def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
+    """
+    Uses pandoc to convert a markdown citation key reference
+    to a rendered markdown citation in the given CSL format.
+
+        Limitation (atleast for harvard.csl): multiple citekeys
+        REQUIRE a '; ' separator to render correctly:
+            - [see @test; @test2] Works
+            - [see @test and @test2] Doesn't work
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bib_path = Path(tmpdir).joinpath("temp.bib")
+        with open(bib_path, "w") as bibfile:
+            bibfile.write(bibtex_string)
+
+        markdown = pypandoc.convert_text(
+            source=fullcite,
+            to="markdown-citations",
+            format="markdown",
+            extra_args=[
+                "--citeproc",
+                "--csl",
+                csl_path,
+                "--bibliography",
+                bib_path
+            ],
+        )
+
+    # Return only the citation text (first line(s))
+    # remove any extra linebreaks to accommodate large author names
+    return markdown.split(":::")[0].replace("\r\n", "").replace("\n", "").strip()
+
+
 def _convert_pandoc_legacy(bibtex_string, csl_path):
     """
     Converts the PyBtex entry into formatted markdown citation text
@@ -113,22 +146,58 @@ nocite: '@*'
     return citation.strip()
 
 
-def find_cite_keys(markdown):
+def extract_cite_keys(cite_block):
     """
-    Finds the cite keys in the markdown text
-    This function can handle multiple keys in a single reference
+    Extract just the keys from a citation block
+    """
+    cite_regex = re.compile(r"@(\w*)")
+    cite_keys = re.findall(cite_regex, cite_block)
+
+    return cite_keys
+
+
+def find_cite_blocks(markdown):
+    """
+    Finds entire cite blocks in the markdown text
 
     Args:
         markdown (str): the markdown text to be extract citation
-                        keys from
+                        blocks from
+
+    regex explanation:
+    - first group  (1): everything. (the only thing we need)
+    - second group (2): (?:(?:\[(-{0,1}[^@]*)) |\[(?=-{0,1}@))
+    - third group  (3): ((?:-{0,1}@\w*(?:; ){0,1})+)
+    - fourth group (4): (?:[^\]\n]{0,1} {0,1})([^\]\n]*)
+
+    The first group captures the entire cite block, as is
+    The second group captures the prefix, which is everything between '[' and ' @| -@'
+    The third group captures the citekey(s), ';' separated (affixes NOT supported)
+    The fourth group captures anything after the citekeys, excluding the leading whitespace
+    (The non-capturing group removes any symbols or whitespaces between the citekey and suffix)
+
+    Matches for [see @author; @doe my suffix here]
+        [0] entire block: '[see @author; @doe my suffix here]'
+        [1] prefix: 'see'
+        [2] citekeys: '@author; @doe'
+        [3] suffix: 'my suffix here'
+
+    Does NOT match: [mail@example.com]
+    DOES match [mail @example.com] as [mail][@example][com]
     """
+    r = r"((?:(?:\[(-{0,1}[^@]*)) |\[(?=-{0,1}@))((?:-{0,1}@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\])"
+    cite_regex = re.compile(r)
 
-    cite_regex = re.compile(r"(\[(?:@\w+;{0,1}\s*)+\])")
-    cite_keys = cite_regex.findall(markdown)
-    return list(OrderedDict.fromkeys(cite_keys).keys())
+    citation_blocks = [
+        # We only care about the block (group 1)
+        (matches.group(1))
+        for matches in re.finditer(cite_regex, markdown)
+    ]
+
+    return citation_blocks
 
 
-def insert_citation_keys(citation_quads, markdown):
+def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
     """
     Insert citations into the markdown text replacing
     the old citation keys
@@ -145,8 +214,25 @@ def insert_citation_keys(citation_quads, markdown):
 
     grouped_quads = [list(g) for _, g in groupby(citation_quads, key=lambda x: x[0])]
     for quad_group in grouped_quads:
-        full_citation = quad_group[0][0]  # the first key in the whole citation
+        full_citation = quad_group[0][0]  # the full citation block
         replacement_citaton = "".join(["[^{}]".format(quad[2]) for quad in quad_group])
+
+        # if cite_inline is true, convert full_citation with pandoc and add to replacement_citaton
+        if csl and bib:
+            # Verify that the pandoc installation is newer than 2.11
+            pandoc_version = pypandoc.get_pandoc_version()
+            pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
+            if pandoc_version_tuple <= (2, 11):
+                raise RuntimeError(f"Your version of pandoc (v{pandoc_version}) is "
+                                   "incompatible with the cite_inline feature.")
+
+            inline_citation = _convert_pandoc_citekey(bib, csl, full_citation)
+            replacement_citaton = f" {inline_citation}{replacement_citaton}"
+
+            # Make sure inline citations doesn't get an extra whitespace by
+            # replacing it with whitespace added first
+            markdown = markdown.replace(f" {full_citation}", replacement_citaton)
+
         markdown = markdown.replace(full_citation, replacement_citaton)
 
     return markdown

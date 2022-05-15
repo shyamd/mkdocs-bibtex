@@ -8,7 +8,8 @@ from mkdocs.plugins import BasePlugin
 from pybtex.database import BibliographyData, parse_file
 
 from mkdocs_bibtex.utils import (
-    find_cite_keys,
+    find_cite_blocks,
+    extract_cite_keys,
     format_bibliography,
     format_pandoc,
     format_simple,
@@ -31,6 +32,7 @@ class BibTexPlugin(BasePlugin):
                                by default, defaults to true
         full_bib_command (string): command to place a full bibliography of all references
         csl_file (string, optional): path or url to a CSL file, relative to mkdocs.yml.
+        cite_inline (bool): Whether or not to render inline citations, requires CSL, defaults to false
     """
 
     config_scheme = [
@@ -40,6 +42,7 @@ class BibTexPlugin(BasePlugin):
         ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.Type(str, default='')),
+        ("cite_inline", config_options.Type(bool, default=False)),
     ]
 
     def __init__(self):
@@ -82,6 +85,11 @@ class BibTexPlugin(BasePlugin):
         else:
             self.csl_file = self.config.get("csl_file", None)
 
+        # Toggle whether or not to render citations inline (Requires CSL)
+        self.cite_inline = self.config.get("cite_inline", False)
+        if self.cite_inline and not self.csl_file:
+            raise Exception("Must supply a CSL file in order to use cite_inline")
+
         return config
 
     def on_page_markdown(self, markdown, page, config, files):
@@ -101,13 +109,18 @@ class BibTexPlugin(BasePlugin):
         """
 
         # 1. Grab all the cited keys in the markdown
-        cite_keys = find_cite_keys(markdown)
+        cite_keys = find_cite_blocks(markdown)
 
         # 2. Convert all the citations to text references
         citation_quads = self.format_citations(cite_keys)
 
-        # 3. Insert in numbers into the main markdown and build bibliography
-        markdown = insert_citation_keys(citation_quads, markdown)
+        # 3. Convert cited keys to citation,
+        # or a footnote reference if inline_cite is false.
+        if self.cite_inline:
+            markdown = insert_citation_keys(citation_quads, markdown, self.csl_file,
+                                            self.bib_data.to_string("bibtex"))
+        else:
+            markdown = insert_citation_keys(citation_quads, markdown)
 
         # 4. Insert in the bibliopgrahy text into the markdown
         bib_command = self.config.get("bib_command", "\\bibliography")
@@ -141,7 +154,7 @@ class BibTexPlugin(BasePlugin):
             cite_keys (list): List of full cite_keys that maybe compound keys
 
         Returns:
-            citation_quads: quad tupples of the citation inforamtion
+            citation_quads: quad tuples of the citation inforamtion
         """
 
         # Deal with arithmatex fix at some point
@@ -149,12 +162,15 @@ class BibTexPlugin(BasePlugin):
         # 1. Extract the keys from the keyset
         entries = OrderedDict()
         pairs = [
-            [key_set, key.strip().strip("@")]
-            for key_set in cite_keys
-            for key in key_set.strip().strip("]").strip("[").split(";")
+            [cite_block, key]
+            for cite_block in cite_keys
+            for key in extract_cite_keys(cite_block)
         ]
         keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
+
+        # Remove non-existant keys from pairs
+        pairs = [p for p in pairs if p[1] in self.bib_data.entries]
 
         # 2. Collect any unformatted reference keys
         for _, key in pairs:
@@ -169,10 +185,12 @@ class BibTexPlugin(BasePlugin):
 
         # 4. Construct quads
         quads = [
-            (key_set, key, numbers[key], self.all_references[key])
-            for key_set, key in pairs
+            (cite_block, key, numbers[key], self.all_references[key])
+            for cite_block, key in pairs
         ]
-        return quads
+
+        # List the quads in order to remove duplicate entries
+        return list(dict.fromkeys(quads))
 
     @property
     def full_bibliography(self):
