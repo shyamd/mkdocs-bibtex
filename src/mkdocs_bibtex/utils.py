@@ -150,7 +150,7 @@ def extract_cite_keys(cite_block):
     """
     Extract just the keys from a citation block
     """
-    cite_regex = re.compile(r"@(\w*)")
+    cite_regex = re.compile(r"@([\w:-]*)")
     cite_keys = re.findall(cite_regex, cite_block)
 
     return cite_keys
