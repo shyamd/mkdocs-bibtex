@@ -67,7 +67,7 @@ class BibTexPlugin(BasePlugin):
                 bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
             bibfiles.extend(Path(self.config["bib_dir"]).glob("*.bib"))
-        else:
+        else:  # pragma: no cover
             raise Exception("Must supply a bibtex file or directory for bibtex files")
 
         # load bibliography data
@@ -87,7 +87,7 @@ class BibTexPlugin(BasePlugin):
 
         # Toggle whether or not to render citations inline (Requires CSL)
         self.cite_inline = self.config.get("cite_inline", False)
-        if self.cite_inline and not self.csl_file:
+        if self.cite_inline and not self.csl_file:  # pragma: no cover
             raise Exception("Must supply a CSL file in order to use cite_inline")
 
         return config
