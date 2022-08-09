@@ -75,7 +75,7 @@ def _convert_pandoc_new(bibtex_string, csl_path):
 
     markdown = " ".join(markdown.split("\n"))
     # Remove newlines from any generated span tag (non-capitalized words)
-    markdown = re.compile(r'<\/span>[\r\n]').sub('<\/span> ', markdown)
+    markdown = re.compile(r'<\/span>[\r\n]').sub('</span> ', markdown)
 
     citation_regex = re.compile(r"<span\s+class=\"csl-(?:left-margin|right-inline)\">(.+?)(?=<\/span>)<\/span>")
     try:
