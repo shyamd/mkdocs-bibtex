@@ -75,11 +75,11 @@ def _convert_pandoc_new(bibtex_string, csl_path):
 
     markdown = " ".join(markdown.split("\n"))
     # Remove newlines from any generated span tag (non-capitalized words)
-    markdown = re.sub(r'<\/span>[\r\n]', '</span> ', markdown)
+    markdown = re.compile(r'<\/span>[\r\n]').sub('<\/span> ', markdown)
 
     citation_regex = re.compile(r"<span\s+class=\"csl-(?:left-margin|right-inline)\">(.+?)(?=<\/span>)<\/span>")
     try:
-        citation = citation_regex.findall(re.sub(r"[\r\n]", "", markdown))[1]
+        citation = citation_regex.findall(re.sub(r"(\r|\n)", "", markdown))[1]
     except IndexError:
         citation = markdown
     return citation.strip()
@@ -115,7 +115,7 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
 
     # Return only the citation text (first line(s))
     # remove any extra linebreaks to accommodate large author names
-    markdown = re.sub(r'[\r\n]', '', markdown)
+    markdown = re.compile(r'[\r\n]').sub('', markdown)
     return markdown.split(":::")[0].strip()
 
 
