@@ -64,7 +64,7 @@ def _convert_pandoc_new(bibtex_string, csl_path):
     """
     markdown = pypandoc.convert_text(
         source=bibtex_string,
-        to="markdown-citations",
+        to="markdown_strict",
         format="bibtex",
         extra_args=[
             "--citeproc",
@@ -73,13 +73,13 @@ def _convert_pandoc_new(bibtex_string, csl_path):
         ],
     )
 
-    # This should cut off the pandoc preamble and ending triple colons
-    markdown = " ".join(markdown.split("\n")[2:-2])
+    markdown = " ".join(markdown.split("\n"))
+    # Remove newlines from any generated span tag (non-capitalized words)
+    markdown = re.compile(r'<\/span>[\r\n]').sub('</span> ', markdown)
 
-    citation_regex = re.compile(r"\{\.csl-left-margin\}\[(.*)\]\{\.csl-right-inline\}")
+    citation_regex = re.compile(r"<span\s+class=\"csl-(?:left-margin|right-inline)\">(.+?)(?=<\/span>)<\/span>")
     try:
-
-        citation = citation_regex.findall(markdown.replace("\n", " "))[0]
+        citation = citation_regex.findall(re.sub(r"(\r|\n)", "", markdown))[1]
     except IndexError:
         citation = markdown
     return citation.strip()
@@ -115,7 +115,8 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
 
     # Return only the citation text (first line(s))
     # remove any extra linebreaks to accommodate large author names
-    return markdown.split(":::")[0].replace("\r\n", "").replace("\n", "").strip()
+    markdown = re.compile(r'[\r\n]').sub('', markdown)
+    return markdown.split(":::")[0].strip()
 
 
 def _convert_pandoc_legacy(bibtex_string, csl_path):
@@ -261,7 +262,7 @@ def tempfile_from_url(url, suffix):
     for i in range(3):
         try:
             dl = requests.get(url)
-            if dl.status_code != 200:
+            if dl.status_code != 200:  # pragma: no cover
                 raise RuntimeError(f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}")
 
             file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
@@ -269,6 +270,6 @@ def tempfile_from_url(url, suffix):
             file.close()
             return file.name
 
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException:  # pragma: no cover
             pass
-    raise RuntimeError(f"Couldn't successfully download the url: {url}")
+    raise RuntimeError(f"Couldn't successfully download the url: {url}")  # pragma: no cover
