@@ -47,7 +47,7 @@ def test_bibtex_loading_bib_url():
     )
 
     plugin.on_config(plugin.config)
-    assert len(plugin.bib_data.entries) == 3
+    assert len(plugin.bib_data.entries) == 4
 
 
 def test_bibtex_loading_bibdir():
