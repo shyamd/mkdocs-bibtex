@@ -62,7 +62,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: r-lib/actions/setup-pandoc@main
+    - uses: r-lib/actions/setup-pandoc@v2
       with:
         pandoc-version: ${{ matrix.pandoc-version }}
 
