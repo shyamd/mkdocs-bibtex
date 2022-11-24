@@ -1,4 +1,4 @@
-mkdocs==1.4.0
+mkdocs==1.4.2
 markdown==3.3.7
 pybtex==0.24.0
 pypandoc==1.8.1
