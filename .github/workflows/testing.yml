@@ -3,11 +3,11 @@ name: testing
 on:
   push:
     branches:
-      - master
+      - main
 
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   lint:
@@ -62,7 +62,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: r-lib/actions/setup-pandoc@master
+    - uses: r-lib/actions/setup-pandoc@main
       with:
         pandoc-version: ${{ matrix.pandoc-version }}
 

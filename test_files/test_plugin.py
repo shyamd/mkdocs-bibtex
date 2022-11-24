@@ -41,7 +41,7 @@ def test_bibtex_loading_bib_url():
     plugin = BibTexPlugin()
     plugin.load_config(
         options={
-            "bib_file": "https://raw.githubusercontent.com/shyamd/mkdocs-bibtex/master/test_files/test.bib"
+            "bib_file": "https://raw.githubusercontent.com/shyamd/mkdocs-bibtex/main/test_files/test.bib"
         },
         config_file_path=test_files_dir,
     )
