@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 120
+exclude = [
+    '.git',
+    '__pycache__',
+    '__init__.py',
+]
+ignore = [
+    'E741',
+    'W605',
+]
+select = [
+    'E',
+    'F',
+    'W',
+]

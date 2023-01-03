@@ -75,9 +75,11 @@ def _convert_pandoc_new(bibtex_string, csl_path):
 
     markdown = " ".join(markdown.split("\n"))
     # Remove newlines from any generated span tag (non-capitalized words)
-    markdown = re.compile(r'<\/span>[\r\n]').sub('</span> ', markdown)
+    markdown = re.compile(r"<\/span>[\r\n]").sub("</span> ", markdown)
 
-    citation_regex = re.compile(r"<span\s+class=\"csl-(?:left-margin|right-inline)\">(.+?)(?=<\/span>)<\/span>")
+    citation_regex = re.compile(
+        r"<span\s+class=\"csl-(?:left-margin|right-inline)\">(.+?)(?=<\/span>)<\/span>"
+    )
     try:
         citation = citation_regex.findall(re.sub(r"(\r|\n)", "", markdown))[1]
     except IndexError:
@@ -104,18 +106,12 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
             source=fullcite,
             to="markdown-citations",
             format="markdown",
-            extra_args=[
-                "--citeproc",
-                "--csl",
-                csl_path,
-                "--bibliography",
-                bib_path
-            ],
+            extra_args=["--citeproc", "--csl", csl_path, "--bibliography", bib_path],
         )
 
     # Return only the citation text (first line(s))
     # remove any extra linebreaks to accommodate large author names
-    markdown = re.compile(r'[\r\n]').sub('', markdown)
+    markdown = re.compile(r"[\r\n]").sub("", markdown)
     return markdown.split(":::")[0].strip()
 
 
@@ -224,8 +220,10 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
             pandoc_version = pypandoc.get_pandoc_version()
             pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
             if pandoc_version_tuple <= (2, 11):
-                raise RuntimeError(f"Your version of pandoc (v{pandoc_version}) is "
-                                   "incompatible with the cite_inline feature.")
+                raise RuntimeError(
+                    f"Your version of pandoc (v{pandoc_version}) is "
+                    "incompatible with the cite_inline feature."
+                )
 
             inline_citation = _convert_pandoc_citekey(bib, csl, full_citation)
             replacement_citaton = f" {inline_citation}{replacement_citaton}"
@@ -263,13 +261,17 @@ def tempfile_from_url(url, suffix):
         try:
             dl = requests.get(url)
             if dl.status_code != 200:  # pragma: no cover
-                raise RuntimeError(f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}")
+                raise RuntimeError(
+                    f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}"
+                )
 
-            file = tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False)
+            file = tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False)
             file.write(dl.text)
             file.close()
             return file.name
 
         except requests.exceptions.RequestException:  # pragma: no cover
             pass
-    raise RuntimeError(f"Couldn't successfully download the url: {url}")  # pragma: no cover
+    raise RuntimeError(
+        f"Couldn't successfully download the url: {url}"
+    )  # pragma: no cover

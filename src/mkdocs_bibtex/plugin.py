@@ -41,7 +41,7 @@ class BibTexPlugin(BasePlugin):
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
-        ("csl_file", config_options.Type(str, default='')),
+        ("csl_file", config_options.Type(str, default="")),
         ("cite_inline", config_options.Type(bool, default=False)),
     ]
 
@@ -62,7 +62,7 @@ class BibTexPlugin(BasePlugin):
             is_url = validators.url(self.config["bib_file"])
             # if bib_file is a valid URL, cache it with tempfile
             if is_url:
-                bibfiles.append(tempfile_from_url(self.config["bib_file"], '.bib'))
+                bibfiles.append(tempfile_from_url(self.config["bib_file"], ".bib"))
             else:
                 bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
@@ -81,7 +81,7 @@ class BibTexPlugin(BasePlugin):
         # Set CSL from either url or path (or empty)
         is_url = validators.url(self.config["csl_file"])
         if is_url:
-            self.csl_file = tempfile_from_url(self.config["csl_file"], '.csl')
+            self.csl_file = tempfile_from_url(self.config["csl_file"], ".csl")
         else:
             self.csl_file = self.config.get("csl_file", None)
 
@@ -117,8 +117,12 @@ class BibTexPlugin(BasePlugin):
         # 3. Convert cited keys to citation,
         # or a footnote reference if inline_cite is false.
         if self.cite_inline:
-            markdown = insert_citation_keys(citation_quads, markdown, self.csl_file,
-                                            self.bib_data.to_string("bibtex"))
+            markdown = insert_citation_keys(
+                citation_quads,
+                markdown,
+                self.csl_file,
+                self.bib_data.to_string("bibtex"),
+            )
         else:
             markdown = insert_citation_keys(citation_quads, markdown)
 
