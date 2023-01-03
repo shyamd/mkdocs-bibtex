@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setup(
     name="mkdocs-bibtex",
     use_scm_version=True,
-    setup_requires=["setuptools_scm"],
+    setup_requires=["setuptools_scm", "setuptools"],
     description="An MkDocs plugin that enables managing citations with BibTex",
     long_description=long_description,
     long_description_content_type="text/markdown",
