@@ -1,9 +1,9 @@
-from pkg_resources import DistributionNotFound, get_distribution
-
+import sys
 from mkdocs_bibtex.plugin import BibTexPlugin
 
-try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:  # pragma: no cover
-    # package is not installed
-    pass
+if sys.version_info[:2] >= (3, 8):
+    from importlib import metadata
+else:
+    import importlib_metadata as metadata
+
+__version__ = metadata.version(__package__ or __name__)
