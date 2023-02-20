@@ -6,6 +6,7 @@ from mkdocs_bibtex.utils import (
     find_cite_blocks,
     format_simple,
     format_pandoc,
+    extract_cite_keys,
 )
 
 from mkdocs_bibtex.plugin import parse_file
@@ -65,3 +66,12 @@ def test_format_pandoc(entries):
         citations["test2"]
         == "Author, F. & Author, S. Test Title (TT). *Testing Journal (TJ)* **1**, (2019)."
     )
+
+
+def test_extract_cite_key():
+    """
+    Test to ensure the extract regex can handle all bibtex keys
+    TODO: Make this fully compliant with bibtex keys allowed characters
+    """
+    assert extract_cite_keys("[@test]") == ["test"]
+    assert extract_cite_keys("[@test.3]") == ["test.3"]
