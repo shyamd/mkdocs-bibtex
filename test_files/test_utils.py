@@ -9,8 +9,10 @@ from mkdocs_bibtex.utils import (
 )
 
 from mkdocs_bibtex.plugin import parse_file
+
 module_dir = os.path.dirname(os.path.abspath(__file__))
 test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
+
 
 @pytest.fixture
 def entries():
@@ -19,7 +21,7 @@ def entries():
 
 
 def test_find_cite_blocks():
-    
+
     # Suppressed authors
     assert find_cite_blocks("[-@test]") == ["[-@test]"]
     # Affixes
