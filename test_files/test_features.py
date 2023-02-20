@@ -199,7 +199,7 @@ def test_basic_pandoc(plugin):
         "[@Bivort2016]",
         "Bivort2016",
         "1",
-        "De Bivort, B. L. & Van Swinderen, B. [Evidence for selective attention in the insect brain](https://doi.org/10.1016/j.cois.2016.02.007). *Current Opinion in Insect Science* **15**, 1–7 (2016).",  # noqa: E501
+        "De Bivort, B. L. & Van Swinderen, B. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science* **15**, 1–7 (2016).",  # noqa: E501
     ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
     # Test a CSL that outputs references in a different style
@@ -215,7 +215,7 @@ def test_basic_pandoc(plugin):
         "[@test_citavi]",
         "test_citavi",
         "1",
-        "Author F, Author S (2019) [Test Title (TT)](\\url{https://doi.org/10.21577/0103-5053.20190253}). Testing Journal (TJ) 1:",  # noqa: E501
+        "Author F, Author S (2019) Test Title (TT). Testing Journal (TJ) 1:",
     ) == plugin.format_citations(["[@test_citavi]"])[0]
 
 
