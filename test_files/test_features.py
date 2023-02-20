@@ -1,6 +1,6 @@
-""" 
-This test file checks to make sure each feature works rather than checking each 
-function. Each feature should have a single test function that covers all the python 
+"""
+This test file checks to make sure each feature works rather than checking each
+function. Each feature should have a single test function that covers all the python
 functions it that would need to be tested
 """
 import os
@@ -34,6 +34,7 @@ def plugin():
     plugin.csl_file = None
     return plugin
 
+
 @pytest.fixture
 def plugin_advanced_pandoc(plugin):
     """
@@ -55,12 +56,13 @@ def plugin_advanced_pandoc(plugin):
 
     return plugin
 
+
 def test_basic_citations(plugin):
     """
     Tests super basic citations using the built-in citation style
     """
     assert find_cite_blocks("[@test]") == ["[@test]"]
-    
+
     assert (
         insert_citation_keys(
             [
@@ -100,7 +102,6 @@ def test_basic_citations(plugin):
         "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007).",  # noqa: E501
     ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
-
     # Test \url embedding
     assert (
         "[@test_citavi]",
@@ -108,6 +109,7 @@ def test_basic_citations(plugin):
         "1",
         "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019. URL: [\\\\url\\{https://doi.org/10.21577/0103\\-5053.20190253\\}](\\url{https://doi.org/10.21577/0103-5053.20190253}).",  # noqa: E501
     ) == plugin.format_citations(["[@test_citavi]"])[0]
+
 
 def test_compound_citations(plugin):
     """
@@ -118,7 +120,6 @@ def test_compound_citations(plugin):
         "[@test]",
         "[@test; @test2]",
     ]
-    
 
     assert (
         insert_citation_keys(
@@ -140,7 +141,6 @@ def test_compound_citations(plugin):
         )
         == "[^1][^2]"
     )
-
 
     quads = [
         (
@@ -181,7 +181,10 @@ def test_compound_citations(plugin):
     ] == plugin.format_citations(["[@test; @test2]"])
 
 
-# The following features are Pandoc Only
+###############
+# PANDOC ONLY #
+###############
+
 
 def test_basic_pandoc(plugin):
     plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
@@ -189,14 +192,14 @@ def test_basic_pandoc(plugin):
         "[@test]",
         "test",
         "1",
-        "First Author and Second Author. Test title. *Testing Journal*, 2019.",
+        "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).",
     ) == plugin.format_citations(["[@test]"])[0]
 
     assert (
         "[@Bivort2016]",
         "Bivort2016",
         "1",
-        "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007).",  # noqa: E501
+        "De Bivort, B. L. & Van Swinderen, B. [Evidence for selective attention in the insect brain](https://doi.org/10.1016/j.cois.2016.02.007). *Current Opinion in Insect Science* **15**, 1–7 (2016).",  # noqa: E501
     ) == plugin.format_citations(["[@Bivort2016]"])[0]
 
     # Test a CSL that outputs references in a different style
@@ -205,19 +208,20 @@ def test_basic_pandoc(plugin):
         "[@test]",
         "test",
         "1",
-        "First Author and Second Author. Test title. *Testing Journal*, 2019.",
+        "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).",
     ) == plugin.format_citations(["[@test]"])[0]
 
     assert (
         "[@test_citavi]",
         "test_citavi",
         "1",
-        "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019. URL: [\\\\url\\{https://doi.org/10.21577/0103\\-5053.20190253\\}](\\url{https://doi.org/10.21577/0103-5053.20190253}).",  # noqa: E501
+        "Author F, Author S (2019) [Test Title (TT)](\\url{https://doi.org/10.21577/0103-5053.20190253}). Testing Journal (TJ) 1:",  # noqa: E501
     ) == plugin.format_citations(["[@test_citavi]"])[0]
+
 
 def test_inline_ciations(plugin_advanced_pandoc):
     plugin = plugin_advanced_pandoc
-    
+
     # Ensure inline citation works
     quads = [("[@test]", None, "1", None)]
     test_markdown = "Hello[@test]"
@@ -241,7 +245,7 @@ def test_supressed_authors(plugin_advanced_pandoc):
 
 def test_affixes(plugin_advanced_pandoc):
     plugin = plugin_advanced_pandoc
-     # Ensure affixes work
+    # Ensure affixes work
     quads = [("[see @test]", None, "1", None)]
     test_markdown = "Hello[see @test]"
     result = "Hello (see Author and Author 2019)[^1]"
@@ -276,21 +280,11 @@ def test_affixes(plugin_advanced_pandoc):
 def test_invalid_blocks(plugin_advanced_pandoc):
     pass
 
+
 def test_citavi_format(plugin_advanced_pandoc):
     pass
 
 
-
-
-
-
-
-
-
-
-
-
-   
 def test_duplicate_reference(plugin_advanced_pandoc):
     """
     Ensures duplicats references show up appropriately
