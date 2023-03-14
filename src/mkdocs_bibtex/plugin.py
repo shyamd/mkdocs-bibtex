@@ -66,7 +66,7 @@ class BibTexPlugin(BasePlugin):
             else:
                 bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
-            bibfiles.extend(Path(self.config["bib_dir"]).glob("*.bib"))
+            bibfiles.extend(Path(self.config["bib_dir"]).rglob("*.bib"))
         else:  # pragma: no cover
             raise Exception("Must supply a bibtex file or directory for bibtex files")
 
