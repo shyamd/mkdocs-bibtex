@@ -94,6 +94,8 @@ class BibTexPlugin(BasePlugin):
         if "{number}" not in self.config.get("footnote_format"):
             raise Exception("Must include `{number}` placeholder in footnote_format")
 
+        self.footnote_format = self.config.get("footnote_format")
+
         return config
 
     def on_page_markdown(self, markdown, page, config, files):
@@ -155,7 +157,8 @@ class BibTexPlugin(BasePlugin):
         return markdown
 
     def format_footnote_key(self, number):
-        """create footnote key based on footnote_format
+        """
+        Create footnote key based on footnote_format
 
         Args:
             number (int): citation number
@@ -163,7 +166,7 @@ class BibTexPlugin(BasePlugin):
         Returns:
             formatted footnote
         """
-        return self.config.get("footnote_format").format(number=number)
+        return self.footnote_format.format(number=number)
 
     def format_citations(self, cite_keys):
         """
