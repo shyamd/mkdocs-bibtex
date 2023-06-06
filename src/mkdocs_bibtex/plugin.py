@@ -43,6 +43,7 @@ class BibTexPlugin(BasePlugin):
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
         ("csl_file", config_options.Type(str, default="")),
         ("cite_inline", config_options.Type(bool, default=False)),
+        ("footnote_format", config_options.Type(str, default="{number}")),
     ]
 
     def __init__(self):
@@ -90,6 +91,11 @@ class BibTexPlugin(BasePlugin):
         if self.cite_inline and not self.csl_file:  # pragma: no cover
             raise Exception("Must supply a CSL file in order to use cite_inline")
 
+        if "{number}" not in self.config.get("footnote_format"):
+            raise Exception("Must include `{number}` placeholder in footnote_format")
+
+        self.footnote_format = self.config.get("footnote_format")
+
         return config
 
     def on_page_markdown(self, markdown, page, config, files):
@@ -100,9 +106,9 @@ class BibTexPlugin(BasePlugin):
         1. Finds all cite keys (may include multiple citation references)
         2. Convert all cite keys to citation quads:
             (full cite key,
-            induvidual cite key,
+            individual cite key,
             citation key in corresponding style,
-            citation for induvidual cite key)
+            citation for individual cite key)
         3. Insert formatted cite keys into text
         4. Insert the bibliography into the markdown
         5. Insert the full bibliograph into the markdown
@@ -150,6 +156,18 @@ class BibTexPlugin(BasePlugin):
 
         return markdown
 
+    def format_footnote_key(self, number):
+        """
+        Create footnote key based on footnote_format
+
+        Args:
+            number (int): citation number
+
+        Returns:
+            formatted footnote
+        """
+        return self.footnote_format.format(number=number)
+
     def format_citations(self, cite_keys):
         """
         Formats references into citation quads and adds them to the global registry
@@ -189,7 +207,12 @@ class BibTexPlugin(BasePlugin):
 
         # 4. Construct quads
         quads = [
-            (cite_block, key, numbers[key], self.all_references[key])
+            (
+                cite_block,
+                key,
+                self.format_footnote_key(numbers[key]),
+                self.all_references[key],
+            )
             for cite_block, key in pairs
         ]
 
@@ -204,7 +227,10 @@ class BibTexPlugin(BasePlugin):
 
         bibliography = []
         for number, (key, citation) in enumerate(self.all_references.items()):
-            bibliography_text = "[^{}]: {}".format(number, citation)
+            bibliography_text = "[^{}]: {}".format(
+                number,
+                citation,
+            )
             bibliography.append(bibliography_text)
 
         return "\n".join(bibliography)

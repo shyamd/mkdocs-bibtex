@@ -91,3 +91,18 @@ def test_on_page_markdown(plugin):
     test_markdown = "This is a citation. [@test; @test2] This is another citation [@test]\n\n \\bibliography"
 
     assert "[^3]" not in plugin.on_page_markdown(test_markdown, None, None, None)
+
+
+def test_footnote_formatting_config(plugin):
+    """
+    This function tests to ensure footnote formatting configuration is working properly
+    """
+    # Test to make sure the config enforces {number} in the format
+    bad_plugin = BibTexPlugin()
+    bad_plugin.load_config(
+        options={"footnote_format": ""},
+        config_file_path=test_files_dir,
+    )
+
+    with pytest.raises(Exception):
+        bad_plugin.on_config(bad_plugin.config)
