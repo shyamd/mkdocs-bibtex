@@ -331,3 +331,18 @@ def test_multi_reference(plugin_advanced_pandoc):
     assert result == insert_citation_keys(
         quads, test_markdown, plugin.csl_file, plugin.bib_data.to_string("bibtex")
     )
+
+
+def test_custom_footnote_formatting(plugin):
+
+    assert plugin.format_footnote_key(1) == "1"
+    plugin.footnote_format = "Test Format {number}"
+    assert plugin.format_footnote_key(1) == "Test Format 1"
+
+    plugin.csl_file = os.path.join(test_files_dir, "nature.csl")
+    assert (
+        "[@test]",
+        "test",
+        "Test Format 1",
+        "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).",
+    ) == plugin.format_citations(["[@test]"])[0]
