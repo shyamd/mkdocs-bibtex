@@ -1,4 +1,4 @@
-mkdocs==1.4.3
+mkdocs==1.5.1
 pybtex==0.24.0
 pypandoc==1.11
 requests==2.31.0
