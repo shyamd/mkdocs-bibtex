@@ -265,7 +265,7 @@ def tempfile_from_url(url, suffix):
                     f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}"
                 )
 
-            file = tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False)
+            file = tempfile.NamedTemporaryFile(mode="wt", encoding="utf-8", suffix=suffix, delete=False)
             file.write(dl.text)
             file.close()
             return file.name
