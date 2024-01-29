@@ -99,7 +99,7 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir).joinpath("temp.bib")
-        with open(bib_path, "w") as bibfile:
+        with open(bib_path, "wt", encoding="utf-8") as bibfile:
             bibfile.write(bibtex_string)
 
         markdown = pypandoc.convert_text(
@@ -122,7 +122,7 @@ def _convert_pandoc_legacy(bibtex_string, csl_path):
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir).joinpath("temp.bib")
-        with open(bib_path, "w") as bibfile:
+        with open(bib_path, "wt", encoding="utf-8") as bibfile:
             bibfile.write(bibtex_string)
         citation_text = """
 ---
