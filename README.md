@@ -50,3 +50,34 @@ In your markdown files:
 2. Add `\bibliography`, or the value of `bib_command`, to the doc you want your references rendered (if `bib_by_default` is set to true this is automatically applied for every page).
 3. (Optional) Add `\full_bibliography`, or the value of `full_bib_command`, to where you want the full bibliography rendered. *Note*: This is currently not working properly, since this plugin can't dictate the order in which files are processed. The best way to ensure the file with the full bibliography gets processed last is to use numbers in front of file/folder names to enforce the order of processing, IE: `01_my_first_file.md`
 4. (Optional) Configure the `csl_file` option to dictate the citation text formatting.
+
+## Debugging
+
+You may wish to use the verbose flag in mkdocs (`-v`) to log debug messages. You should see something like this
+
+```bash
+(...)
+DEBUG   -  Parsing bibtex file 'docs/bib/papers.bib'...
+INFO    -  SUCCESS Parsing bibtex file 'docs/bib/papers.bib'
+DEBUG   -  Downloading CSL file from URL https://raw.githubusercontent.com/citation-style-language/styles/master/apa-6th-edition.csl to temporary file...
+INFO    -  CSL file downladed from URL https://raw.githubusercontent.com/citation-style-language/styles/master/apa-6th-edition.csl to temporary file (<tempfile._TemporaryFileWrapper object at 0x00000203E4F2F650>)
+(...)
+DEBUG   -  Reading: publications.md
+DEBUG   -  Running 2 `page_markdown` events
+DEBUG   -  Formatting all bib entries...
+DEBUG   -  --Converting bibtex entry 'foo2019' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
+DEBUG   -  --SUCCESS Converting bibtex entry 'foo2019' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
+DEBUG   -  --Converting bibtex entry 'bar2024' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
+DEBUG   -  --SUCCESS Converting bibtex entry 'bar2024' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
+INFO    -  SUCCESS Formatting all bib entries
+DEBUG   -  Replacing citation keys with the generated ones...
+DEBUG   -  --Rendering citation inline for '[@foo2019]'...
+DEBUG   -  ----Converting pandoc citation key '[@foo2019]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'...
+DEBUG   -  ----SUCCESS Converting pandoc citation key '[@foo2019]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'
+DEBUG   -  --SUCCESS Rendering citation inline for '[@foo2019]'
+DEBUG   -  --Rendering citation inline for '[@bar2024]'...
+DEBUG   -  ----Converting pandoc citation key '[@bar2024]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'...
+DEBUG   -  ----SUCCESS Converting pandoc citation key '[@bar2024]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'
+DEBUG   -  --SUCCESS Rendering citation inline for '[@bar2024]'
+DEBUG   -  SUCCESS Replacing citation keys with the generated ones
+```

@@ -60,12 +60,12 @@ def format_pandoc(entries, csl_path):
     msg = "pandoc>=2.11" if is_new_pandoc else "pandoc<2.11"
     for key, entry in entries.items():
         bibtex_string = BibliographyData(entries={entry.key: entry}).to_string("bibtex")
-        log.debug(f"Converting bibtex entry {key!r} with CSL file {csl_path!r} using {msg}")
+        log.debug(f"--Converting bibtex entry {key!r} with CSL file {csl_path!r} using {msg}")
         if is_new_pandoc:
             citations[key] = _convert_pandoc_new(bibtex_string, csl_path)
         else:
             citations[key] = _convert_pandoc_legacy(bibtex_string, csl_path)
-        log.debug(f"SUCCESS Converting bibtex entry {key!r} with CSL file {csl_path!r} using {msg}")
+        log.debug(f"--SUCCESS Converting bibtex entry {key!r} with CSL file {csl_path!r} using {msg}")
 
     return citations
 
@@ -115,16 +115,16 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
         with open(bib_path, "w") as bibfile:
             bibfile.write(bibtex_string)
 
-        log.debug(f"Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and Bibliography file"
-                  f" {bib_path!r}...")
+        log.debug(f"----Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and Bibliography file"
+                  f" '{bib_path!s}'...")
         markdown = pypandoc.convert_text(
             source=fullcite,
             to="markdown-citations",
             format="markdown",
             extra_args=["--citeproc", "--csl", csl_path, "--bibliography", bib_path],
         )
-        log.debug(f"SUCCESS Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and Bibliography "
-                  f"file {bib_path!r}...")
+        log.debug(f"----SUCCESS Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and "
+                  f"Bibliography file '{bib_path!s}'")
 
     # Return only the citation text (first line(s))
     # remove any extra linebreaks to accommodate large author names
@@ -224,6 +224,8 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
         markdown (str): the modified Markdown
     """
 
+    log.debug(f"Replacing citation keys with the generated ones...")
+
     # Renumber quads if using numbers for citation links
 
     grouped_quads = [list(g) for _, g in groupby(citation_quads, key=lambda x: x[0])]
@@ -233,6 +235,7 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
 
         # if cite_inline is true, convert full_citation with pandoc and add to replacement_citaton
         if csl and bib:
+            log.debug(f"--Rendering citation inline for {full_citation!r}...")
             # Verify that the pandoc installation is newer than 2.11
             pandoc_version = pypandoc.get_pandoc_version()
             pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
@@ -248,8 +251,11 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
             # Make sure inline citations doesn't get an extra whitespace by
             # replacing it with whitespace added first
             markdown = markdown.replace(f" {full_citation}", replacement_citaton)
+            log.debug(f"--SUCCESS Rendering citation inline for {full_citation!r}")
 
         markdown = markdown.replace(full_citation, replacement_citaton)
+
+    log.debug(f"SUCCESS Replacing citation keys with the generated ones")
 
     return markdown
 

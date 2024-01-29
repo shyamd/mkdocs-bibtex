@@ -15,6 +15,7 @@ from mkdocs_bibtex.utils import (
     format_simple,
     insert_citation_keys,
     tempfile_from_url,
+    log,
 )
 
 
@@ -74,7 +75,9 @@ class BibTexPlugin(BasePlugin):
         # load bibliography data
         refs = {}
         for bibfile in bibfiles:
+            log.debug(f"Parsing bibtex file {bibfile!r}...")
             bibdata = parse_file(bibfile)
+            log.info(f"SUCCESS Parsing bibtex file {bibfile!r}")
             refs.update(bibdata.entries)
 
         self.bib_data = BibliographyData(entries=refs)
@@ -200,10 +203,12 @@ class BibTexPlugin(BasePlugin):
                 entries[key] = self.bib_data.entries[key]
 
         # 3. Format entries
+        log.debug(f"Formatting all bib entries...")
         if self.csl_file:
             self.all_references.update(format_pandoc(entries, self.csl_file))
         else:
             self.all_references.update(format_simple(entries))
+        log.info(f"SUCCESS Formatting all bib entries")
 
         # 4. Construct quads
         quads = [
