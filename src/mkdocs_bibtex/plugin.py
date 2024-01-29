@@ -63,7 +63,7 @@ class BibTexPlugin(BasePlugin):
             is_url = validators.url(self.config["bib_file"])
             # if bib_file is a valid URL, cache it with tempfile
             if is_url:
-                bibfiles.append(tempfile_from_url(self.config["bib_file"], ".bib"))
+                bibfiles.append(tempfile_from_url("bib file", self.config["bib_file"], ".bib"))
             else:
                 bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
@@ -82,7 +82,7 @@ class BibTexPlugin(BasePlugin):
         # Set CSL from either url or path (or empty)
         is_url = validators.url(self.config["csl_file"])
         if is_url:
-            self.csl_file = tempfile_from_url(self.config["csl_file"], ".csl")
+            self.csl_file = tempfile_from_url("CSL file", self.config["csl_file"], ".csl")
         else:
             self.csl_file = self.config.get("csl_file", None)
 
