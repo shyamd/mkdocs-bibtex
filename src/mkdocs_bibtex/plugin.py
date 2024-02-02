@@ -203,7 +203,7 @@ class BibTexPlugin(BasePlugin):
                 entries[key] = self.bib_data.entries[key]
 
         # 3. Format entries
-        log.debug(f"Formatting all bib entries...")
+        log.debug("Formatting all bib entries...")
         if self.csl_file:
             self.all_references.update(format_pandoc(entries, self.csl_file))
         else:
