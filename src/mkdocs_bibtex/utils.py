@@ -255,7 +255,7 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
 
         markdown = markdown.replace(full_citation, replacement_citaton)
 
-    log.debug(f"SUCCESS Replacing citation keys with the generated ones")
+    log.debug("SUCCESS Replacing citation keys with the generated ones")
 
     return markdown
 
