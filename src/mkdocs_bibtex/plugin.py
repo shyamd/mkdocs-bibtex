@@ -208,7 +208,7 @@ class BibTexPlugin(BasePlugin):
             self.all_references.update(format_pandoc(entries, self.csl_file))
         else:
             self.all_references.update(format_simple(entries))
-        log.info(f"SUCCESS Formatting all bib entries")
+        log.info("SUCCESS Formatting all bib entries")
 
         # 4. Construct quads
         quads = [
