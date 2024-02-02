@@ -1,3 +1,4 @@
+import logging
 import re
 import requests
 import tempfile
@@ -6,9 +7,15 @@ from itertools import groupby
 from pathlib import Path
 
 import pypandoc
+from mkdocs.utils import warning_filter
+
 from pybtex.backends.markdown import Backend as MarkdownBackend
 from pybtex.database import BibliographyData
 from pybtex.style.formatting.plain import Style as PlainStyle
+
+
+log = logging.getLogger("mkdocs.plugins.mkdocs-bibtex")
+log.addFilter(warning_filter)
 
 
 def format_simple(entries):
@@ -25,6 +32,7 @@ def format_simple(entries):
     backend = MarkdownBackend()
     citations = OrderedDict()
     for key, entry in entries.items():
+        log.debug(f"Converting bibtex entry {key!r} without pandoc")
         formatted_entry = style.format_entry("", entry)
         entry_text = formatted_entry.text.render(backend)
         entry_text = entry_text.replace("\n", " ")
@@ -32,6 +40,7 @@ def format_simple(entries):
         citations[key] = (
             entry_text.replace("\\(", "(").replace("\\)", ")").replace("\\.", ".")
         )
+        log.debug(f"SUCCESS Converting bibtex entry {key!r} without pandoc")
     return citations
 
 
@@ -47,12 +56,16 @@ def format_pandoc(entries, csl_path):
     """
     pandoc_version = tuple(int(ver) for ver in pypandoc.get_pandoc_version().split("."))
     citations = OrderedDict()
+    is_new_pandoc = pandoc_version >= (2, 11)
+    msg = "pandoc>=2.11" if is_new_pandoc else "pandoc<2.11"
     for key, entry in entries.items():
         bibtex_string = BibliographyData(entries={entry.key: entry}).to_string("bibtex")
-        if pandoc_version >= (2, 11):
+        log.debug(f"--Converting bibtex entry {key!r} with CSL file {csl_path!r} using {msg}")
+        if is_new_pandoc:
             citations[key] = _convert_pandoc_new(bibtex_string, csl_path)
         else:
             citations[key] = _convert_pandoc_legacy(bibtex_string, csl_path)
+        log.debug(f"--SUCCESS Converting bibtex entry {key!r} with CSL file {csl_path!r} using {msg}")
 
     return citations
 
@@ -102,12 +115,16 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
         with open(bib_path, "wt", encoding="utf-8") as bibfile:
             bibfile.write(bibtex_string)
 
+        log.debug(f"----Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and Bibliography file"
+                  f" '{bib_path!s}'...")
         markdown = pypandoc.convert_text(
             source=fullcite,
             to="markdown-citations",
             format="markdown",
             extra_args=["--citeproc", "--csl", csl_path, "--bibliography", bib_path],
         )
+        log.debug(f"----SUCCESS Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and "
+                  f"Bibliography file '{bib_path!s}'")
 
     # Return only the citation text (first line(s))
     # remove any extra linebreaks to accommodate large author names
@@ -207,6 +224,8 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
         markdown (str): the modified Markdown
     """
 
+    log.debug("Replacing citation keys with the generated ones...")
+
     # Renumber quads if using numbers for citation links
 
     grouped_quads = [list(g) for _, g in groupby(citation_quads, key=lambda x: x[0])]
@@ -216,6 +235,7 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
 
         # if cite_inline is true, convert full_citation with pandoc and add to replacement_citaton
         if csl and bib:
+            log.debug(f"--Rendering citation inline for {full_citation!r}...")
             # Verify that the pandoc installation is newer than 2.11
             pandoc_version = pypandoc.get_pandoc_version()
             pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
@@ -231,8 +251,11 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
             # Make sure inline citations doesn't get an extra whitespace by
             # replacing it with whitespace added first
             markdown = markdown.replace(f" {full_citation}", replacement_citaton)
+            log.debug(f"--SUCCESS Rendering citation inline for {full_citation!r}")
 
         markdown = markdown.replace(full_citation, replacement_citaton)
+
+    log.debug("SUCCESS Replacing citation keys with the generated ones")
 
     return markdown
 
@@ -256,7 +279,8 @@ def format_bibliography(citation_quads):
     return "\n".join(bibliography)
 
 
-def tempfile_from_url(url, suffix):
+def tempfile_from_url(name, url, suffix):
+    log.debug(f"Downloading {name} from URL {url} to temporary file...")
     for i in range(3):
         try:
             dl = requests.get(url)
@@ -268,6 +292,7 @@ def tempfile_from_url(url, suffix):
             file = tempfile.NamedTemporaryFile(mode="wt", encoding="utf-8", suffix=suffix, delete=False)
             file.write(dl.text)
             file.close()
+            log.info(f"{name} downladed from URL {url} to temporary file ({file})")
             return file.name
 
         except requests.exceptions.RequestException:  # pragma: no cover

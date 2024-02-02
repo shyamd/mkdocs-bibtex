@@ -15,6 +15,7 @@ from mkdocs_bibtex.utils import (
     format_simple,
     insert_citation_keys,
     tempfile_from_url,
+    log,
 )
 
 
@@ -63,7 +64,7 @@ class BibTexPlugin(BasePlugin):
             is_url = validators.url(self.config["bib_file"])
             # if bib_file is a valid URL, cache it with tempfile
             if is_url:
-                bibfiles.append(tempfile_from_url(self.config["bib_file"], ".bib"))
+                bibfiles.append(tempfile_from_url("bib file", self.config["bib_file"], ".bib"))
             else:
                 bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
@@ -74,7 +75,9 @@ class BibTexPlugin(BasePlugin):
         # load bibliography data
         refs = {}
         for bibfile in bibfiles:
+            log.debug(f"Parsing bibtex file {bibfile!r}...")
             bibdata = parse_file(bibfile)
+            log.info(f"SUCCESS Parsing bibtex file {bibfile!r}")
             refs.update(bibdata.entries)
 
         self.bib_data = BibliographyData(entries=refs)
@@ -82,7 +85,7 @@ class BibTexPlugin(BasePlugin):
         # Set CSL from either url or path (or empty)
         is_url = validators.url(self.config["csl_file"])
         if is_url:
-            self.csl_file = tempfile_from_url(self.config["csl_file"], ".csl")
+            self.csl_file = tempfile_from_url("CSL file", self.config["csl_file"], ".csl")
         else:
             self.csl_file = self.config.get("csl_file", None)
 
@@ -200,10 +203,12 @@ class BibTexPlugin(BasePlugin):
                 entries[key] = self.bib_data.entries[key]
 
         # 3. Format entries
+        log.debug("Formatting all bib entries...")
         if self.csl_file:
             self.all_references.update(format_pandoc(entries, self.csl_file))
         else:
             self.all_references.update(format_simple(entries))
+        log.info("SUCCESS Formatting all bib entries")
 
         # 4. Construct quads
         quads = [
