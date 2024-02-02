@@ -99,7 +99,7 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir).joinpath("temp.bib")
-        with open(bib_path, "w") as bibfile:
+        with open(bib_path, "wt", encoding="utf-8") as bibfile:
             bibfile.write(bibtex_string)
 
         markdown = pypandoc.convert_text(
@@ -122,7 +122,7 @@ def _convert_pandoc_legacy(bibtex_string, csl_path):
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir).joinpath("temp.bib")
-        with open(bib_path, "w") as bibfile:
+        with open(bib_path, "wt", encoding="utf-8") as bibfile:
             bibfile.write(bibtex_string)
         citation_text = """
 ---
@@ -265,7 +265,7 @@ def tempfile_from_url(url, suffix):
                     f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}"
                 )
 
-            file = tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False)
+            file = tempfile.NamedTemporaryFile(mode="wt", encoding="utf-8", suffix=suffix, delete=False)
             file.write(dl.text)
             file.close()
             return file.name
