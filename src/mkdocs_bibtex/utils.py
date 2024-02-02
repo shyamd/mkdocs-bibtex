@@ -224,7 +224,7 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
         markdown (str): the modified Markdown
     """
 
-    log.debug(f"Replacing citation keys with the generated ones...")
+    log.debug("Replacing citation keys with the generated ones...")
 
     # Renumber quads if using numbers for citation links
 
