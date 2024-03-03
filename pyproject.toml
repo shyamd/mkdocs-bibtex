@@ -5,6 +5,8 @@ exclude = [
     '__pycache__',
     '__init__.py',
 ]
+
+[tool.ruff.lint]
 ignore = [
     'E741',
     'W605',
