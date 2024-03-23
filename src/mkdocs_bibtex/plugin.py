@@ -74,10 +74,10 @@ class BibTexPlugin(BasePlugin):
 
         # load bibliography data
         refs = {}
+        log.info(f"Loading data from bib files: {bibfiles}")
         for bibfile in bibfiles:
-            log.debug(f"Parsing bibtex file {bibfile!r}...")
+            log.debug(f"Parsing bibtex file {bibfile}")
             bibdata = parse_file(bibfile)
-            log.info(f"SUCCESS Parsing bibtex file {bibfile!r}")
             refs.update(bibdata.entries)
 
         self.bib_data = BibliographyData(entries=refs)
@@ -208,7 +208,7 @@ class BibTexPlugin(BasePlugin):
             self.all_references.update(format_pandoc(entries, self.csl_file))
         else:
             self.all_references.update(format_simple(entries))
-        log.info("SUCCESS Formatting all bib entries")
+        log.debug("SUCCESS Formatting all bib entries")
 
         # 4. Construct quads
         quads = [
