@@ -81,6 +81,7 @@ class BibTexPlugin(BasePlugin):
             refs.update(bibdata.entries)
 
         self.bib_data = BibliographyData(entries=refs)
+        self.bib_data_bibtex = self.bib_data.to_string("bibtex")
 
         # Set CSL from either url or path (or empty)
         is_url = validators.url(self.config["csl_file"])
@@ -130,7 +131,7 @@ class BibTexPlugin(BasePlugin):
                 citation_quads,
                 markdown,
                 self.csl_file,
-                self.bib_data.to_string("bibtex"),
+                self.bib_data_bibtex,
             )
         else:
             markdown = insert_citation_keys(citation_quads, markdown)
