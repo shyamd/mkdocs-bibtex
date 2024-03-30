@@ -89,8 +89,8 @@ class BibTexPlugin(BasePlugin):
         if self.configured:
             # Skip rebuilding bib data if all files are older than the initial config
             if all(Path(bibfile).stat().st_mtime < self.configured for bibfile in bibfiles):
-                log.info("BibTexPlugin: No changes in bibfiles, returning config as is")
-            return config
+                log.info("BibTexPlugin: No changes in bibfiles.")
+                return config
         
         self.bib_data = BibliographyData(entries=refs)
 
