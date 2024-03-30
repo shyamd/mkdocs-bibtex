@@ -92,6 +92,9 @@ class BibTexPlugin(BasePlugin):
                 log.info("BibTexPlugin: No changes in bibfiles.")
                 return config
         
+        # Clear references on reconfig
+        self.all_references = OrderedDict()
+        
         self.bib_data = BibliographyData(entries=refs)
 
         # Set CSL from either url or path (or empty)
