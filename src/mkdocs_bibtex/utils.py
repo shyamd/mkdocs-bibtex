@@ -3,6 +3,7 @@ import re
 import requests
 import tempfile
 from collections import OrderedDict
+from functools import lru_cache
 from itertools import groupby
 from pathlib import Path
 
@@ -100,6 +101,7 @@ def _convert_pandoc_new(bibtex_string, csl_path):
     return citation.strip()
 
 
+@lru_cache(maxsize=1024)
 def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
     """
     Uses pandoc to convert a markdown citation key reference
