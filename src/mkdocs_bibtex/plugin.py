@@ -91,10 +91,10 @@ class BibTexPlugin(BasePlugin):
             if all(Path(bibfile).stat().st_mtime < self.configured for bibfile in bibfiles):
                 log.info("BibTexPlugin: No changes in bibfiles.")
                 return config
-        
+
         # Clear references on reconfig
         self.all_references = OrderedDict()
-        
+
         self.bib_data = BibliographyData(entries=refs)
 
         # Set CSL from either url or path (or empty)
