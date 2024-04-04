@@ -1,4 +1,5 @@
 import re
+import time
 import validators
 from collections import OrderedDict
 from pathlib import Path
@@ -51,6 +52,11 @@ class BibTexPlugin(BasePlugin):
         self.bib_data = None
         self.all_references = OrderedDict()
         self.unescape_for_arithmatex = False
+        self.configured = False
+
+    def on_startup(self, *, command, dirty):
+        """ Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
+        pass
 
     def on_config(self, config):
         """
@@ -80,6 +86,15 @@ class BibTexPlugin(BasePlugin):
             bibdata = parse_file(bibfile)
             refs.update(bibdata.entries)
 
+        if hasattr(self,"last_configured"):
+            # Skip rebuilding bib data if all files are older than the initial config
+            if all(Path(bibfile).stat().st_mtime < self.last_configured for bibfile in bibfiles):
+                log.info("BibTexPlugin: No changes in bibfiles.")
+                return config
+
+        # Clear references on reconfig
+        self.all_references = OrderedDict()
+
         self.bib_data = BibliographyData(entries=refs)
         self.bib_data_bibtex = self.bib_data.to_string("bibtex")
 
@@ -100,6 +115,7 @@ class BibTexPlugin(BasePlugin):
 
         self.footnote_format = self.config.get("footnote_format")
 
+        self.last_configured = time.time()
         return config
 
     def on_page_markdown(self, markdown, page, config, files):

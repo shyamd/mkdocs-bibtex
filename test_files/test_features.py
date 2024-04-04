@@ -35,6 +35,7 @@ def plugin():
     return plugin
 
 
+
 @pytest.fixture
 def plugin_advanced_pandoc(plugin):
     """
@@ -52,6 +53,7 @@ def plugin_advanced_pandoc(plugin):
     )
     plugin.config["cite_inline"] = True
 
+    delattr(plugin,"last_configured")
     plugin.on_config(plugin.config)
 
     return plugin
