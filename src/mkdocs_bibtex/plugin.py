@@ -86,9 +86,9 @@ class BibTexPlugin(BasePlugin):
             bibdata = parse_file(bibfile)
             refs.update(bibdata.entries)
 
-        if self.configured:
+        if hasattr(self,"last_configured"):
             # Skip rebuilding bib data if all files are older than the initial config
-            if all(Path(bibfile).stat().st_mtime < self.configured for bibfile in bibfiles):
+            if all(Path(bibfile).stat().st_mtime < self.last_configured for bibfile in bibfiles):
                 log.info("BibTexPlugin: No changes in bibfiles.")
                 return config
 
@@ -114,7 +114,7 @@ class BibTexPlugin(BasePlugin):
 
         self.footnote_format = self.config.get("footnote_format")
 
-        self.configured = time.time()
+        self.last_configured = time.time()
         return config
 
     def on_page_markdown(self, markdown, page, config, files):
