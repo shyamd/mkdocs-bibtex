@@ -3,4 +3,4 @@ pytest-cov==4.1.0
 pytest-pretty==1.2.0
 mypy==0.812;python_version<"3.9"
 mypy==1.11.1;python_version>"3.8"
-ruff==0.4.7
+ruff==0.5.5
