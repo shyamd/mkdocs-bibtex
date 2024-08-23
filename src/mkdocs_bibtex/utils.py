@@ -6,17 +6,24 @@ from collections import OrderedDict
 from functools import lru_cache
 from itertools import groupby
 from pathlib import Path
+from packaging.version import Version
 
+import mkdocs
 import pypandoc
-from mkdocs.utils import warning_filter
 
 from pybtex.backends.markdown import Backend as MarkdownBackend
 from pybtex.database import BibliographyData
 from pybtex.style.formatting.plain import Style as PlainStyle
 
-
+# Grab a logger
 log = logging.getLogger("mkdocs.plugins.mkdocs-bibtex")
-log.addFilter(warning_filter)
+
+# Add the warning filter only if the version is lower than 1.2
+# Filter doesn't do anything since that version
+MKDOCS_LOG_VERSION = '1.2'
+if Version(mkdocs.__version__) < Version(MKDOCS_LOG_VERSION):
+    from mkdocs.utils import warning_filter
+    log.addFilter(warning_filter)
 
 
 def format_simple(entries):
