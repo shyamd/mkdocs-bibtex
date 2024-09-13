@@ -24,16 +24,19 @@ def entries():
 def test_find_cite_blocks():
 
     # Suppressed authors
-    assert find_cite_blocks("[-@test]") == ["[-@test]"]
+    assert find_cite_blocks("([-@test]") == [("[-@test]", '')]
     # Affixes
-    assert find_cite_blocks("[see @test]") == ["[see @test]"]
-    assert find_cite_blocks("[@test, p. 15]") == ["[@test, p. 15]"]
-    assert find_cite_blocks("[see @test, p. 15]") == ["[see @test, p. 15]"]
-    assert find_cite_blocks("[see -@test, p. 15]") == ["[see -@test, p. 15]"]
+    assert find_cite_blocks("[see @test]") == [("[see @test]", '')]
+    assert find_cite_blocks("[@test, p. 15]") == [("[@test, p. 15]", '')]
+    assert find_cite_blocks("[see @test, p. 15]") == [("[see @test, p. 15]", '')]
+    assert find_cite_blocks("[see -@test, p. 15]") == [("[see -@test, p. 15]", '')]
+    # Options
+    assert find_cite_blocks("([@test|f]") == [("[@test|f]", 'f')]
+    assert find_cite_blocks("[see -@test, p. 15|f]") == [("[see -@test, p. 15|f]", 'f')]
     # Invalid blocks
     assert find_cite_blocks("[ @test]") is not True
     # Citavi . format
-    assert find_cite_blocks("[@Bermudez.2020]") == ["[@Bermudez.2020]"]
+    assert find_cite_blocks("[@Bermudez.2020]") == [("[@Bermudez.2020]", '')]
 
 
 def test_format_simple(entries):
