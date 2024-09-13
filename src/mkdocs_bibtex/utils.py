@@ -191,12 +191,14 @@ def find_cite_blocks(markdown):
     - first group  (1): everything. (the only thing we need)
     - second group (2): (?:(?:\[(-{0,1}[^@]*)) |\[(?=-{0,1}@))
     - third group  (3): ((?:-{0,1}@\w*(?:; ){0,1})+)
-    - fourth group (4): (?:[^\]\n]{0,1} {0,1})([^\]\n]*)
+    - fourth group (4): (?:[^\|\]\n]{0,1} {0,1})([^\|\]\n]*)
+    - fivth group  (5): (?:[\|]{0,1})([^\]\n]*)
 
     The first group captures the entire cite block, as is
     The second group captures the prefix, which is everything between '[' and ' @| -@'
     The third group captures the citekey(s), ';' separated (affixes NOT supported)
     The fourth group captures anything after the citekeys, excluding the leading whitespace
+    The fivth group captures any formatting options
     (The non-capturing group removes any symbols or whitespaces between the citekey and suffix)
 
     Matches for [see @author; @doe my suffix here]
@@ -208,16 +210,32 @@ def find_cite_blocks(markdown):
     Does NOT match: [mail@example.com]
     DOES match [mail @example.com] as [mail][@example][com]
     """
-    r = r"((?:(?:\[(-{0,1}[^@]*)) |\[(?=-{0,1}@))((?:-{0,1}@\w*(?:; ){0,1})+)(?:[^\]\n]{0,1} {0,1})([^\]\n]*)\])"
+    r = r"((?:(?:\[(-{0,1}[^@]*)) |\[(?=-{0,1}@))((?:-{0,1}@\w*(?:; ){0,1})+)(?:[^\|\]\n]{0,1} {0,1})([^\|\]\n]*)(?:[\|]{0,1})([^\]\n]*)\])"
     cite_regex = re.compile(r)
 
     citation_blocks = [
-        # We only care about the block (group 1)
-        (matches.group(1))
+        # We only care about the block (group 1) and the options (group 5)
+        (matches.group(1), check_options(matches.group(5)))
         for matches in re.finditer(cite_regex, markdown)
     ]
 
     return citation_blocks
+
+
+def check_options(options):
+    """ Checks that the options passed are correct. Possible options are:
+        - f: Insert a full-cite instead of inline reference
+    """
+    allowed = "f"
+    unknown = ""
+    for option in options:
+        if option not in allowed:
+            unknown += option
+
+    if unknown:
+        log.warning(f"Unrecognized option(s): {', '.join(*option)}. Possible options are: {', '.join(allowed)}")
+
+    return options
 
 
 def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
@@ -239,11 +257,15 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
 
     grouped_quads = [list(g) for _, g in groupby(citation_quads, key=lambda x: x[0])]
     for quad_group in grouped_quads:
+        full_cite = all(["f" in quad[4] for quad in quad_group])
         full_citation = quad_group[0][0]  # the full citation block
+
         replacement_citaton = "".join(["[^{}]".format(quad[2]) for quad in quad_group])
 
+        if full_cite:
+            replacement_citaton = "\n".join([f"- {quad[3]}" for quad in quad_group])
         # if cite_inline is true, convert full_citation with pandoc and add to replacement_citaton
-        if csl and bib:
+        elif csl and bib:
             log.debug(f"--Rendering citation inline for {full_citation!r}...")
             # Verify that the pandoc installation is newer than 2.11
             pandoc_version = pypandoc.get_pandoc_version()
@@ -279,7 +301,7 @@ def format_bibliography(citation_quads):
     Returns:
         markdown (str): the Markdown string for the bibliography
     """
-    new_bib = {quad[2]: quad[3] for quad in citation_quads}
+    new_bib = {quad[2]: quad[3] for quad in citation_quads if "f" not in quad[4]}
     bibliography = []
     for key, citation in new_bib.items():
         bibliography_text = "[^{}]: {}".format(key, citation)

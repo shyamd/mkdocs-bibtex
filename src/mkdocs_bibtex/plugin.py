@@ -204,18 +204,18 @@ class BibTexPlugin(BasePlugin):
         # 1. Extract the keys from the keyset
         entries = OrderedDict()
         pairs = [
-            [cite_block, key]
-            for cite_block in cite_keys
+            [cite_block, key, option]
+            for cite_block, option in cite_keys
             for key in extract_cite_keys(cite_block)
         ]
-        keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
+        keys = list(OrderedDict.fromkeys([k for _, k, _ in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 
         # Remove non-existant keys from pairs
         pairs = [p for p in pairs if p[1] in self.bib_data.entries]
 
         # 2. Collect any unformatted reference keys
-        for _, key in pairs:
+        for _, key, _ in pairs:
             if key not in self.all_references:
                 entries[key] = self.bib_data.entries[key]
 
@@ -234,11 +234,13 @@ class BibTexPlugin(BasePlugin):
                 key,
                 self.format_footnote_key(numbers[key]),
                 self.all_references[key],
+                option,
             )
-            for cite_block, key in pairs
+            for cite_block, key, option in pairs
         ]
 
         # List the quads in order to remove duplicate entries
+
         return list(dict.fromkeys(quads))
 
     @property
