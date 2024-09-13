@@ -46,7 +46,8 @@ The footnotes extension is how citations are linked for now.
 
 In your markdown files:
 
-1. Add your citations as you would if you used pandoc, IE: `[@first_cite;@second_cite]`
+1. Add your citations as you would if you used pandoc, IE: `[@first_cite; @second_cite]` You can pass additional options with the following syntax: `[@first_cite; @second_cite|f]`. Allowed options are:
+    - f : Insert a full cite instead of referencing an inline citation (similar to LaTeX `\fullcite{}`). If multiple citations are provided, a bullet-point list is created.
 2. Add `\bibliography`, or the value of `bib_command`, to the doc you want your references rendered (if `bib_by_default` is set to true this is automatically applied for every page).
 3. (Optional) Add `\full_bibliography`, or the value of `full_bib_command`, to where you want the full bibliography rendered. *Note*: This is currently not working properly, since this plugin can't dictate the order in which files are processed. The best way to ensure the file with the full bibliography gets processed last is to use numbers in front of file/folder names to enforce the order of processing, IE: `01_my_first_file.md`
 4. (Optional) Configure the `csl_file` option to dictate the citation text formatting.

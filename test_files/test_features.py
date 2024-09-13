@@ -63,7 +63,7 @@ def test_basic_citations(plugin):
     """
     Tests super basic citations using the built-in citation style
     """
-    assert find_cite_blocks("[@test]") == ["[@test]"]
+    assert find_cite_blocks("[@test]") == [("[@test]", '')]
 
     assert (
         insert_citation_keys(
@@ -73,6 +73,7 @@ def test_basic_citations(plugin):
                     "@test",
                     "1",
                     "First Author and Second Author",
+                    "",
                 )
             ],
             "[@test]",
@@ -87,14 +88,16 @@ def test_basic_citations(plugin):
         "test",
         "1",
         "First Author and Second Author. Test title. *Testing Journal*, 2019.",
-    ) == plugin.format_citations(["[@test]"])[0]
+        "",
+    ) == plugin.format_citations([("[@test]", '')])[0]
 
     assert (
         "[@test2]",
         "test2",
         "1",
         "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019.",
-    ) == plugin.format_citations(["[@test2]"])[0]
+        "",
+    ) == plugin.format_citations([("[@test2]", '')])[0]
 
     # test long citation
     assert (
@@ -102,7 +105,8 @@ def test_basic_citations(plugin):
         "Bivort2016",
         "1",
         "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007).",  # noqa: E501
-    ) == plugin.format_citations(["[@Bivort2016]"])[0]
+        "",
+    ) == plugin.format_citations([("[@Bivort2016]", '')])[0]
 
     # Test \url embedding
     assert (
@@ -110,17 +114,19 @@ def test_basic_citations(plugin):
         "test_citavi",
         "1",
         "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019. URL: [\\\\url\\{https://doi.org/10.21577/0103\\-5053.20190253\\}](\\url{https://doi.org/10.21577/0103-5053.20190253}).",  # noqa: E501
-    ) == plugin.format_citations(["[@test_citavi]"])[0]
+        "",
+    ) == plugin.format_citations([("[@test_citavi]", '')])[0]
 
 
 def test_compound_citations(plugin):
     """
     Compound citations are citations that include multiple cite keys
     """
-    assert find_cite_blocks("[@test; @test2]") == ["[@test; @test2]"]
+    assert find_cite_blocks("[@test; @test2]") == [("[@test; @test2]", '')]
+    assert find_cite_blocks("[@test; @test2|f]") == [("[@test; @test2|f]", 'f')]
     assert find_cite_blocks("[@test]\n [@test; @test2]") == [
-        "[@test]",
-        "[@test; @test2]",
+        ("[@test]", ''),
+        ("[@test; @test2]", ''),
     ]
 
     assert (
@@ -131,12 +137,14 @@ def test_compound_citations(plugin):
                     "@test",
                     "1",
                     "First Author and Second Author",
+                    "",
                 ),
                 (
                     "[@test; @test2]",
                     "@test2",
                     "2",
                     "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019",  # noqa: E501
+                    "",
                 ),
             ],
             "[@test; @test2]",
@@ -150,12 +158,14 @@ def test_compound_citations(plugin):
             "@test",
             "1",
             "First Author and Second Author",
+            "",
         ),
         (
             "[@test; @test2]",
             "@test2",
             "2",
             "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019",
+            "",
         ),
     ]
 
@@ -173,14 +183,16 @@ def test_compound_citations(plugin):
             "test",
             "1",
             "First Author and Second Author. Test title. *Testing Journal*, 2019.",
+            "",
         ),
         (
             "[@test; @test2]",
             "test2",
             "2",
             "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019.",
+            "",
         ),
-    ] == plugin.format_citations(["[@test; @test2]"])
+    ] == plugin.format_citations([("[@test; @test2]", '')])
 
 
 ###############
@@ -195,14 +207,16 @@ def test_basic_pandoc(plugin):
         "test",
         "1",
         "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).",
-    ) == plugin.format_citations(["[@test]"])[0]
+        "",
+    ) == plugin.format_citations([("[@test]", '')])[0]
 
     assert (
         "[@Bivort2016]",
         "Bivort2016",
         "1",
         "De Bivort, B. L. & Van Swinderen, B. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science* **15**, 1–7 (2016).",  # noqa: E501
-    ) == plugin.format_citations(["[@Bivort2016]"])[0]
+        "",
+    ) == plugin.format_citations([("[@Bivort2016]", '')])[0]
 
     # Test a CSL that outputs references in a different style
     plugin.csl_file = os.path.join(test_files_dir, "springer-basic-author-date.csl")
@@ -211,21 +225,22 @@ def test_basic_pandoc(plugin):
         "test",
         "1",
         "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).",
-    ) == plugin.format_citations(["[@test]"])[0]
+        "",
+    ) == plugin.format_citations([("[@test]", '')])[0]
 
     assert (
         "[@test_citavi]",
         "test_citavi",
         "1",
         "Author F, Author S (2019) Test Title (TT). Testing Journal (TJ) 1:",
-    ) == plugin.format_citations(["[@test_citavi]"])[0]
+    ) == plugin.format_citations([("[@test_citavi]", '')])[0]
 
 
 def test_inline_ciations(plugin_advanced_pandoc):
     plugin = plugin_advanced_pandoc
 
     # Ensure inline citation works
-    quads = [("[@test]", None, "1", None)]
+    quads = [("[@test]", None, "1", None, "")]
     test_markdown = "Hello[@test]"
     result = "Hello (Author and Author 2019)[^1]"
     assert result == insert_citation_keys(
@@ -237,7 +252,7 @@ def test_supressed_authors(plugin_advanced_pandoc):
     plugin = plugin_advanced_pandoc
 
     # Ensure suppressed authors works
-    quads = [("[-@test]", None, "1", None)]
+    quads = [("[-@test]", None, "1", None, "")]
     test_markdown = "Suppressed [-@test]"
     result = "Suppressed (2019)[^1]"
     assert result == insert_citation_keys(
@@ -248,14 +263,14 @@ def test_supressed_authors(plugin_advanced_pandoc):
 def test_affixes(plugin_advanced_pandoc):
     plugin = plugin_advanced_pandoc
     # Ensure affixes work
-    quads = [("[see @test]", None, "1", None)]
+    quads = [("[see @test]", None, "1", None, "")]
     test_markdown = "Hello[see @test]"
     result = "Hello (see Author and Author 2019)[^1]"
     assert result == insert_citation_keys(
         quads, test_markdown, plugin.csl_file, plugin.bib_data.to_string("bibtex")
     )
 
-    quads = [("[@test, p. 123]", None, "1", None)]
+    quads = [("[@test, p. 123]", None, "1", None, "")]
     test_markdown = "[@test, p. 123]"
     result = " (Author and Author 2019, p. 123)[^1]"
     assert result == insert_citation_keys(
@@ -263,7 +278,7 @@ def test_affixes(plugin_advanced_pandoc):
     )
 
     # Combined
-    quads = [("[see @test, p. 123]", None, "1", None)]
+    quads = [("[see @test, p. 123]", None, "1", None, "")]
     test_markdown = "Hello[see @test, p. 123]"
     result = "Hello (see Author and Author 2019, p. 123)[^1]"
     assert result == insert_citation_keys(
@@ -271,7 +286,7 @@ def test_affixes(plugin_advanced_pandoc):
     )
 
     # Combined, suppressed author
-    quads = [("[see -@test, p. 123]", None, "1", None)]
+    quads = [("[see -@test, p. 123]", None, "1", None, "")]
     test_markdown = "Suppressed [see -@test, p. 123]"
     result = "Suppressed (see 2019, p. 123)[^1]"
     assert result == insert_citation_keys(
@@ -295,8 +310,8 @@ def test_duplicate_reference(plugin_advanced_pandoc):
     plugin = plugin_advanced_pandoc
     # Ensure multi references work
     quads = [
-        ("[@test; @Bivort2016]", None, "1", None),
-        ("[@test; @Bivort2016]", None, "2", None),
+        ("[@test; @Bivort2016]", None, "1", None, ""),
+        ("[@test; @Bivort2016]", None, "2", None, ""),
     ]
     test_markdown = "[@test; @Bivort2016]"
     # CSL defines the order, this ordering is therefore expected with springer.csl
@@ -306,8 +321,8 @@ def test_duplicate_reference(plugin_advanced_pandoc):
     )
 
     quads = [
-        ("[@test, p. 12; @Bivort2016, p. 15]", None, "1", None),
-        ("[@test, p. 12; @Bivort2016, p. 15]", None, "2", None),
+        ("[@test, p. 12; @Bivort2016, p. 15]", None, "1", None, ""),
+        ("[@test, p. 12; @Bivort2016, p. 15]", None, "2", None, ""),
     ]
     test_markdown = "[@test, p. 12; @Bivort2016, p. 15]"
     # CSL defines the order, this ordering is therefore expected with springer.csl
@@ -325,8 +340,8 @@ def test_multi_reference(plugin_advanced_pandoc):
     plugin = plugin_advanced_pandoc
     # Ensure multiple inline references works
     quads = [
-        ("[@test]", None, "1", None),
-        ("[see @Bivort2016, p. 123]", None, "2", None),
+        ("[@test]", None, "1", None, ""),
+        ("[see @Bivort2016, p. 123]", None, "2", None, ""),
     ]
     test_markdown = "Hello[@test] World [see @Bivort2016, p. 123]"
     result = "Hello (Author and Author 2019)[^1] World (see De Bivort and Van Swinderen 2016, p. 123)[^2]"
@@ -347,4 +362,5 @@ def test_custom_footnote_formatting(plugin):
         "test",
         "Test Format 1",
         "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).",
-    ) == plugin.format_citations(["[@test]"])[0]
+        ''
+    ) == plugin.format_citations([("[@test]", '')])[0]
