@@ -43,8 +43,7 @@ def test_format_simple(entries):
     assert all(entry != citations[k] for k, entry in entries.items())
 
     assert (
-        citations["test"]
-        == "First Author and Second Author. Test title. *Testing Journal*, 2019."
+        citations["test"] == "First Author and Second Author. Test title. *Testing Journal*, 2019."
     )
     assert (
         citations["test2"]
@@ -59,8 +58,7 @@ def test_format_pandoc(entries):
     assert all(entry != citations[k] for k, entry in entries.items())
 
     assert (
-        citations["test"]
-        == "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019)."
+        citations["test"] == "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019)."
     )
     assert (
         citations["test2"]
