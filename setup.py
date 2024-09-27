@@ -22,10 +22,11 @@ setup(
         "pypandoc>=1.5",
         "requests>=2.8.1",
         "validators>=0.19.0",
-        "setuptools>=68.0.0"
+        "setuptools>=68.0.0",
     ],
     tests_require=["pytest"],
     packages=find_packages("src"),
     package_dir={"": "src"},
     entry_points={"mkdocs.plugins": ["bibtex = mkdocs_bibtex.plugin:BibTexPlugin"]},
+    version="2.16.2",
 )
