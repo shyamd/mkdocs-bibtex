@@ -20,6 +20,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
     """BibTex plugin that makes bibtex available in mkdocs."""
 
     def __init__(self):
+        """Initializer of the BibTexPlugin class"""
         # Path to a CSL file
         self.csl_file: Optional[str] = None
         # Time at which the bibliography files were last parsed
@@ -29,8 +30,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         # Mapping from cite groups to a list of cite keys contained within
         self.global_mapping: CitationBlockMapping = {}
         # Available bibliography entries
-        self.bib_data = None
+        self.bib_data: Optional[BibliographyData] = None
         self.bib_data_bibtex = None
+        # Typed aliases for the bib_type and cite_format
+        self.bib_type = BibType.GLOBAL
+        self.cite_format = CiteFormat.LINK
 
     def on_startup(self, *, command, dirty: bool):
         """Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
@@ -38,42 +42,51 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
 
     def on_config(self, config):
         """Loads bibliography on load of config"""
+        # Convert the bib_type and cite_format
+        self.bib_type = BibType(self.config.bib_type)
+        self.cite_format = CiteFormat(self.config.cite_format)
+
         # List of file paths containing bibliography entries
         bibfiles: list[str] = []
 
         # Set bib files from either URL or path
-        if self.config.get("bib_file", None) is not None:
+        if self.config.bib_file is not None:
+
             # If bib_file is a valid URL, cache it with tempfile
-            is_url = validators.url(self.config["bib_file"])
+            is_url = validators.url(self.config.bib_file)
             if is_url:
-                bibfiles.append(
-                    utils.tempfile_from_url("bib file", self.config["bib_file"], ".bib")
-                )
+                bibfiles.append(utils.tempfile_from_url("bib file", self.config.bib_file, ".bib"))
             # If it is not an URL, treat is as a local path
             else:
-                bibfiles.append(self.config["bib_file"])
+                bibfiles.append(self.config.bib_file)
 
         # Set bib files from directory
-        elif self.config.get("bib_dir", None) is not None:
-            bibfiles.extend(Path(self.config["bib_dir"]).rglob("*.bib"))
+        elif self.config.bib_dir is not None:
+            bibfiles.extend(Path(self.config.bib_dir).rglob("*.bib"))
         else:  # pragma: no cover
             raise ConfigurationError("Must supply a bibtex file or directory for bibtex files")
 
         # Set CSL from either url or path (or empty)
-        is_url = validators.url(self.config["csl_file"])
+        is_url = validators.url(self.config.csl_file)
         if is_url:
-            self.csl_file = utils.tempfile_from_url("CSL file", self.config["csl_file"], ".csl")
+            self.csl_file = utils.tempfile_from_url("CSL file", self.config.csl_file, ".csl")
         else:
-            self.csl_file = self.config["csl_file"]
+            self.csl_file = self.config.csl_file
 
         # Toggle whether or not to render citations inline (Requires CSL)
-        if self.config.cite_format == CiteFormat.INLINE and not self.csl_file:  # pragma: no cover
+        if self.cite_format == CiteFormat.INLINE and not self.csl_file:  # pragma: no cover
             raise ConfigurationError("Must supply a CSL file in order to use cite_inline")
 
-        # Handle footnote format
+        # Handle reference format
         if "{number}" not in self.config.ref_format and "{key}" not in self.config.ref_format:
             raise ConfigurationError(
                 "Must include `{number}` or `{key}` placeholders in ref_format"
+            )
+
+        # Handle the combinations of bib_type and cite_format
+        if self.bib_type == BibType.GLOBAL and self.cite_format == CiteFormat.FOOTNOTE:
+            raise ConfigurationError(
+                "Footnote citations are not supported for a global bibliography"
             )
 
         # Skip rebuilding bib data if all files are older than the initial config
@@ -89,6 +102,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         return config
 
     def refresh_bib_data(self, bibfiles: list[str]):
+        """Parse the provided list of bibliography files and store the entries contained within.
+
+        Args:
+            bibfiles (list): List of paths to files containing bibliography entries.
+        """
         refs = {}
         for bibfile in bibfiles:
             utils.log.debug(f"[bibtex] Parsing bibtex file {bibfile}")
@@ -102,7 +120,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
     def on_files(self, files, config):
         """Build global index if configured for global bibliography."""
         # Build the index once for a global bibliography with unique numbering
-        if self.config.bib_type == BibType.GLOBAL:
+        if self.bib_type == BibType.GLOBAL:
             utils.log.info("[bibtex] Building global bibliography index")
 
             # Extract all cite keys from all pages
@@ -118,22 +136,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         return files
 
     def on_page_markdown(self, markdown, page, config, files) -> str:
-        """
-        Parses the markdown for each page, extracting the bibtex references
-        If a local reference list is requested, this will render that list where requested
-
-        1. Finds all cite keys (may include multiple citation references)
-        2. Convert all cite keys to citation quads:
-            (full cite key,
-            individual cite key,
-            citation key in corresponding style,
-            citation for individual cite key)
-        3. Insert formatted cite keys into text
-        4. Insert the bibliography into the markdown
-        5. Insert the full bibliograph into the markdown
+        """Parses the markdown for each page, extracting the bibtex references.
+        Renders the citations and bibliographies as requested in the configuration.
         """
         # If configured for a local bibliography, configured a local index
-        if self.config.bib_type == BibType.PER_PAGE:
+        if self.bib_type == BibType.PER_PAGE:
             utils.log.debug("[bibtex] Generating local bibliography index for page: %s", page.title)
             cite_keys = utils.find_cite_blocks(markdown)
             citation_index, mapping = self.generate_index(cite_keys)
@@ -143,16 +150,16 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
 
         # Convert cited keys to citation
         utils.log.debug("[bibtex] Replacing citation keys with the generated ones")
-        if self.config.cite_format == CiteFormat.INLINE:
+        if self.cite_format == CiteFormat.INLINE:
             markdown = utils.insert_citation_keys_inline(
                 citation_index,
                 markdown,
                 self.csl_file,
-                self.bib_data_bibtex,
+                self.bib_data,
             )
-        elif self.config.cite_format == CiteFormat.FOOTNOTE:
+        elif self.cite_format == CiteFormat.FOOTNOTE:
             markdown = utils.insert_citation_keys_footnote(citation_index, mapping, markdown)
-        elif self.config.cite_format == CiteFormat.LINK:
+        elif self.cite_format == CiteFormat.LINK:
             markdown = utils.insert_citation_keys_link(citation_index, mapping, markdown)
 
         # Automatically insert the per page bibliography if configured
@@ -160,8 +167,8 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             markdown += f"\n{self.config.per_page_bib_command}"
 
         # Insert a local bibliography per page and remove global tags
-        if self.config.bib_type == BibType.PER_PAGE:
-            add_line = self.config.cite_format == CiteFormat.LINK
+        if self.bib_type == BibType.PER_PAGE:
+            add_line = self.cite_format == CiteFormat.LINK
             markdown = re.sub(
                 re.escape(self.config.per_page_bib_command),
                 self.generate_bibliography(citation_index, add_line),
@@ -170,7 +177,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             markdown = re.sub(re.escape(self.config.global_bib_command), "", markdown)
 
         # Insert a global bibliography and remove the local tags
-        elif self.config.bib_type == BibType.GLOBAL:
+        elif self.bib_type == BibType.GLOBAL:
             markdown = re.sub(
                 re.escape(self.config.global_bib_command),
                 self.generate_bibliography(citation_index),
@@ -180,14 +187,15 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         return markdown
 
     def generate_index(self, cite_keys: list[str]) -> Tuple[CitationIndex, CitationBlockMapping]:
-        """Formats a list of citations into a citation index
+        """Formats a list of citations into a citation index.
 
         Args:
-            cite_keys: List of full cite keys that may be compound keys
+            cite_keys: List of full cite keys that may be compound keys.
 
         Returns:
             Citation index containing all unique citations and the metadata
             needed to render the corresponding key and the bibliography.
+            Mapping from the cite block to the cite keys contained within.
         """
         # Go through all citations in the cite keys and split compound citations
         index: CitationIndex = {}
@@ -216,9 +224,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
                     ref = self.config.ref_format
                     ref = re.sub(re.escape("{number}"), str(idx), ref)
                     ref = re.sub(re.escape("{key}"), key, ref)
-                    page = (
-                        self.config.global_bib_ref if self.config.bib_type == BibType.GLOBAL else ""
-                    )
+                    page = self.config.global_bib_ref if self.bib_type == BibType.GLOBAL else ""
 
                     # Create the index entry
                     index[key] = CitationIndexEntry(
@@ -235,10 +241,18 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         return (index, mapping)
 
     def generate_bibliography(self, index: CitationIndex, add_line=False) -> str:
+        """Generate a bibliography string for the provided citation index.
+
+        Args:
+            index (CitationIndex): Index of citations to be rendered in the bibliography.
+            add_line (bool): Add a markdown separator line before the bibliography.
+        Returns:
+            String of the bibliography.
+        """
         # Generate bibliography depending on the selected citation type
-        if self.config.cite_format in [CiteFormat.FOOTNOTE, CiteFormat.INLINE]:
+        if self.cite_format in [CiteFormat.FOOTNOTE, CiteFormat.INLINE]:
             bibliography = utils.format_bibliography_footnote(index)
-        elif self.config.cite_format == CiteFormat.LINK:
+        elif self.cite_format == CiteFormat.LINK:
             bibliography = utils.format_bibliography_link(index)
 
         # Add a separator line in front of the bibliography if requested

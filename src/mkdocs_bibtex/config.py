@@ -19,11 +19,13 @@ class BibTexConfig(base.Config):
             Should be either "global" or "per_page". It defaults to "per_page"
         automatic_per_page (bool, optional): Automatically insert the bibliography
             command at the end of each page. It defaults to True.
+        ref_format (string, optional): Formatting string for the citation links.
+        global_bib_ref (string, optional): Absolute to the file where the global
+            bibliography is rendered.
         per_page_bib_command (string, optional): Command used to insert a per
             page bibliography. It defaults to "\\bibliography".
         global_bib_command (string, optional): Command to place a global
             bibliography of all used references. It defaults to "\\full_bibliography"
-        ref_format (string, optional): Formatting string for the citation links.
     """
 
     # Input files
@@ -32,8 +34,13 @@ class BibTexConfig(base.Config):
     csl_file = c.Optional(c.Type(str))
 
     # General settings
-    cite_format = c.Choice(CiteFormat, default=CiteFormat.LINK)
-    bib_type = c.Choice(BibType, default=BibType.GLOBAL)
+    cite_format = c.Choice(
+        (CiteFormat.LINK.value, CiteFormat.FOOTNOTE.value, CiteFormat.INLINE.value),
+        default=CiteFormat.LINK.value,
+    )
+    bib_type = c.Choice(
+        (BibType.GLOBAL.value, BibType.PER_PAGE.value), default=BibType.GLOBAL.value
+    )
     automatic_per_page = c.Type(bool, default=True)
     ref_format = c.Type(str, default="{number}-{key}")
     global_bib_ref = c.Type(str, default="/bibliography.md")

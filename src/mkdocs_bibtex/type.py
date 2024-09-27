@@ -1,7 +1,6 @@
 # Python imports
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional
 
 
 class CiteFormat(Enum):
