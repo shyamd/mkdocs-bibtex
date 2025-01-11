@@ -31,8 +31,6 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
     def __init__(self):
         self.bib_data = None
         self.all_references = OrderedDict()
-        self.unescape_for_arithmatex = False
-        self.configured = False
 
     def on_startup(self, *, command, dirty):
         """ Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
