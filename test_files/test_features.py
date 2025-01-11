@@ -3,6 +3,7 @@ This test file checks to make sure each feature works rather than checking each
 function. Each feature should have a single test function that covers all the python
 functions it that would need to be tested
 """
+
 import os
 
 import pytest
@@ -35,7 +36,6 @@ def plugin():
     return plugin
 
 
-
 @pytest.fixture
 def plugin_advanced_pandoc(plugin):
     """
@@ -48,12 +48,10 @@ def plugin_advanced_pandoc(plugin):
         pytest.skip(f"Unsupported version of pandoc (v{pandoc_version}) installed.")
 
     plugin.config["bib_file"] = os.path.join(test_files_dir, "test.bib")
-    plugin.config["csl_file"] = os.path.join(
-        test_files_dir, "springer-basic-author-date.csl"
-    )
+    plugin.config["csl_file"] = os.path.join(test_files_dir, "springer-basic-author-date.csl")
     plugin.config["cite_inline"] = True
 
-    delattr(plugin,"last_configured")
+    delattr(plugin, "last_configured")
     plugin.on_config(plugin.config)
 
     return plugin
@@ -163,8 +161,7 @@ def test_compound_citations(plugin):
 
     assert "[^1]: First Author and Second Author" in bib
     assert (
-        "[^2]: First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019"
-        in bib
+        "[^2]: First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019" in bib
     )
 
     assert [
