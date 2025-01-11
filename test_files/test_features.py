@@ -338,7 +338,7 @@ def test_multi_reference(plugin_advanced_pandoc):
 def test_custom_footnote_formatting(plugin):
 
     assert plugin.format_footnote_key(1) == "1"
-    plugin.footnote_format = "Test Format {number}"
+    plugin.config.footnote_format = "Test Format {number}"
     assert plugin.format_footnote_key(1) == "Test Format 1"
 
     plugin.csl_file = os.path.join(test_files_dir, "nature.csl")

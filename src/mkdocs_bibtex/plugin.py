@@ -8,6 +8,10 @@ from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
 from pybtex.database import BibliographyData, parse_file
 
+from mkdocs_bibtex.config import BibTexConfig
+from mkdocs.exceptions import ConfigurationError
+
+
 from mkdocs_bibtex.utils import (
     find_cite_blocks,
     extract_cite_keys,
@@ -20,34 +24,11 @@ from mkdocs_bibtex.utils import (
 )
 
 
-class BibTexPlugin(BasePlugin):
+class BibTexPlugin(BasePlugin[BibTexConfig]):
     """
     Allows the use of bibtex in markdown content for MKDocs.
-
-    Options:
-        bib_file (string): path or url to a single bibtex file for entries,
-                           url example: https://api.zotero.org/*/items?format=bibtex
-        bib_dir (string): path to a directory of bibtex files for entries
-        bib_command (string): command to place a bibliography relevant to just that file
-                              defaults to \bibliography
-        bib_by_default (bool): automatically appends bib_command to markdown pages
-                               by default, defaults to true
-        full_bib_command (string): command to place a full bibliography of all references
-        csl_file (string, optional): path or url to a CSL file, relative to mkdocs.yml.
-        cite_inline (bool): Whether or not to render inline citations, requires CSL, defaults to false
     """
-
-    config_scheme = [
-        ("bib_file", config_options.Type(str, required=False)),
-        ("bib_dir", config_options.Dir(exists=True, required=False)),
-        ("bib_command", config_options.Type(str, default="\\bibliography")),
-        ("bib_by_default", config_options.Type(bool, default=True)),
-        ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
-        ("csl_file", config_options.Type(str, default="")),
-        ("cite_inline", config_options.Type(bool, default=False)),
-        ("footnote_format", config_options.Type(str, default="{number}")),
-    ]
-
+    
     def __init__(self):
         self.bib_data = None
         self.all_references = OrderedDict()
@@ -66,17 +47,17 @@ class BibTexPlugin(BasePlugin):
         bibfiles = []
 
         # Set bib_file from either url or path
-        if self.config.get("bib_file", None) is not None:
-            is_url = validators.url(self.config["bib_file"])
+        if self.config.bib_file is not None:
+            is_url = validators.url(self.config.bib_file)
             # if bib_file is a valid URL, cache it with tempfile
             if is_url:
-                bibfiles.append(tempfile_from_url("bib file", self.config["bib_file"], ".bib"))
+                bibfiles.append(tempfile_from_url("bib file", self.config.bib_file, ".bib"))
             else:
-                bibfiles.append(self.config["bib_file"])
-        elif self.config.get("bib_dir", None) is not None:
-            bibfiles.extend(Path(self.config["bib_dir"]).rglob("*.bib"))
+                bibfiles.append(self.config.bib_file)
+        elif self.config.bib_dir is not None:
+            bibfiles.extend(Path(self.config.bib_dir).rglob("*.bib"))
         else:  # pragma: no cover
-            raise Exception("Must supply a bibtex file or directory for bibtex files")
+            raise ConfigurationError("Must supply a bibtex file or directory for bibtex files")
 
         # load bibliography data
         refs = {}
@@ -99,21 +80,17 @@ class BibTexPlugin(BasePlugin):
         self.bib_data_bibtex = self.bib_data.to_string("bibtex")
 
         # Set CSL from either url or path (or empty)
-        is_url = validators.url(self.config["csl_file"])
-        if is_url:
-            self.csl_file = tempfile_from_url("CSL file", self.config["csl_file"], ".csl")
+        if self.config.csl_file is not None and validators.url(self.config.csl_file):
+            self.csl_file = tempfile_from_url("CSL file", self.config.csl_file, ".csl")
         else:
-            self.csl_file = self.config.get("csl_file", None)
+            self.csl_file = self.config.csl_file
 
         # Toggle whether or not to render citations inline (Requires CSL)
-        self.cite_inline = self.config.get("cite_inline", False)
-        if self.cite_inline and not self.csl_file:  # pragma: no cover
-            raise Exception("Must supply a CSL file in order to use cite_inline")
+        if self.config.cite_inline and not self.csl_file:  # pragma: no cover
+            raise ConfigurationError("Must supply a CSL file in order to use cite_inline")
 
-        if "{number}" not in self.config.get("footnote_format"):
-            raise Exception("Must include `{number}` placeholder in footnote_format")
-
-        self.footnote_format = self.config.get("footnote_format")
+        if "{number}" not in self.config.footnote_format:
+            raise ConfigurationError("Must include `{number}` placeholder in footnote_format")
 
         self.last_configured = time.time()
         return config
@@ -142,7 +119,7 @@ class BibTexPlugin(BasePlugin):
 
         # 3. Convert cited keys to citation,
         # or a footnote reference if inline_cite is false.
-        if self.cite_inline:
+        if self.config.cite_inline:
             markdown = insert_citation_keys(
                 citation_quads,
                 markdown,
@@ -153,9 +130,9 @@ class BibTexPlugin(BasePlugin):
             markdown = insert_citation_keys(citation_quads, markdown)
 
         # 4. Insert in the bibliopgrahy text into the markdown
-        bib_command = self.config.get("bib_command", "\\bibliography")
+        bib_command = self.config.bib_command
 
-        if self.config.get("bib_by_default"):
+        if self.config.bib_by_default:
             markdown += f"\n{bib_command}"
 
         bibliography = format_bibliography(citation_quads)
@@ -166,7 +143,7 @@ class BibTexPlugin(BasePlugin):
         )
 
         # 5. Build the full Bibliography and insert into the text
-        full_bib_command = self.config.get("full_bib_command", "\\full_bibliography")
+        full_bib_command = self.config.full_bib_command
 
         markdown = re.sub(
             re.escape(full_bib_command),
@@ -186,7 +163,7 @@ class BibTexPlugin(BasePlugin):
         Returns:
             formatted footnote
         """
-        return self.footnote_format.format(number=number)
+        return self.config.footnote_format.format(number=number)
 
     def format_citations(self, cite_keys):
         """
