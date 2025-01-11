@@ -28,7 +28,7 @@ jobs:
         pip install -r requirements-testing.txt
 
     - name: Lint with Ruff
-      run: ruff src
+      run: ruff check src
 
     - name: Lint with mypy
       run: mypy --ignore-missing-imports src
