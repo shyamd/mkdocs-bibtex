@@ -4,7 +4,6 @@ import validators
 from collections import OrderedDict
 from pathlib import Path
 
-from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
 from pybtex.database import BibliographyData, parse_file
 
@@ -28,7 +27,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
     """
     Allows the use of bibtex in markdown content for MKDocs.
     """
-    
+
     def __init__(self):
         self.bib_data = None
         self.all_references = OrderedDict()
