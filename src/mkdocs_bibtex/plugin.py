@@ -31,6 +31,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
     def __init__(self):
         self.bib_data = None
         self.all_references = OrderedDict()
+        self.last_configured = None
 
     def on_startup(self, *, command, dirty):
         """ Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
@@ -56,6 +57,12 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         else:  # pragma: no cover
             raise ConfigurationError("Must supply a bibtex file or directory for bibtex files")
 
+        # Skip rebuilding bib data if all files are older than the initial config
+        if self.last_configured is not None:
+            if all(Path(bibfile).stat().st_mtime < self.last_configured for bibfile in bibfiles):
+                log.info("BibTexPlugin: No changes in bibfiles.")
+                return config
+
         # load bibliography data
         refs = {}
         log.info(f"Loading data from bib files: {bibfiles}")
@@ -63,12 +70,6 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             log.debug(f"Parsing bibtex file {bibfile}")
             bibdata = parse_file(bibfile)
             refs.update(bibdata.entries)
-
-        if hasattr(self,"last_configured"):
-            # Skip rebuilding bib data if all files are older than the initial config
-            if all(Path(bibfile).stat().st_mtime < self.last_configured for bibfile in bibfiles):
-                log.info("BibTexPlugin: No changes in bibfiles.")
-                return config
 
         # Clear references on reconfig
         self.all_references = OrderedDict()

@@ -53,7 +53,7 @@ def plugin_advanced_pandoc(plugin):
     )
     plugin.config["cite_inline"] = True
 
-    delattr(plugin,"last_configured")
+    plugin.last_configured = None
     plugin.on_config(plugin.config)
 
     return plugin
