@@ -16,6 +16,7 @@ class BibTexConfig(base.Config):
         full_bib_command (string): command to place a full bibliography of all references
         csl_file (string, optional): path or url to a CSL file, relative to mkdocs.yml.
         cite_inline (bool): Whether or not to render inline citations, requires CSL, defaults to false
+        footnote_format (string): format for the footnote number, defaults to "{number}"
     """
     # Input files
     bib_file = config_options.Optional(config_options.Type(str))
