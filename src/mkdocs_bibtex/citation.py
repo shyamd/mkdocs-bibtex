@@ -12,9 +12,9 @@ EMAIL_REGEX = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 class Citation:
     """Represents a citation in raw markdown without formatting"""
 
+    key: str
     prefix: str
     suffix: str
-    key: str
 
     @classmethod
     def from_markdown(cls, markdown: str) -> List["Citation"]:
