@@ -93,7 +93,7 @@ def test_citation_features(pandoc_plugin):
     # Check various citation formats
     assert "(2019)" in result  # Suppressed author
     assert "(see Author and Author 2019, p. 123)" in result  # Prefix and suffix
-    assert "Author and Author 2019; Author and Author 2019" in result  # Multiple citations
+    assert "Author and Author 2019a, b" in result  # Multiple citations
 
 
 def test_bibliography_controls(plugin):
