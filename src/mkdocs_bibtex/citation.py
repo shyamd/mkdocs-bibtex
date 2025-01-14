@@ -13,8 +13,8 @@ class Citation:
     """Represents a citation in raw markdown without formatting"""
 
     key: str
-    prefix: str
-    suffix: str
+    prefix: str = ""
+    suffix: str = ""
 
     def __str__(self) -> str:
         """String representation of the citation"""
@@ -46,9 +46,12 @@ class Citation:
 @dataclass
 class CitationBlock:
     citations: List[Citation]
+    raw: str = ""
 
     def __str__(self) -> str:
         """String representation of the citation block"""
+        if self.raw != "":
+            return f"[{self.raw}]"
         return "[" + "; ".join(str(citation) for citation in self.citations) + "]"
 
     @classmethod
@@ -64,7 +67,9 @@ class CitationBlock:
         citation_blocks = []
         for match in CITATION_BLOCK_REGEX.finditer(markdown):
             try:
-                citation_blocks.append(CitationBlock(citations=Citation.from_markdown(match.group(1))))
+                citation_blocks.append(
+                    CitationBlock(raw=match.group(1), citations=Citation.from_markdown(match.group(1)))
+                )
             except Exception as e:
                 print(f"Error extracting citations from block: {e}")
         return citation_blocks

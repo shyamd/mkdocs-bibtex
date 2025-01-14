@@ -80,6 +80,7 @@ def test_citation_block():
     assert blocks[0].citations[0].key == "test"
     assert blocks[0].citations[0].prefix == "see"
     assert blocks[0].citations[0].suffix == "p. 123"
+    assert str(blocks[0]) == "[see @test, p. 123]"
 
 
 def test_multiple_citation_blocks():
@@ -88,6 +89,8 @@ def test_multiple_citation_blocks():
     assert len(blocks) == 2
     assert blocks[0].citations[0].key == "test"
     assert blocks[1].citations[0].key == "test2"
+    assert str(blocks[0]) == "[see @test, p. 123]"
+    assert str(blocks[1]) == "[@test2]"
 
 
 def test_invalid_citation():
@@ -119,6 +122,7 @@ def test_complex_citation_block():
     assert blocks[0].citations[2].key == "test3"
     assert blocks[0].citations[2].prefix == " -"
     assert blocks[0].citations[2].suffix == ""
+    assert str(blocks[0]) == "[see @test1, p. 123; @test2, p. 456; -@test3]"
 
 
 def test_citation_string():
