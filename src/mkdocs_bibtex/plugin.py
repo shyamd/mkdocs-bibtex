@@ -34,7 +34,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         self.last_configured = None
 
     def on_startup(self, *, command, dirty):
-        """ Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
+        """Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
         pass
 
     def on_config(self, config):
@@ -178,11 +178,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
 
         # 1. Extract the keys from the keyset
         entries = OrderedDict()
-        pairs = [
-            [cite_block, key]
-            for cite_block in cite_keys
-            for key in extract_cite_keys(cite_block)
-        ]
+        pairs = [[cite_block, key] for cite_block in cite_keys for key in extract_cite_keys(cite_block)]
         keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
         numbers = {k: str(n + 1) for n, k in enumerate(keys)}
 

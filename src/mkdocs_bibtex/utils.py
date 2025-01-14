@@ -20,9 +20,10 @@ log = logging.getLogger("mkdocs.plugins.mkdocs-bibtex")
 
 # Add the warning filter only if the version is lower than 1.2
 # Filter doesn't do anything since that version
-MKDOCS_LOG_VERSION = '1.2'
+MKDOCS_LOG_VERSION = "1.2"
 if Version(mkdocs.__version__) < Version(MKDOCS_LOG_VERSION):
     from mkdocs.utils import warning_filter
+
     log.addFilter(warning_filter)
 
 
@@ -45,9 +46,7 @@ def format_simple(entries):
         entry_text = formatted_entry.text.render(backend)
         entry_text = entry_text.replace("\n", " ")
         # Local reference list for this file
-        citations[key] = (
-            entry_text.replace("\\(", "(").replace("\\)", ")").replace("\\.", ".")
-        )
+        citations[key] = entry_text.replace("\\(", "(").replace("\\)", ")").replace("\\.", ".")
         log.debug(f"SUCCESS Converting bibtex entry {key!r} without pandoc")
     return citations
 
@@ -98,9 +97,7 @@ def _convert_pandoc_new(bibtex_string, csl_path):
     # Remove newlines from any generated span tag (non-capitalized words)
     markdown = re.compile(r"<\/span>[\r\n]").sub("</span> ", markdown)
 
-    citation_regex = re.compile(
-        r"<span\s+class=\"csl-(?:left-margin|right-inline)\">(.+?)(?=<\/span>)<\/span>"
-    )
+    citation_regex = re.compile(r"<span\s+class=\"csl-(?:left-margin|right-inline)\">(.+?)(?=<\/span>)<\/span>")
     try:
         citation = citation_regex.findall(re.sub(r"(\r|\n)", "", markdown))[1]
     except IndexError:
@@ -124,16 +121,20 @@ def _convert_pandoc_citekey(bibtex_string, csl_path, fullcite):
         with open(bib_path, "wt", encoding="utf-8") as bibfile:
             bibfile.write(bibtex_string)
 
-        log.debug(f"----Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and Bibliography file"
-                  f" '{bib_path!s}'...")
+        log.debug(
+            f"----Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and Bibliography file"
+            f" '{bib_path!s}'..."
+        )
         markdown = pypandoc.convert_text(
             source=fullcite,
             to="markdown-citations",
             format="markdown",
             extra_args=["--citeproc", "--csl", csl_path, "--bibliography", bib_path],
         )
-        log.debug(f"----SUCCESS Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and "
-                  f"Bibliography file '{bib_path!s}'")
+        log.debug(
+            f"----SUCCESS Converting pandoc citation key {fullcite!r} with CSL file {csl_path!r} and "
+            f"Bibliography file '{bib_path!s}'"
+        )
 
     # Return only the citation text (first line(s))
     # remove any extra linebreaks to accommodate large author names
@@ -250,8 +251,7 @@ def insert_citation_keys(citation_quads, markdown, csl=False, bib=False):
             pandoc_version_tuple = tuple(int(ver) for ver in pandoc_version.split("."))
             if pandoc_version_tuple <= (2, 11):
                 raise RuntimeError(
-                    f"Your version of pandoc (v{pandoc_version}) is "
-                    "incompatible with the cite_inline feature."
+                    f"Your version of pandoc (v{pandoc_version}) is incompatible with the cite_inline feature."
                 )
 
             inline_citation = _convert_pandoc_citekey(bib, csl, full_citation)
@@ -294,9 +294,7 @@ def tempfile_from_url(name, url, suffix):
         try:
             dl = requests.get(url)
             if dl.status_code != 200:  # pragma: no cover
-                raise RuntimeError(
-                    f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}"
-                )
+                raise RuntimeError(f"Couldn't download the url: {url}.\n Status Code: {dl.status_code}")
 
             file = tempfile.NamedTemporaryFile(mode="wt", encoding="utf-8", suffix=suffix, delete=False)
             file.write(dl.text)
@@ -306,6 +304,4 @@ def tempfile_from_url(name, url, suffix):
 
         except requests.exceptions.RequestException:  # pragma: no cover
             pass
-    raise RuntimeError(
-        f"Couldn't successfully download the url: {url}"
-    )  # pragma: no cover
+    raise RuntimeError(f"Couldn't successfully download the url: {url}")  # pragma: no cover

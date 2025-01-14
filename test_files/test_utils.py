@@ -22,7 +22,6 @@ def entries():
 
 
 def test_find_cite_blocks():
-
     # Suppressed authors
     assert find_cite_blocks("[-@test]") == ["[-@test]"]
     # Affixes
@@ -42,14 +41,8 @@ def test_format_simple(entries):
     assert all(k in citations for k in entries)
     assert all(entry != citations[k] for k, entry in entries.items())
 
-    assert (
-        citations["test"]
-        == "First Author and Second Author. Test title. *Testing Journal*, 2019."
-    )
-    assert (
-        citations["test2"]
-        == "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019."
-    )
+    assert citations["test"] == "First Author and Second Author. Test title. *Testing Journal*, 2019."
+    assert citations["test2"] == "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019."
 
 
 def test_format_pandoc(entries):
@@ -58,14 +51,8 @@ def test_format_pandoc(entries):
     assert all(k in citations for k in entries)
     assert all(entry != citations[k] for k, entry in entries.items())
 
-    assert (
-        citations["test"]
-        == "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019)."
-    )
-    assert (
-        citations["test2"]
-        == "Author, F. & Author, S. Test Title (TT). *Testing Journal (TJ)* **1**, (2019)."
-    )
+    assert citations["test"] == "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019)."
+    assert citations["test2"] == "Author, F. & Author, S. Test Title (TT). *Testing Journal (TJ)* **1**, (2019)."
 
 
 def test_extract_cite_key():

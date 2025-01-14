@@ -18,6 +18,7 @@ class BibTexConfig(base.Config):
         cite_inline (bool): Whether or not to render inline citations, requires CSL, defaults to false
         footnote_format (string): format for the footnote number, defaults to "{number}"
     """
+
     # Input files
     bib_file = config_options.Optional(config_options.Type(str))
     bib_dir = config_options.Optional(config_options.Dir(exists=True))
