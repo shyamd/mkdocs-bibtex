@@ -185,6 +185,9 @@ def test_unicode_in_citation(registry):
         registry.validate_citation_blocks([block])
 
 
+@pytest.mark.skip_if(
+    int(pypandoc.get_pandoc_version().split(".")[0]) < 3, reason="Pandoc formatting is different in Pandoc 3.0"
+)
 def test_complex_citation_formatting(registry):
     """Test complex citation scenarios"""
     citations = [
