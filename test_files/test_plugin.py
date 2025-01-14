@@ -44,7 +44,3 @@ def test_bibtex_loading_bibdir():
 
     plugin.on_config(plugin.config)
     assert len(plugin.bib_data.entries) == 2
-
-
-
-
