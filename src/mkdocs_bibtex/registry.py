@@ -85,8 +85,8 @@ class PandocRegistry(ReferenceRegistry):
             raise ValueError("Pandoc version 2.11 or higher is required for this registry")
 
         # Cache for formatted citations
-        self._inline_cache = {}
-        self._reference_cache = {}
+        self._inline_cache: dict[str, str] = {}
+        self._reference_cache: dict[str, str] = {}
 
     def inline_text(self, citation_block: CitationBlock) -> str:
         """Returns cached inline citation text"""
