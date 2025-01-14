@@ -48,8 +48,7 @@ class SimpleRegistry(ReferenceRegistry):
         for citation_block in citation_blocks:
             for citation in citation_block.citations:
                 if citation.key not in self.bib_data.entries:
-                    # TODO: Should this be a warning or fatal error?
-                    pass
+                    log.warning("File '%s' not found. Breaks the build if --strict is passed", my_file_name)
 
         for citation_block in citation_blocks:
             for citation in citation_block.citations:
@@ -148,6 +147,7 @@ nocite: |
         print(markdown)
         raise ValueError("Failed to parse pandoc output")
 
+    print(markdown)
     # Parse inline citations
     inline_citations = inline_citations.strip()
 
