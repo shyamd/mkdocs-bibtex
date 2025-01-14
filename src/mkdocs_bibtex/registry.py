@@ -48,13 +48,12 @@ class SimpleRegistry(ReferenceRegistry):
         for citation_block in citation_blocks:
             for citation in citation_block.citations:
                 if citation.key not in self.bib_data.entries:
-                    log.warning("File '%s' not found. Breaks the build if --strict is passed", my_file_name)
+                    log.warning(f"Citing unknown reference key {citation.key}")
 
         for citation_block in citation_blocks:
             for citation in citation_block.citations:
                 if citation.prefix != "" or citation.suffix != "":
-                    # TODO: Should this be a warning or fatal error?
-                    pass
+                    log.warning(f"Affixes not supported in simple mode: {citation}")
 
     def inline_text(self, citation_block: CitationBlock) -> str:
         keys = sorted(set(citation.key for citation in citation_block.citations))
@@ -103,7 +102,7 @@ class PandocRegistry(ReferenceRegistry):
         for citation_block in citation_blocks:
             for citation in citation_block.citations:
                 if citation.key not in self.bib_data.entries:
-                    raise ValueError(f"Citation key {citation.key} not found in bibliography")
+                    log.warning(f"Citing unknown reference key {citation.key}")
 
         # Pre-Process with appropriate pandoc version
         self._inline_cache, self._reference_cache = _process_with_pandoc(
@@ -130,7 +129,7 @@ nocite: |
 """
     citation_map = {index: block for index, block in enumerate(citation_blocks)}
     full_doc += "\n\n".join(f"{index}. {block}" for index, block in citation_map.items())
-    full_doc += "# References\n\n"
+    full_doc += "\n\n# References\n\n"
 
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir).joinpath("temp.bib")

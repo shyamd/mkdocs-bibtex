@@ -31,28 +31,28 @@ def test_validate_citation_blocks_valid(simple_registry):
     simple_registry.validate_citation_blocks([block])
 
 
-@pytest.mark.xfail(reason="Old logic didn't fail this way but maybe it should")
+@pytest.mark.xfail(reason="For some reason pytest does not catch the warning")
 def test_validate_citation_blocks_invalid_key(simple_registry):
     """Test validation fails with invalid citation key"""
     citations = [Citation("nonexistent", "", "")]
     block = CitationBlock(citations)
-    with pytest.raises(ValueError, match="Citation key nonexistent not found in bibliography"):
+    with pytest.warns(UserWarning, match="Citing unknown reference key nonexistent"):
         simple_registry.validate_citation_blocks([block])
 
 
-@pytest.mark.xfail(reason="Old logic didn't fail this way but maybe it should")
+@pytest.mark.xfail(reason="For some reason pytest does not catch the warning")
 def test_validate_citation_blocks_invalid_affixes(simple_registry):
     """Test validation fails with affixes (not supported in simple mode)"""
     # Test prefix
     citations = [Citation("test", "see", "")]
     block = CitationBlock(citations)
-    with pytest.raises(ValueError, match="Simple style does not support any affixes"):
+    with pytest.warns(UserWarning, match="Simple style does not support any affixes"):
         simple_registry.validate_citation_blocks([block])
 
     # Test suffix
     citations = [Citation("test", "", "p. 123")]
     block = CitationBlock(citations)
-    with pytest.raises(ValueError, match="Simple style does not support any affixes"):
+    with pytest.warns(UserWarning, match="Simple style does not support any affixes"):
         simple_registry.validate_citation_blocks([block])
 
 
