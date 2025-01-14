@@ -16,6 +16,16 @@ class Citation:
     prefix: str
     suffix: str
 
+    def __str__(self) -> str:
+        """String representation of the citation"""
+        parts = []
+        if self.prefix:
+            parts.append(self.prefix)
+        parts.append(f"@{self.key}")
+        if self.suffix:
+            parts.append(self.suffix)
+        return " ".join(parts)
+
     @classmethod
     def from_markdown(cls, markdown: str) -> List["Citation"]:
         """Extracts citations from a markdown string"""
@@ -36,6 +46,10 @@ class Citation:
 @dataclass
 class CitationBlock:
     citations: List[Citation]
+
+    def __str__(self) -> str:
+        """String representation of the citation block"""
+        return "[" + "; ".join(str(citation) for citation in self.citations) + "]"
 
     @classmethod
     def from_markdown(cls, markdown: str) -> List["CitationBlock"]:

@@ -119,3 +119,16 @@ def test_complex_citation_block():
     assert blocks[0].citations[2].key == "test3"
     assert blocks[0].citations[2].prefix == " -"
     assert blocks[0].citations[2].suffix == ""
+
+
+def test_citation_string():
+    """Test citation string"""
+    citation = Citation("test", "Author", "2020")
+    assert str(citation) == "Author, 2020"
+
+    block = CitationBlock([citation])
+    assert str(block) == "[Author, 2020]"
+
+    citations = [citation, citation]
+    block = CitationBlock(citations)
+    assert str(block) == "[Author, 2020; Author, 2020]"
