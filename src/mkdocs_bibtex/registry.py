@@ -44,14 +44,14 @@ class SimpleRegistry(ReferenceRegistry):
         for citation_block in citation_blocks:
             for citation in citation_block.citations:
                 if citation.key not in self.bib_data.entries:
+                    # TODO: Should this be a warning or fatal error?
                     pass
-                    # raise ValueError(f"Citation key {citation.key} not found in bibliography")
 
         for citation_block in citation_blocks:
             for citation in citation_block.citations:
                 if citation.prefix != "" or citation.suffix != "":
+                    # TODO: Should this be a warning or fatal error?
                     pass
-                    # raise ValueError("Simple style does not support any affixes (prefix, suffix, or author suppression)")
 
     def inline_text(self, citation_block: CitationBlock) -> str:
         keys = sorted(set(citation.key for citation in citation_block.citations))
