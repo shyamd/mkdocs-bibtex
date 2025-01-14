@@ -66,7 +66,7 @@ def test_inline_text(simple_registry):
     # Multiple citations
     citations = [Citation("test", "", ""), Citation("test2", "", "")]
     block = CitationBlock(citations)
-    assert simple_registry.inline_text(block) == "[^test,^test2]"
+    assert simple_registry.inline_text(block) == "[^test][^test2]"
 
 
 def test_reference_text(simple_registry):

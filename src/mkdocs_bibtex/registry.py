@@ -56,9 +56,8 @@ class SimpleRegistry(ReferenceRegistry):
                     log.warning(f"Affixes not supported in simple mode: {citation}")
 
     def inline_text(self, citation_block: CitationBlock) -> str:
-        keys = sorted(set(citation.key for citation in citation_block.citations))
-
-        return "[" + ",".join(f"^{key}" for key in keys) + "]"
+        keys = [citation.key for citation in citation_block.citations if citation.key in self.bib_data.entries]
+        return "".join(f"[^{key}]" for key in keys)
 
     def reference_text(self, citation: Citation) -> str:
         entry = self.bib_data.entries[citation.key]
@@ -90,7 +89,8 @@ class PandocRegistry(ReferenceRegistry):
 
     def inline_text(self, citation_block: CitationBlock) -> str:
         """Returns cached inline citation text"""
-        return self._inline_cache.get(str(citation_block), "")
+        keys = [citation.key for citation in citation_block.citations if citation.key in self._reference_cache]
+        return self._inline_cache.get(str(citation_block), "") + "".join(f"[^{key}]" for key in keys)
 
     def reference_text(self, citation: Citation) -> str:
         """Returns cached reference text"""
@@ -146,7 +146,6 @@ nocite: |
         print(markdown)
         raise ValueError("Failed to parse pandoc output")
 
-    print(markdown)
     # Parse inline citations
     inline_citations = inline_citations.strip()
 
