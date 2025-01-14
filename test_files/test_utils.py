@@ -9,7 +9,7 @@ from mkdocs_bibtex.utils import (
     extract_cite_keys,
 )
 
-from mkdocs_bibtex.plugin import parse_file
+from pybtex.database import parse_file
 
 module_dir = os.path.dirname(os.path.abspath(__file__))
 test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
