@@ -21,7 +21,7 @@ def plugin():
 
 
 def test_bibtex_loading_bibfile(plugin):
-    assert len(plugin.bib_data.entries) == 4
+    assert len(plugin.registry.bib_data.entries) == 4
 
 
 def test_bibtex_loading_bib_url():
@@ -32,7 +32,7 @@ def test_bibtex_loading_bib_url():
     )
 
     plugin.on_config(plugin.config)
-    assert len(plugin.bib_data.entries) == 4
+    assert len(plugin.registry.bib_data.entries) == 4
 
 
 def test_bibtex_loading_bibdir():
@@ -43,4 +43,4 @@ def test_bibtex_loading_bibdir():
     )
 
     plugin.on_config(plugin.config)
-    assert len(plugin.bib_data.entries) == 2
+    assert len(plugin.registry.bib_data.entries) == 2
