@@ -3,21 +3,18 @@ import time
 import validators
 from collections import OrderedDict
 from pathlib import Path
+from collections import OrderedDict
 
 from mkdocs.plugins import BasePlugin
-from pybtex.database import BibliographyData, parse_file
+
+from mkdocs_bibtex.citation import CitationBlock, Citation
 
 from mkdocs_bibtex.config import BibTexConfig
+from mkdocs_bibtex.registry import SimpleRegistry, PandocRegistry
 from mkdocs.exceptions import ConfigurationError
 
 
 from mkdocs_bibtex.utils import (
-    find_cite_blocks,
-    extract_cite_keys,
-    format_bibliography,
-    format_pandoc,
-    format_simple,
-    insert_citation_keys,
     tempfile_from_url,
     log,
 )
@@ -32,6 +29,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         self.bib_data = None
         self.all_references = OrderedDict()
         self.last_configured = None
+        self.registry = None
 
     def on_startup(self, *, command, dirty):
         """Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
@@ -63,19 +61,8 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
                 log.info("BibTexPlugin: No changes in bibfiles.")
                 return config
 
-        # load bibliography data
-        refs = {}
-        log.info(f"Loading data from bib files: {bibfiles}")
-        for bibfile in bibfiles:
-            log.debug(f"Parsing bibtex file {bibfile}")
-            bibdata = parse_file(bibfile)
-            refs.update(bibdata.entries)
-
         # Clear references on reconfig
         self.all_references = OrderedDict()
-
-        self.bib_data = BibliographyData(entries=refs)
-        self.bib_data_bibtex = self.bib_data.to_string("bibtex")
 
         # Set CSL from either url or path (or empty)
         if self.config.csl_file is not None and validators.url(self.config.csl_file):
@@ -89,6 +76,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
 
         if "{number}" not in self.config.footnote_format:
             raise ConfigurationError("Must include `{number}` placeholder in footnote_format")
+
+        if self.csl_file:
+            self.registry = PandocRegistry(bib_files=bibfiles, csl_file=self.csl_file)
+        else:
+            self.registry = SimpleRegistry(bib_files=bibfiles)
 
         self.last_configured = time.time()
         return config
@@ -109,23 +101,16 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         5. Insert the full bibliograph into the markdown
         """
 
-        # 1. Grab all the cited keys in the markdown
-        cite_keys = find_cite_blocks(markdown)
+        # 1. Find all cite blocks in the markdown
+        cite_blocks = CitationBlock.from_markdown(markdown)
 
-        # 2. Convert all the citations to text references
-        citation_quads = self.format_citations(cite_keys)
-
-        # 3. Convert cited keys to citation,
-        # or a footnote reference if inline_cite is false.
-        if self.config.cite_inline:
-            markdown = insert_citation_keys(
-                citation_quads,
-                markdown,
-                self.csl_file,
-                self.bib_data_bibtex,
-            )
-        else:
-            markdown = insert_citation_keys(citation_quads, markdown)
+        # 2. Validate the cite blocks
+        self.registry.validate_citation_blocks(cite_blocks)
+        print(cite_blocks)
+        # 3. Replace the cite blocks with the inline citations
+        for block in cite_blocks:
+            replacement = self.registry.inline_text(block)
+            markdown = markdown.replace(str(block), replacement)
 
         # 4. Insert in the bibliopgrahy text into the markdown
         bib_command = self.config.bib_command
@@ -133,7 +118,18 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         if self.config.bib_by_default:
             markdown += f"\n{bib_command}"
 
-        bibliography = format_bibliography(citation_quads)
+        citations = OrderedDict()
+        for block in cite_blocks:
+            for citation in block.citations:
+                citations[citation.key] = citation
+
+        bibliography = []
+        for citation in citations.values():
+            try:
+                bibliography.append("[^{}]: {}".format(citation.key, self.registry.reference_text(citation)))
+            except Exception as e:
+                log.warning(f"Error formatting citation {citation.key}: {e}")
+        bibliography = "\n".join(bibliography)
         markdown = re.sub(
             re.escape(bib_command),
             bibliography,
@@ -142,88 +138,13 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
 
         # 5. Build the full Bibliography and insert into the text
         full_bib_command = self.config.full_bib_command
+        all_citations = [Citation(key=key) for key in self.registry.bib_data.entries]
+        full_bibliography = []
+        for citation in all_citations:
+            full_bibliography.append("[^{}]: {}".format(citation.key, self.registry.reference_text(citation)))
+        full_bibliography = "\n".join(full_bibliography)
 
-        markdown = re.sub(
-            re.escape(full_bib_command),
-            self.full_bibliography,
-            markdown,
-        )
+        markdown = markdown.replace(bib_command, bibliography)
+        markdown = markdown.replace(full_bib_command, full_bibliography)
 
         return markdown
-
-    def format_footnote_key(self, number):
-        """
-        Create footnote key based on footnote_format
-
-        Args:
-            number (int): citation number
-
-        Returns:
-            formatted footnote
-        """
-        return self.config.footnote_format.format(number=number)
-
-    def format_citations(self, cite_keys):
-        """
-        Formats references into citation quads and adds them to the global registry
-
-        Args:
-            cite_keys (list): List of full cite_keys that maybe compound keys
-
-        Returns:
-            citation_quads: quad tuples of the citation inforamtion
-        """
-
-        # Deal with arithmatex fix at some point
-
-        # 1. Extract the keys from the keyset
-        entries = OrderedDict()
-        pairs = [[cite_block, key] for cite_block in cite_keys for key in extract_cite_keys(cite_block)]
-        keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
-        numbers = {k: str(n + 1) for n, k in enumerate(keys)}
-
-        # Remove non-existant keys from pairs
-        pairs = [p for p in pairs if p[1] in self.bib_data.entries]
-
-        # 2. Collect any unformatted reference keys
-        for _, key in pairs:
-            if key not in self.all_references:
-                entries[key] = self.bib_data.entries[key]
-
-        # 3. Format entries
-        log.debug("Formatting all bib entries...")
-        if self.csl_file:
-            self.all_references.update(format_pandoc(entries, self.csl_file))
-        else:
-            self.all_references.update(format_simple(entries))
-        log.debug("SUCCESS Formatting all bib entries")
-
-        # 4. Construct quads
-        quads = [
-            (
-                cite_block,
-                key,
-                self.format_footnote_key(numbers[key]),
-                self.all_references[key],
-            )
-            for cite_block, key in pairs
-        ]
-
-        # List the quads in order to remove duplicate entries
-        return list(dict.fromkeys(quads))
-
-    @property
-    def full_bibliography(self):
-        """
-        Returns the full bibliography text
-        """
-
-        bibliography = []
-        for number, (key, citation) in enumerate(self.all_references.items()):
-            bibliography_text = "[^{}]: {}".format(
-                number,
-                citation,
-            )
-            bibliography.append(bibliography_text)
-
-        return "\n".join(bibliography)
