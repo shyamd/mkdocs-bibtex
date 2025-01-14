@@ -3,7 +3,6 @@ import time
 import validators
 from collections import OrderedDict
 from pathlib import Path
-from collections import OrderedDict
 
 from mkdocs.plugins import BasePlugin
 

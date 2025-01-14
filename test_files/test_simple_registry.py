@@ -89,7 +89,7 @@ def test_reference_text(simple_registry):
     citation = Citation("Bivort2016", "", "")
     assert (
         simple_registry.reference_text(citation)
-        == "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007)."
+        == "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007)." # noqa: E501
     )
 
     # Test citation with URL
