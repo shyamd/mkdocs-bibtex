@@ -78,11 +78,18 @@ def test_reference_text(simple_registry):
         == "First Author and Second Author. Test title. *Testing Journal*, 2019."
     )
 
-    # Test citation with title in braces
+    # Test another basic citation
     citation = Citation("test2", "", "")
     assert (
         simple_registry.reference_text(citation)
         == "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019."
+    )
+
+    # test long citation
+    citation = Citation("Bivort2016", "", "")
+    assert (
+        simple_registry.reference_text(citation)
+        == "Benjamin L. De Bivort and Bruno Van Swinderen. Evidence for selective attention in the insect brain. *Current Opinion in Insect Science*, 15:1–7, 2016. [doi:10.1016/j.cois.2016.02.007](https://doi.org/10.1016/j.cois.2016.02.007)."
     )
 
     # Test citation with URL

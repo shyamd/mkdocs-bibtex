@@ -88,12 +88,18 @@ def test_citation_features(pandoc_plugin):
     """
     result = pandoc_plugin.on_page_markdown(markdown, None, None, None)
 
-    print(result)
-
     # Check various citation formats
     assert "(2019)" in result  # Suppressed author
     assert "(see Author and Author 2019, p. 123)" in result  # Prefix and suffix
     assert "Author and Author 2019a, b" in result  # Multiple citations
+
+    # Check bibliography formatting
+    assert "Author F, Author S (2019) Test title. Testing Journal 1" in result
+    assert "Author F, Author S (2019) Test Title (TT). Testing Journal (TJ) 1" in result
+
+    # Check that the bibliography entries are only shown once
+    assert result.count("Author F, Author S (2019) Test title. Testing Journal 1") == 1
+    assert result.count("Author F, Author S (2019) Test Title (TT). Testing Journal (TJ) 1") == 1
 
 
 def test_bibliography_controls(plugin):
@@ -116,10 +122,19 @@ def test_bibliography_controls(plugin):
 
 def test_custom_footnote_format(plugin):
     """Test custom footnote formatting"""
-    plugin.config["footnote_format"] = "ref{number}"
+    plugin.config.footnote_format = "ref{number}"
     markdown = "Citation [@test]\n\n\\bibliography"
     result = plugin.on_page_markdown(markdown, None, None, None)
     assert "[^ref1]" in result
+
+    # Test that an invalid footnote format raises an exception
+    bad_plugin = BibTexPlugin()
+    bad_plugin.load_config(
+        options={"footnote_format": ""},
+        config_file_path=test_files_dir,
+    )
+    with pytest.raises(Exception):
+        bad_plugin.on_config(bad_plugin.config)
 
 
 def test_invalid_citations(plugin):
