@@ -164,7 +164,7 @@ nocite: |
     reference_cache = {}
 
     # Pattern for format with .csl-left-margin and .csl-right-inline
-    pattern1 = r"::: \{#ref-(?P<key>[^\s]+) .csl-entry\}\n\[.*?\]\{\.csl-left-margin\}\[(?P<citation>.*?)\]\{\.csl-right-inline\}"
+    pattern1 = r"::: \{#ref-(?P<key>[^\s]+) .csl-entry\}\n\[.*?\]\{\.csl-left-margin\}\[(?P<citation>.*?)\]\{\.csl-right-inline\}"  # noqa: E501
 
     # Pattern for simple reference format
     pattern2 = r"::: \{#ref-(?P<key>[^\s]+) .csl-entry\}\n(?P<citation>.*?)(?=:::|$)"
