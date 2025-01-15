@@ -145,3 +145,15 @@ def test_invalid_citations(plugin):
     result = plugin.on_page_markdown(markdown, None, None, None)
     # assert "[@nonexistent]" in result  # Invalid citation should remain unchanged
     assert "[^nonexistent]" not in result
+
+
+def test_full_bib_command(plugin):
+    """Test full bibliography command"""
+    markdown = "Full bibliography [@test]\n\n\\full_bibliography"
+    result = plugin.on_page_markdown(markdown, None, None, None)
+    print(result)
+    assert "Full bibliography [^test]" in result
+    assert "[^test]:" in result
+    assert "[^test2]:" in result
+    assert "[^Bivort2016]:" in result
+    assert "[^test_citavi]:" in result

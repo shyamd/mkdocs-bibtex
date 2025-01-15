@@ -1,4 +1,3 @@
-import re
 import time
 import validators
 from collections import OrderedDict
@@ -129,21 +128,19 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             except Exception as e:
                 log.warning(f"Error formatting citation {citation.key}: {e}")
         bibliography = "\n".join(bibliography)
-        markdown = re.sub(
-            re.escape(bib_command),
-            bibliography,
-            markdown,
-        )
+        markdown = markdown.replace(bib_command, bibliography)
+
 
         # 5. Build the full Bibliography and insert into the text
         full_bib_command = self.config.full_bib_command
-        all_citations = [Citation(key=key) for key in self.registry.bib_data.entries]
-        full_bibliography = []
-        for citation in all_citations:
-            full_bibliography.append("[^{}]: {}".format(citation.key, self.registry.reference_text(citation)))
-        full_bibliography = "\n".join(full_bibliography)
+        if markdown.count(full_bib_command) > 0:
+            all_citations = [Citation(key=key) for key in self.registry.bib_data.entries]
+            full_bibliography = []
+            for citation in all_citations:
+                full_bibliography.append("[^{}]: {}".format(citation.key, self.registry.reference_text(citation)))
+            full_bibliography = "\n".join(full_bibliography)
+            markdown = markdown.replace(full_bib_command, full_bibliography)
 
-        markdown = markdown.replace(bib_command, bibliography)
-        markdown = markdown.replace(full_bib_command, full_bibliography)
+
 
         return markdown
