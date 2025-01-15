@@ -15,9 +15,10 @@ MOCK_ZOTERO_URL = "https://api.zotero.org/groups/FOO/collections/BAR/items?forma
 
 @pytest.fixture
 def mock_zotero_api(request: pytest.FixtureRequest) -> collections.abc.Generator[responses.RequestsMock]:
-    zotero_api_url = "https://api.zotero.org/groups/FOO/collections/BAR/items?format=bibtex"
+    zotero_api_url = "https://api.zotero.org/groups/FOO/collections/BAR/items?format=bibtex&limit=100"
     bibtex_contents = generate_bibtex_entries(request.param)
-    limit = 25
+
+    limit = 100
     pages = [bibtex_contents[i : i + limit] for i in range(0, len(bibtex_contents), limit)]
 
     with responses.RequestsMock() as mock_api:

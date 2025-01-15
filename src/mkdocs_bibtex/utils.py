@@ -318,6 +318,9 @@ def tempfile_from_zotero_url(name: str, url: str, suffix: str) -> str:
     """Download bibfile from the Zotero API."""
     log.debug(f"Downloading {name} from Zotero at {url}")
     bib_contents = ""
+
+    url = sanitize_zotero_query(url)
+
     # Limit the pages requested to 999 arbitrarily. This will support a maximum of ~100k items
     for page_num in range(999):
         for _ in range(3):
@@ -342,3 +345,27 @@ def tempfile_from_zotero_url(name: str, url: str, suffix: str) -> str:
         file.write(bib_contents)
     log.info(f"{name} downloaded from URL {url} to temporary file ({file})")
     return file.name
+
+
+def sanitize_zotero_query(url: str) -> str:
+    """Sanitize query params in the Zotero URL.
+
+    The query params are amended to meet the following requirements:
+        - `mkdocs-bibtex` expects all bib data to be in bibtex format.
+        - Requesting the maximum number of items (100) reduces the requests
+            required, hence reducing load times.
+    """
+    updated_query_params = {"format": "bibtex", "limit": 100}
+
+    parsed_url = urllib.parse.urlparse(url)
+
+    query_params = dict(urllib.parse.parse_qsl(parsed_url.query))
+
+    return urllib.parse.ParseResult(
+        scheme=parsed_url.scheme,
+        netloc=parsed_url.netloc,
+        path=parsed_url.path,
+        params=parsed_url.params,
+        query=urllib.parse.urlencode(query={**query_params, **updated_query_params}),
+        fragment=parsed_url.fragment,
+    ).geturl()
