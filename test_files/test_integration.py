@@ -157,3 +157,17 @@ def test_full_bib_command(plugin):
     assert "[^test2]:" in result
     assert "[^Bivort2016]:" in result
     assert "[^test_citavi]:" in result
+
+
+def test_bib_by_default(plugin):
+    """Test bib_by_default behavior"""
+    markdown = "Citation [@test]"
+    plugin.config.bib_by_default = False
+    result = plugin.on_page_markdown(markdown, None, None, None)
+    assert "[^test]:" not in result
+
+    plugin.config.bib_by_default = True
+    result = plugin.on_page_markdown(markdown, None, None, None)
+    assert "[^test]:" in result
+
+
