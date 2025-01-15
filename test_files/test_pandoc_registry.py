@@ -147,7 +147,7 @@ def test_pandoc_formatting(registry):
     block = CitationBlock([citation])
     registry.validate_citation_blocks([block])
     text = registry.reference_text(citation)
-    assert text == "Author F, Author S (2019a) Test title. Testing Journal 1:"
+    assert text == "Author F, Author S (2019) Test title. Testing Journal 1:"
 
 
 def test_multiple_citation_blocks(registry):

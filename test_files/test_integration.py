@@ -70,7 +70,7 @@ def test_pandoc_citation_rendering(pandoc_plugin):
     print(pandoc_plugin.registry._inline_cache)
     print(result)
     # Check inline citations
-    assert "(Author and Author 2019a)" in result
+    assert "(Author and Author 2019)" in result
     assert "(De Bivort and Van Swinderen 2016)" in result
 
     # Check bibliography formatting

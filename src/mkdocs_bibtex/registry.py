@@ -123,8 +123,6 @@ def _process_with_pandoc(citation_blocks: list[CitationBlock], bib_data: str, cs
 ---
 title: "Test"
 link-citations: false
-nocite: |
-    @*
 ---
 """
     citation_map = {index: block for index, block in enumerate(citation_blocks)}
