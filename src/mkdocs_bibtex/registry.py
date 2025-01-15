@@ -130,7 +130,8 @@ nocite: |
     citation_map = {index: block for index, block in enumerate(citation_blocks)}
     full_doc += "\n\n".join(f"{index}. {block}" for index, block in citation_map.items())
     full_doc += "\n\n# References\n\n"
-
+    log.debug("Converting with pandoc")
+    log.debug(f"Full doc: {full_doc}")
     with tempfile.TemporaryDirectory() as tmpdir:
         bib_path = Path(tmpdir).joinpath("temp.bib")
         with open(bib_path, "wt", encoding="utf-8") as bibfile:
@@ -138,12 +139,13 @@ nocite: |
 
         args = ["--citeproc", "--bibliography", str(bib_path), "--csl", csl_file]
         markdown = pypandoc.convert_text(source=full_doc, to="markdown-citations", format="markdown", extra_args=args)
-
+        
+    log.debug(f"Pandoc output: {markdown}")
     try:
         splits = markdown.split("# References")
         inline_citations, references = splits[0], splits[1]
     except IndexError:
-        print(markdown)
+
         raise ValueError("Failed to parse pandoc output")
 
     # Parse inline citations
