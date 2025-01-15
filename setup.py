@@ -17,7 +17,7 @@ setup(
     license="BSD-3-Clause-LBNL",
     python_requires=">=3.6",
     install_requires=[
-        "mkdocs>=1",
+        "mkdocs>=1.2",
         "pybtex>=0.22",
         "pypandoc>=1.5",
         "requests>=2.8.1",
