@@ -105,7 +105,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
 
         # 2. Validate the cite blocks
         self.registry.validate_citation_blocks(cite_blocks)
-        print(cite_blocks)
+        
         # 3. Replace the cite blocks with the inline citations
         for block in cite_blocks:
             replacement = self.registry.inline_text(block)
