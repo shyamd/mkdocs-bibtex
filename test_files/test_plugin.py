@@ -75,6 +75,19 @@ def test_bibtex_loading_bibdir():
     assert len(plugin.bib_data.entries) == 2
 
 
+@pytest.mark.parametrize(("mock_zotero_api","number_of_entries"),((4,4), (150,150)), indirect=["mock_zotero_api"])
+def test_bibtex_loading_zotero(mock_zotero_api: responses.RequestsMock, number_of_entries: int) -> None:
+    plugin = BibTexPlugin()
+    plugin.load_config(
+        options={
+            "bib_file": MOCK_ZOTERO_URL
+        },
+        config_file_path=test_files_dir,
+    )
+
+    plugin.on_config(plugin.config)
+    assert len(plugin.bib_data.entries) == number_of_entries
+
 def test_on_page_markdown(plugin):
     """
     This function just tests to make sure the rendered markdown changees with
