@@ -2,5 +2,6 @@ pytest==8.3.4
 pytest-cov==6.0.0
 pytest-pretty==1.2.0
 mypy==1.14.1
+responses==0.25.6
 ruff==0.9.1
 types-requests~=2.32.0
