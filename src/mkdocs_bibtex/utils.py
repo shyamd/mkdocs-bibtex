@@ -2,6 +2,7 @@ import logging
 import re
 import requests
 import tempfile
+import urllib.parse
 from collections import OrderedDict
 from functools import lru_cache
 from itertools import groupby
@@ -290,6 +291,8 @@ def format_bibliography(citation_quads):
 
 def tempfile_from_url(name, url, suffix):
     log.debug(f"Downloading {name} from URL {url} to temporary file...")
+    if urllib.parse.urlparse(url).hostname == "api.zotero.org":
+        return tempfile_from_zotero_url(name, url, suffix)
     for i in range(3):
         try:
             dl = requests.get(url)
@@ -309,3 +312,33 @@ def tempfile_from_url(name, url, suffix):
     raise RuntimeError(
         f"Couldn't successfully download the url: {url}"
     )  # pragma: no cover
+
+
+def tempfile_from_zotero_url(name: str, url: str, suffix: str) -> str:
+    """Download bibfile from the Zotero API."""
+    log.debug(f"Downloading {name} from Zotero at {url}")
+    bib_contents = ""
+    # Limit the pages requested to 999 arbitrarily. This will support a maximum of ~100k items
+    for page_num in range(999):
+        for _ in range(3):
+            try:
+                response = requests.get(url)
+                if response.status_code != 200:
+                    msg = f"Couldn't download the url: {url}.\nStatus Code: {response.status_code}"
+                    raise RuntimeError(msg)
+                break
+            except requests.exceptions.RequestException:  # pragma: no cover
+                pass
+
+        bib_contents += response.text
+        try:
+            url = response.links["next"]["url"]
+        except KeyError:
+            log.debug(f"Downloaded {page_num}(s) from {url}")
+            break
+    else:
+        log.debug(f"Exceeded the maximum number of pages. Found: {page_num} pages")
+    with tempfile.NamedTemporaryFile(mode="wt", encoding="utf-8", suffix=suffix, delete=False) as file:
+        file.write(bib_contents)
+    log.info(f"{name} downloaded from URL {url} to temporary file ({file})")
+    return file.name

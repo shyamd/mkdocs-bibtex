@@ -12,25 +12,28 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
 MOCK_ZOTERO_URL = "https://api.zotero.org/groups/FOO/collections/BAR/items?format=bibtex"
 
+
 @pytest.fixture
 def mock_zotero_api(request: pytest.FixtureRequest) -> collections.abc.Generator[responses.RequestsMock]:
     zotero_api_url = "https://api.zotero.org/groups/FOO/collections/BAR/items?format=bibtex"
     bibtex_contents = generate_bibtex_entries(request.param)
     limit = 25
-    pages = [bibtex_contents[i:i + limit] for i in range(0, len(bibtex_contents), limit)]
+    pages = [bibtex_contents[i : i + limit] for i in range(0, len(bibtex_contents), limit)]
 
     with responses.RequestsMock() as mock_api:
         for page_num, page in enumerate(pages):
-            current_start = "" if page_num == 0 else f"&start={page_num*limit}"
-            next_start = f"&start={(page_num+1)*limit}"
-            mock_api.add(responses.Response(
-                method="GET",
-                url=f"{zotero_api_url}{current_start}",
-                json="\n".join(page),
-                headers={} if page_num == len(pages)-1 else {
-                    "Link": f"<{zotero_api_url}{next_start}>; rel='next'"
-                }
-            ))
+            current_start = "" if page_num == 0 else f"&start={page_num * limit}"
+            next_start = f"&start={(page_num + 1) * limit}"
+            mock_api.add(
+                responses.Response(
+                    method="GET",
+                    url=f"{zotero_api_url}{current_start}",
+                    json="\n".join(page),
+                    headers={}
+                    if page_num == len(pages) - 1
+                    else {"Link": f"<{zotero_api_url}{next_start}>; rel='next'"},
+                )
+            )
 
         yield mock_api
 
@@ -75,13 +78,11 @@ def test_bibtex_loading_bibdir():
     assert len(plugin.bib_data.entries) == 2
 
 
-@pytest.mark.parametrize(("mock_zotero_api","number_of_entries"),((4,4), (150,150)), indirect=["mock_zotero_api"])
+@pytest.mark.parametrize(("mock_zotero_api", "number_of_entries"), ((4, 4), (150, 150)), indirect=["mock_zotero_api"])
 def test_bibtex_loading_zotero(mock_zotero_api: responses.RequestsMock, number_of_entries: int) -> None:
     plugin = BibTexPlugin()
     plugin.load_config(
-        options={
-            "bib_file": MOCK_ZOTERO_URL
-        },
+        options={"bib_file": MOCK_ZOTERO_URL},
         config_file_path=test_files_dir,
     )
 
