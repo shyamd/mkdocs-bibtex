@@ -182,4 +182,6 @@ link-citations: false
             citation = match.group("citation").replace("\n", " ").strip()
             reference_cache[key] = citation
 
+    log.debug(f"Inline cache: {inline_cache}")
+    log.debug(f"Reference cache: {reference_cache}")
     return inline_cache, reference_cache
