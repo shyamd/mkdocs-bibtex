@@ -139,7 +139,7 @@ nocite: |
 
         args = ["--citeproc", "--bibliography", str(bib_path), "--csl", csl_file]
         markdown = pypandoc.convert_text(source=full_doc, to="markdown-citations", format="markdown", extra_args=args)
-        
+
     log.debug(f"Pandoc output: {markdown}")
     try:
         splits = markdown.split("# References")
