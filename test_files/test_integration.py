@@ -67,8 +67,7 @@ def test_pandoc_citation_rendering(pandoc_plugin):
     """Test citation rendering with Pandoc and CSL"""
     markdown = "Here is a citation [@test] and another [@Bivort2016].\n\n\\bibliography"
     result = pandoc_plugin.on_page_markdown(markdown, None, None, None)
-    print(pandoc_plugin.registry._inline_cache)
-    print(result)
+    
     # Check inline citations
     assert "(Author and Author 2019)" in result
     assert "(De Bivort and Van Swinderen 2016)" in result
@@ -151,7 +150,7 @@ def test_full_bib_command(plugin):
     """Test full bibliography command"""
     markdown = "Full bibliography [@test]\n\n\\full_bibliography"
     result = plugin.on_page_markdown(markdown, None, None, None)
-    print(result)
+
     assert "Full bibliography [^test]" in result
     assert "[^test]:" in result
     assert "[^test2]:" in result
