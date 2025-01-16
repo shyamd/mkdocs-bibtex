@@ -68,13 +68,15 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         else:
             self.csl_file = self.config.csl_file
 
-        if "{number}" not in self.config.footnote_format:
-            raise ConfigurationError("Must include `{number}` placeholder in footnote_format")
+        if "{key}" not in self.config.footnote_format:
+            raise ConfigurationError("Must include `{key}` placeholder in footnote_format")
 
         if self.csl_file:
-            self.registry = PandocRegistry(bib_files=bibfiles, csl_file=self.csl_file)
+            self.registry = PandocRegistry(
+                bib_files=bibfiles, csl_file=self.csl_file, footnote_format=self.config.footnote_format
+            )
         else:
-            self.registry = SimpleRegistry(bib_files=bibfiles)
+            self.registry = SimpleRegistry(bib_files=bibfiles, footnote_format=self.config.footnote_format)
 
         self.last_configured = time.time()
         return config
@@ -121,7 +123,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         bibliography = []
         for citation in citations.values():
             try:
-                bibliography.append("[^{}]: {}".format(citation.key, self.registry.reference_text(citation)))
+                bibliography.append(
+                    "[^{}]: {}".format(
+                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
+                    )
+                )
             except Exception as e:
                 log.warning(f"Error formatting citation {citation.key}: {e}")
         bibliography = "\n".join(bibliography)
@@ -136,7 +142,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             self.registry.validate_citation_blocks(blocks)
             full_bibliography = []
             for citation in all_citations:
-                full_bibliography.append("[^{}]: {}".format(citation.key, self.registry.reference_text(citation)))
+                full_bibliography.append(
+                    "[^{}]: {}".format(
+                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
+                    )
+                )
             full_bibliography = "\n".join(full_bibliography)
             markdown = markdown.replace(full_bib_command, full_bibliography)
 

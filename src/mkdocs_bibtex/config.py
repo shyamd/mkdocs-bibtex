@@ -29,4 +29,4 @@ class BibTexConfig(base.Config):
 
     # Settings
     bib_by_default = config_options.Type(bool, default=True)
-    footnote_format = config_options.Type(str, default="{number}")
+    footnote_format = config_options.Type(str, default="{key}")

@@ -120,14 +120,22 @@ def test_bibliography_controls(plugin):
     assert "[^test]:" in result
 
 
-@pytest.mark.xfail(reason="Need to reimplement footnote formatting")
-def test_custom_footnote_format(plugin):
+def test_custom_footnote_format():
     """Test custom footnote formatting"""
-    plugin.config.footnote_format = "ref{number}"
+    plugin = BibTexPlugin()
+    plugin.load_config(
+        options={
+            "bib_file": os.path.join(test_files_dir, "test.bib"),
+            "bib_by_default": False,
+            "footnote_format": "ref-{key}",
+        },
+        config_file_path=test_files_dir,
+    )
+    plugin.on_config(plugin.config)
+
     markdown = "Citation [@test]\n\n\\bibliography"
     result = plugin.on_page_markdown(markdown, None, None, None)
-    assert "[^reftest]" in result
-
+    assert "[^ref-test]" in result
     # Test that an invalid footnote format raises an exception
     bad_plugin = BibTexPlugin()
     bad_plugin.load_config(

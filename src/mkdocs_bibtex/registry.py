@@ -15,7 +15,7 @@ class ReferenceRegistry(ABC):
     A registry of references that can be used to format citations
     """
 
-    def __init__(self, bib_files: list[str]):
+    def __init__(self, bib_files: list[str], footnote_format: str = "{key}"):
         refs = {}
         log.info(f"Loading data from bib files: {bib_files}")
         for bibfile in bib_files:
@@ -23,6 +23,7 @@ class ReferenceRegistry(ABC):
             bibdata = parse_file(bibfile)
             refs.update(bibdata.entries)
         self.bib_data = BibliographyData(entries=refs)
+        self.footnote_format = footnote_format
 
     @abstractmethod
     def validate_citation_blocks(self, citation_blocks: list[CitationBlock]) -> None:
@@ -38,8 +39,8 @@ class ReferenceRegistry(ABC):
 
 
 class SimpleRegistry(ReferenceRegistry):
-    def __init__(self, bib_files: list[str]):
-        super().__init__(bib_files)
+    def __init__(self, bib_files: list[str], footnote_format: str = "{key}"):
+        super().__init__(bib_files, footnote_format)
         self.style = PlainStyle()
         self.backend = MarkdownBackend()
 
@@ -56,7 +57,11 @@ class SimpleRegistry(ReferenceRegistry):
                     log.warning(f"Affixes not supported in simple mode: {citation}")
 
     def inline_text(self, citation_block: CitationBlock) -> str:
-        keys = [citation.key for citation in citation_block.citations if citation.key in self.bib_data.entries]
+        keys = [
+            self.footnote_format.format(key=citation.key)
+            for citation in citation_block.citations
+            if citation.key in self.bib_data.entries
+        ]
         return "".join(f"[^{key}]" for key in keys)
 
     def reference_text(self, citation: Citation) -> str:
@@ -74,8 +79,8 @@ class SimpleRegistry(ReferenceRegistry):
 class PandocRegistry(ReferenceRegistry):
     """A registry that uses Pandoc to format citations"""
 
-    def __init__(self, bib_files: list[str], csl_file: str):
-        super().__init__(bib_files)
+    def __init__(self, bib_files: list[str], csl_file: str, footnote_format: str = "{key}"):
+        super().__init__(bib_files, footnote_format)
         self.csl_file = csl_file
 
         # Get pandoc version for formatting decisions
@@ -91,7 +96,9 @@ class PandocRegistry(ReferenceRegistry):
     def inline_text(self, citation_block: CitationBlock) -> str:
         """Get the inline text for a citation block"""
         footnotes = " ".join(
-            f"[^{citation.key}]" for citation in citation_block.citations if citation.key in self._reference_cache
+            f"[^{self.footnote_format.format(key=citation.key)}]"
+            for citation in citation_block.citations
+            if citation.key in self._reference_cache
         )
 
         if self._is_inline:
