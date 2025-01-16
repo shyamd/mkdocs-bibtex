@@ -105,83 +105,81 @@ class PandocRegistry(ReferenceRegistry):
                     log.warning(f"Citing unknown reference key {citation.key}")
 
         # Pre-Process with appropriate pandoc version
-        self._inline_cache, self._reference_cache = _process_with_pandoc(
-            citation_blocks, self.bib_data_bibtex, self.csl_file
-        )
+        self._inline_cache, self._reference_cache = self._process_with_pandoc(citation_blocks)
 
     @property
     def bib_data_bibtex(self) -> str:
         """Convert bibliography data to BibTeX format"""
         return self.bib_data.to_string("bibtex")
 
+    def _process_with_pandoc(self, citation_blocks: list[CitationBlock]) -> tuple[dict, dict]:
+        """Process citations with pandoc"""
 
-def _process_with_pandoc(citation_blocks: list[CitationBlock], bib_data: str, csl_file: str) -> tuple[dict, dict]:
-    """Process citations with pandoc"""
-
-    # Build the document pandoc can process and we can parse to extract inline citations and reference text
-    full_doc = """
+        # Build the document pandoc can process and we can parse to extract inline citations and reference text
+        full_doc = """
 ---
-title: "Test"
 link-citations: false
 ---
+
 """
-    citation_map = {index: block for index, block in enumerate(citation_blocks)}
-    full_doc += "\n\n".join(f"{index}. {block}" for index, block in citation_map.items())
-    full_doc += "\n\n# References\n\n"
-    log.debug("Converting with pandoc")
-    log.debug(f"Full doc: {full_doc}")
-    with tempfile.TemporaryDirectory() as tmpdir:
-        bib_path = Path(tmpdir).joinpath("temp.bib")
-        with open(bib_path, "wt", encoding="utf-8") as bibfile:
-            bibfile.write(bib_data)
+        citation_map = {index: block for index, block in enumerate(citation_blocks)}
+        full_doc += "\n\n".join(f"{index}. {block}" for index, block in citation_map.items())
+        full_doc += "\n\n# References\n\n"
+        log.debug("Converting with pandoc")
+        log.debug(f"Full doc: {full_doc}")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bib_path = Path(tmpdir).joinpath("temp.bib")
+            with open(bib_path, "wt", encoding="utf-8") as bibfile:
+                bibfile.write(self.bib_data_bibtex)
 
-        args = ["--citeproc", "--bibliography", str(bib_path), "--csl", csl_file]
-        markdown = pypandoc.convert_text(source=full_doc, to="markdown-citations", format="markdown", extra_args=args)
+            args = ["--citeproc", "--bibliography", str(bib_path), "--csl", self.csl_file]
+            markdown = pypandoc.convert_text(
+                source=full_doc, to="markdown-citations", format="markdown", extra_args=args
+            )
 
-    log.debug(f"Pandoc output: {markdown}")
-    try:
-        splits = markdown.split("# References")
-        inline_citations, references = splits[0], splits[1]
-    except IndexError:
+        log.debug(f"Pandoc output: {markdown}")
+        try:
+            splits = markdown.split("# References")
+            inline_citations, references = splits[0], splits[1]
+        except IndexError:
+            raise ValueError("Failed to parse pandoc output")
 
-        raise ValueError("Failed to parse pandoc output")
+        # Parse inline citations
+        inline_citations = inline_citations.strip()
 
-    # Parse inline citations
-    inline_citations = inline_citations.strip()
+        # Use regex to match numbered entries, handling multi-line citations
+        citation_pattern = re.compile(r"(\d+)\.\s+(.*?)(?=(?:\n\d+\.|$))", re.DOTALL)
+        matches = citation_pattern.finditer(inline_citations)
 
-    # Use regex to match numbered entries, handling multi-line citations
-    citation_pattern = re.compile(r"(\d+)\.\s+(.*?)(?=(?:\n\d+\.|$))", re.DOTALL)
-    matches = citation_pattern.finditer(inline_citations)
+        # Create a dictionary of cleaned citations (removing extra whitespace and newlines)
+        inline_citations = {int(match.group(1)): " ".join(match.group(2).split()) for match in matches}
 
-    # Create a dictionary of cleaned citations (removing extra whitespace and newlines)
-    inline_citations = {int(match.group(1)): " ".join(match.group(2).split()) for match in matches}
+        inline_cache = {str(citation_map[index]): citation for index, citation in inline_citations.items()}
 
-    inline_cache = {str(citation_map[index]): citation for index, citation in inline_citations.items()}
+        # Parse references
+        reference_cache = {}
 
-    # Parse references
-    reference_cache = {}
+        # Pattern for format with .csl-left-margin and .csl-right-inline
+        pattern1 = r"::: \{#ref-(?P<key>[^\s]+) .csl-entry\}\n\[.*?\]\{\.csl-left-margin\}\[(?P<citation>.*?)\]\{\.csl-right-inline\}"  # noqa: E501
 
-    # Pattern for format with .csl-left-margin and .csl-right-inline
-    pattern1 = r"::: \{#ref-(?P<key>[^\s]+) .csl-entry\}\n\[.*?\]\{\.csl-left-margin\}\[(?P<citation>.*?)\]\{\.csl-right-inline\}"  # noqa: E501
+        # Pattern for simple reference format
+        pattern2 = r"::: \{#ref-(?P<key>[^\s]+) .csl-entry\}\n(?P<citation>.*?)(?=:::|$)"
 
-    # Pattern for simple reference format
-    pattern2 = r"::: \{#ref-(?P<key>[^\s]+) .csl-entry\}\n(?P<citation>.*?)(?=:::|$)"
-
-    # Try first pattern
-    matches1 = re.finditer(pattern1, references, re.DOTALL)
-    for match in matches1:
-        key = match.group("key").strip()
-        citation = match.group("citation").replace("\n", " ").strip()
-        reference_cache[key] = citation
-
-    # If no matches found, try second pattern
-    if not reference_cache:
-        matches2 = re.finditer(pattern2, references, re.DOTALL)
-        for match in matches2:
+        # Try first pattern
+        matches1 = re.finditer(pattern1, references, re.DOTALL)
+        for match in matches1:
             key = match.group("key").strip()
             citation = match.group("citation").replace("\n", " ").strip()
             reference_cache[key] = citation
 
-    log.debug(f"Inline cache: {inline_cache}")
-    log.debug(f"Reference cache: {reference_cache}")
-    return inline_cache, reference_cache
+        # If no matches found, try second pattern
+        if not reference_cache:
+            matches2 = re.finditer(pattern2, references, re.DOTALL)
+            for match in matches2:
+                key = match.group("key").strip()
+                citation = match.group("citation").replace("\n", " ").strip()
+                reference_cache[key] = citation
+
+        log.debug(f"Inline cache: {inline_cache}")
+        log.debug(f"Reference cache: {reference_cache}")
+        return inline_cache, reference_cache
