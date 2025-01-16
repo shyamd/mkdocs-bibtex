@@ -154,7 +154,7 @@ link-citations: false
                 source=full_doc, to="markdown-citations", format="markdown", extra_args=args
             )
 
-        log.debug(f"Pandoc output:")
+        log.debug("Pandoc output:")
         log.debug(markdown)
         try:
             splits = markdown.split("# References")
