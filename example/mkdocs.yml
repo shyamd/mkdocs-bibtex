@@ -1,0 +1,15 @@
+site_name: Example Mkdocs-bibtex
+
+plugins:
+  - bibtex:
+      bib_file: refs.bib
+      csl_file: nature.csl
+      #csl_file: springer-basic-author-date.csl
+
+markdown_extensions:
+  - footnotes
+  - pymdownx.caret
+
+nav:
+  - Index: index.md
+  - Bibliography: full_bib.md

@@ -39,7 +39,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: [3.9, '3.10', 3.11, 3.12]
-        pandoc-version: [2.9.2, 2.14.0.3]
+        pandoc-version: [2.14.0.3, 3.6.2]
     runs-on: ${{ matrix.os }}
 
     steps:

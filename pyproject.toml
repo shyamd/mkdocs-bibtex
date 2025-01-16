@@ -1,3 +1,39 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mkdocs-bibtex"
+dynamic = ["version"]
+description = "An MkDocs plugin that enables managing citations with BibTex"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {text = "BSD-3-Clause-LBNL"}
+keywords = ["mkdocs", "python", "markdown", "bibtex"]
+authors = [
+    {name = "Shyam Dwaraknath", email = "16827130+shyamd@users.noreply.github.com"},
+]
+dependencies = [
+    "mkdocs>=1.2",
+    "pybtex>=0.22",
+    "pypandoc>=1.5",
+    "requests>=2.8.1",
+    "validators>=0.19.0",
+    "setuptools>=68.0.0",
+    "responses>=0.25.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/shyamd/mkdocs-bibtex/"
+
+[project.entry-points."mkdocs.plugins"]
+bibtex = "mkdocs_bibtex.plugin:BibTexPlugin"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["mkdocs_bibtex"]
+
+
 [tool.ruff]
 line-length = 120
 exclude = [
@@ -5,6 +41,8 @@ exclude = [
     '__pycache__',
     '__init__.py',
 ]
+
+[tool.setuptools_scm]
 
 [tool.ruff.lint]
 ignore = [

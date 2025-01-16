@@ -1,61 +1,36 @@
-import re
 import time
 import validators
 from collections import OrderedDict
 from pathlib import Path
 
-from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
-from pybtex.database import BibliographyData, parse_file
+
+from mkdocs_bibtex.citation import CitationBlock, Citation
+
+from mkdocs_bibtex.config import BibTexConfig
+from mkdocs_bibtex.registry import SimpleRegistry, PandocRegistry
+from mkdocs.exceptions import ConfigurationError
+
 
 from mkdocs_bibtex.utils import (
-    find_cite_blocks,
-    extract_cite_keys,
-    format_bibliography,
-    format_pandoc,
-    format_simple,
-    insert_citation_keys,
     tempfile_from_url,
     log,
 )
 
 
-class BibTexPlugin(BasePlugin):
+class BibTexPlugin(BasePlugin[BibTexConfig]):
     """
     Allows the use of bibtex in markdown content for MKDocs.
-
-    Options:
-        bib_file (string): path or url to a single bibtex file for entries,
-                           url example: https://api.zotero.org/*/items?format=bibtex
-        bib_dir (string): path to a directory of bibtex files for entries
-        bib_command (string): command to place a bibliography relevant to just that file
-                              defaults to \bibliography
-        bib_by_default (bool): automatically appends bib_command to markdown pages
-                               by default, defaults to true
-        full_bib_command (string): command to place a full bibliography of all references
-        csl_file (string, optional): path or url to a CSL file, relative to mkdocs.yml.
-        cite_inline (bool): Whether or not to render inline citations, requires CSL, defaults to false
     """
-
-    config_scheme = [
-        ("bib_file", config_options.Type(str, required=False)),
-        ("bib_dir", config_options.Dir(exists=True, required=False)),
-        ("bib_command", config_options.Type(str, default="\\bibliography")),
-        ("bib_by_default", config_options.Type(bool, default=True)),
-        ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
-        ("csl_file", config_options.Type(str, default="")),
-        ("cite_inline", config_options.Type(bool, default=False)),
-        ("footnote_format", config_options.Type(str, default="{number}")),
-    ]
 
     def __init__(self):
         self.bib_data = None
         self.all_references = OrderedDict()
-        self.unescape_for_arithmatex = False
-        self.configured = False
+        self.last_configured = None
+        self.registry = None
 
     def on_startup(self, *, command, dirty):
-        """ Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
+        """Having on_startup() tells mkdocs to keep the plugin object upon rebuilds"""
         pass
 
     def on_config(self, config):
@@ -66,28 +41,20 @@ class BibTexPlugin(BasePlugin):
         bibfiles = []
 
         # Set bib_file from either url or path
-        if self.config.get("bib_file", None) is not None:
-            is_url = validators.url(self.config["bib_file"])
+        if self.config.bib_file is not None:
+            is_url = validators.url(self.config.bib_file)
             # if bib_file is a valid URL, cache it with tempfile
             if is_url:
-                bibfiles.append(tempfile_from_url("bib file", self.config["bib_file"], ".bib"))
+                bibfiles.append(tempfile_from_url("bib file", self.config.bib_file, ".bib"))
             else:
-                bibfiles.append(self.config["bib_file"])
-        elif self.config.get("bib_dir", None) is not None:
-            bibfiles.extend(Path(self.config["bib_dir"]).rglob("*.bib"))
+                bibfiles.append(self.config.bib_file)
+        elif self.config.bib_dir is not None:
+            bibfiles.extend(Path(self.config.bib_dir).rglob("*.bib"))
         else:  # pragma: no cover
-            raise Exception("Must supply a bibtex file or directory for bibtex files")
+            raise ConfigurationError("Must supply a bibtex file or directory for bibtex files")
 
-        # load bibliography data
-        refs = {}
-        log.info(f"Loading data from bib files: {bibfiles}")
-        for bibfile in bibfiles:
-            log.debug(f"Parsing bibtex file {bibfile}")
-            bibdata = parse_file(bibfile)
-            refs.update(bibdata.entries)
-
-        if hasattr(self,"last_configured"):
-            # Skip rebuilding bib data if all files are older than the initial config
+        # Skip rebuilding bib data if all files are older than the initial config
+        if self.last_configured is not None:
             if all(Path(bibfile).stat().st_mtime < self.last_configured for bibfile in bibfiles):
                 log.info("BibTexPlugin: No changes in bibfiles.")
                 return config
@@ -95,25 +62,21 @@ class BibTexPlugin(BasePlugin):
         # Clear references on reconfig
         self.all_references = OrderedDict()
 
-        self.bib_data = BibliographyData(entries=refs)
-        self.bib_data_bibtex = self.bib_data.to_string("bibtex")
-
         # Set CSL from either url or path (or empty)
-        is_url = validators.url(self.config["csl_file"])
-        if is_url:
-            self.csl_file = tempfile_from_url("CSL file", self.config["csl_file"], ".csl")
+        if self.config.csl_file is not None and validators.url(self.config.csl_file):
+            self.csl_file = tempfile_from_url("CSL file", self.config.csl_file, ".csl")
         else:
-            self.csl_file = self.config.get("csl_file", None)
+            self.csl_file = self.config.csl_file
 
-        # Toggle whether or not to render citations inline (Requires CSL)
-        self.cite_inline = self.config.get("cite_inline", False)
-        if self.cite_inline and not self.csl_file:  # pragma: no cover
-            raise Exception("Must supply a CSL file in order to use cite_inline")
+        if "{key}" not in self.config.footnote_format:
+            raise ConfigurationError("Must include `{key}` placeholder in footnote_format")
 
-        if "{number}" not in self.config.get("footnote_format"):
-            raise Exception("Must include `{number}` placeholder in footnote_format")
-
-        self.footnote_format = self.config.get("footnote_format")
+        if self.csl_file:
+            self.registry = PandocRegistry(
+                bib_files=bibfiles, csl_file=self.csl_file, footnote_format=self.config.footnote_format
+            )
+        else:
+            self.registry = SimpleRegistry(bib_files=bibfiles, footnote_format=self.config.footnote_format)
 
         self.last_configured = time.time()
         return config
@@ -134,125 +97,59 @@ class BibTexPlugin(BasePlugin):
         5. Insert the full bibliograph into the markdown
         """
 
-        # 1. Grab all the cited keys in the markdown
-        cite_keys = find_cite_blocks(markdown)
+        # 1. Find all cite blocks in the markdown
+        cite_blocks = CitationBlock.from_markdown(markdown)
 
-        # 2. Convert all the citations to text references
-        citation_quads = self.format_citations(cite_keys)
+        # 2. Validate the cite blocks
+        self.registry.validate_citation_blocks(cite_blocks)
 
-        # 3. Convert cited keys to citation,
-        # or a footnote reference if inline_cite is false.
-        if self.cite_inline:
-            markdown = insert_citation_keys(
-                citation_quads,
-                markdown,
-                self.csl_file,
-                self.bib_data_bibtex,
-            )
-        else:
-            markdown = insert_citation_keys(citation_quads, markdown)
+        # 3. Replace the cite blocks with the inline citations
+        for block in cite_blocks:
+            replacement = self.registry.inline_text(block)
+            markdown = markdown.replace(str(block), replacement)
 
-        # 4. Insert in the bibliopgrahy text into the markdown
-        bib_command = self.config.get("bib_command", "\\bibliography")
+        # 4a. Esnure we have a bibliography if desired
+        bib_command = self.config.bib_command
 
-        if self.config.get("bib_by_default"):
+        if self.config.bib_by_default and markdown.count(bib_command) == 0:
             markdown += f"\n{bib_command}"
 
-        bibliography = format_bibliography(citation_quads)
-        markdown = re.sub(
-            re.escape(bib_command),
-            bibliography,
-            markdown,
-        )
-
-        # 5. Build the full Bibliography and insert into the text
-        full_bib_command = self.config.get("full_bib_command", "\\full_bibliography")
-
-        markdown = re.sub(
-            re.escape(full_bib_command),
-            self.full_bibliography,
-            markdown,
-        )
-
-        return markdown
-
-    def format_footnote_key(self, number):
-        """
-        Create footnote key based on footnote_format
-
-        Args:
-            number (int): citation number
-
-        Returns:
-            formatted footnote
-        """
-        return self.footnote_format.format(number=number)
-
-    def format_citations(self, cite_keys):
-        """
-        Formats references into citation quads and adds them to the global registry
-
-        Args:
-            cite_keys (list): List of full cite_keys that maybe compound keys
-
-        Returns:
-            citation_quads: quad tuples of the citation inforamtion
-        """
-
-        # Deal with arithmatex fix at some point
-
-        # 1. Extract the keys from the keyset
-        entries = OrderedDict()
-        pairs = [
-            [cite_block, key]
-            for cite_block in cite_keys
-            for key in extract_cite_keys(cite_block)
-        ]
-        keys = list(OrderedDict.fromkeys([k for _, k in pairs]).keys())
-        numbers = {k: str(n + 1) for n, k in enumerate(keys)}
-
-        # Remove non-existant keys from pairs
-        pairs = [p for p in pairs if p[1] in self.bib_data.entries]
-
-        # 2. Collect any unformatted reference keys
-        for _, key in pairs:
-            if key not in self.all_references:
-                entries[key] = self.bib_data.entries[key]
-
-        # 3. Format entries
-        log.debug("Formatting all bib entries...")
-        if self.csl_file:
-            self.all_references.update(format_pandoc(entries, self.csl_file))
-        else:
-            self.all_references.update(format_simple(entries))
-        log.debug("SUCCESS Formatting all bib entries")
-
-        # 4. Construct quads
-        quads = [
-            (
-                cite_block,
-                key,
-                self.format_footnote_key(numbers[key]),
-                self.all_references[key],
-            )
-            for cite_block, key in pairs
-        ]
-
-        # List the quads in order to remove duplicate entries
-        return list(dict.fromkeys(quads))
-
-    @property
-    def full_bibliography(self):
-        """
-        Returns the full bibliography text
-        """
+        # 4. Insert in the bibliopgrahy text into the markdown
+        citations = OrderedDict()
+        for block in cite_blocks:
+            for citation in block.citations:
+                citations[citation.key] = citation
 
         bibliography = []
-        for number, (key, citation) in enumerate(self.all_references.items()):
-            bibliography_text = "[^{}]: {}".format(
-                number,
-                citation,
-            )
-            bibliography.append(bibliography_text)
+        for citation in citations.values():
+            try:
+                bibliography.append(
+                    "[^{}]: {}".format(
+                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
+                    )
+                )
+            except Exception as e:
+                log.warning(f"Error formatting citation {citation.key}: {e}")
+        bibliography = "\n".join(bibliography)
+        markdown = markdown.replace(bib_command, bibliography)
 
-        return "\n".join(bibliography)
+        # 5. Build the full Bibliography and insert into the text
+        full_bib_command = self.config.full_bib_command
+        if markdown.count(full_bib_command) > 0:
+            log.info("Building full bibliography")
+            all_citations = [Citation(key=key) for key in self.registry.bib_data.entries]
+            blocks = [CitationBlock(citations=[cite]) for cite in all_citations]
+            self.registry.validate_citation_blocks(blocks)
+            full_bibliography = []
+            for citation in all_citations:
+                full_bibliography.append(
+                    "[^{}]: {}".format(
+                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
+                    )
+                )
+            full_bibliography = "\n".join(full_bibliography)
+            markdown = markdown.replace(full_bib_command, full_bibliography)
+
+        log.debug(f"Markdown: \n{markdown}")
+
+        return markdown

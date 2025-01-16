@@ -1,84 +1,43 @@
-import os
-
 import pytest
 
-from mkdocs_bibtex.utils import (
-    find_cite_blocks,
-    format_simple,
-    format_pandoc,
-    extract_cite_keys,
-    sanitize_zotero_query,
-)
+from mkdocs_bibtex.utils import sanitize_zotero_query, tempfile_from_zotero_url
+import collections.abc
+import os
+import random
+import string
 
-from mkdocs_bibtex.plugin import parse_file
+import responses
+from pybtex.database import parse_file
 
-module_dir = os.path.dirname(os.path.abspath(__file__))
-test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
+EXAMPLE_ZOTERO_API_ENDPOINT = "https://api.zotero.org/groups/FOO/collections/BAR/items"
+
+MOCK_ZOTERO_URL = "https://api.zotero.org/groups/FOO/collections/BAR/items?format=bibtex"
 
 
 @pytest.fixture
-def entries():
-    bibdata = parse_file(os.path.join(test_files_dir, "test.bib"))
-    return bibdata.entries
+def mock_zotero_api(request: pytest.FixtureRequest) -> collections.abc.Generator[responses.RequestsMock]:
+    zotero_api_url = "https://api.zotero.org/groups/FOO/collections/BAR/items?format=bibtex&limit=100"
+    bibtex_contents = generate_bibtex_entries(request.param)
 
+    limit = 100
+    pages = [bibtex_contents[i : i + limit] for i in range(0, len(bibtex_contents), limit)]
 
-def test_find_cite_blocks():
+    with responses.RequestsMock() as mock_api:
+        for page_num, page in enumerate(pages):
+            current_start = "" if page_num == 0 else f"&start={page_num * limit}"
+            next_start = f"&start={(page_num + 1) * limit}"
+            mock_api.add(
+                responses.Response(
+                    method="GET",
+                    url=f"{zotero_api_url}{current_start}",
+                    json="\n".join(page),
+                    headers={}
+                    if page_num == len(pages) - 1
+                    else {"Link": f"<{zotero_api_url}{next_start}>; rel='next'"},
+                )
+            )
 
-    # Suppressed authors
-    assert find_cite_blocks("[-@test]") == ["[-@test]"]
-    # Affixes
-    assert find_cite_blocks("[see @test]") == ["[see @test]"]
-    assert find_cite_blocks("[@test, p. 15]") == ["[@test, p. 15]"]
-    assert find_cite_blocks("[see @test, p. 15]") == ["[see @test, p. 15]"]
-    assert find_cite_blocks("[see -@test, p. 15]") == ["[see -@test, p. 15]"]
-    # Invalid blocks
-    assert find_cite_blocks("[ @test]") is not True
-    # Citavi . format
-    assert find_cite_blocks("[@Bermudez.2020]") == ["[@Bermudez.2020]"]
-
-
-def test_format_simple(entries):
-    citations = format_simple(entries)
-
-    assert all(k in citations for k in entries)
-    assert all(entry != citations[k] for k, entry in entries.items())
-
-    assert (
-        citations["test"]
-        == "First Author and Second Author. Test title. *Testing Journal*, 2019."
-    )
-    assert (
-        citations["test2"]
-        == "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019."
-    )
-
-
-def test_format_pandoc(entries):
-    citations = format_pandoc(entries, os.path.join(test_files_dir, "nature.csl"))
-
-    assert all(k in citations for k in entries)
-    assert all(entry != citations[k] for k, entry in entries.items())
-
-    assert (
-        citations["test"]
-        == "Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019)."
-    )
-    assert (
-        citations["test2"]
-        == "Author, F. & Author, S. Test Title (TT). *Testing Journal (TJ)* **1**, (2019)."
-    )
-
-
-def test_extract_cite_key():
-    """
-    Test to ensure the extract regex can handle all bibtex keys
-    TODO: Make this fully compliant with bibtex keys allowed characters
-    """
-    assert extract_cite_keys("[@test]") == ["test"]
-    assert extract_cite_keys("[@test.3]") == ["test.3"]
-
-
-EXAMPLE_ZOTERO_API_ENDPOINT = "https://api.zotero.org/groups/FOO/collections/BAR/items"
+        yield mock_api
 
 
 @pytest.mark.parametrize(
@@ -105,3 +64,38 @@ EXAMPLE_ZOTERO_API_ENDPOINT = "https://api.zotero.org/groups/FOO/collections/BAR
 )
 def test_sanitize_zotero_query(zotero_url: str, expected_sanitized_url: str) -> None:
     assert sanitize_zotero_query(url=zotero_url) == expected_sanitized_url
+
+
+@pytest.mark.parametrize(("mock_zotero_api", "number_of_entries"), ((4, 4), (150, 150)), indirect=["mock_zotero_api"])
+def test_bibtex_loading_zotero(mock_zotero_api: responses.RequestsMock, number_of_entries: int) -> None:
+    bib_file = tempfile_from_zotero_url("Bib File", MOCK_ZOTERO_URL, ".bib")
+
+    assert os.path.exists(bib_file)
+    assert os.path.getsize(bib_file) > 0
+
+    bibdata = parse_file(bib_file)
+
+    assert len(bibdata.entries) == number_of_entries
+
+
+def generate_bibtex_entries(n: int) -> list[str]:
+    """Generates n random bibtex entries."""
+
+    entries = []
+
+    for i in range(n):
+        author_first = "".join(random.choices(string.ascii_letters, k=8))
+        author_last = "".join(random.choices(string.ascii_letters, k=8))
+        title = "".join(random.choices(string.ascii_letters, k=10))
+        journal = "".join(random.choices(string.ascii_uppercase, k=5))
+        year = str(random.randint(1950, 2025))
+
+        entries.append(f"""
+@article{{{author_last}_{i}}},
+    title = {{{title}}},
+    volume = {{1}},
+    journal = {{{journal}}},
+    author = {{{author_last}, {author_first}}},
+    year = {{{year}}},
+""")
+    return entries
