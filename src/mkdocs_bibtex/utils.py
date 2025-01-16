@@ -8,7 +8,8 @@ import urllib.parse
 log = logging.getLogger("mkdocs.plugins.mkdocs-bibtex")
 
 
-def tempfile_from_url(name, url, suffix):
+def tempfile_from_url(name: str, url: str, suffix: str) -> str:
+    """Download bibfile from a URL."""
     log.debug(f"Downloading {name} from URL {url} to temporary file...")
     if urllib.parse.urlparse(url).hostname == "api.zotero.org":
         return tempfile_from_zotero_url(name, url, suffix)
