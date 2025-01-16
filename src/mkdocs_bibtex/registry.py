@@ -111,7 +111,7 @@ class PandocRegistry(ReferenceRegistry):
 
     def reference_text(self, citation: Citation) -> str:
         """Returns cached reference text"""
-        return self._reference_cache.get(citation.key, "")
+        return self._reference_cache[citation.key]
 
     def validate_citation_blocks(self, citation_blocks: list[CitationBlock]) -> None:
         """Validates citation blocks and pre-formats all citations"""
@@ -142,8 +142,8 @@ link-citations: false
         citation_map = {index: block for index, block in enumerate(citation_blocks)}
         full_doc += "\n\n".join(f"{index}. {block}" for index, block in citation_map.items())
         full_doc += "\n\n# References\n\n"
-        log.debug("Converting with pandoc")
-        log.debug(f"Full doc: {full_doc}")
+        log.debug("Converting with pandoc:")
+        log.debug(full_doc)
         with tempfile.TemporaryDirectory() as tmpdir:
             bib_path = Path(tmpdir).joinpath("temp.bib")
             with open(bib_path, "wt", encoding="utf-8") as bibfile:
@@ -154,7 +154,8 @@ link-citations: false
                 source=full_doc, to="markdown-citations", format="markdown", extra_args=args
             )
 
-        log.debug(f"Pandoc output: {markdown}")
+        log.debug(f"Pandoc output:")
+        log.debug(markdown)
         try:
             splits = markdown.split("# References")
             inline_citations, references = splits[0], splits[1]
