@@ -22,7 +22,8 @@ setup(
         "pypandoc>=1.5",
         "requests>=2.8.1",
         "validators>=0.19.0",
-        "setuptools>=68.0.0"
+        "setuptools>=68.0.0",
+        "responses>=0.25.6"
     ],
     tests_require=["pytest"],
     packages=find_packages("src"),
