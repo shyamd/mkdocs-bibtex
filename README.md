@@ -40,44 +40,90 @@ The footnotes extension is how citations are linked for now.
 - `bib_by_default` - Automatically append the `bib_command` at the end of every markdown document, defaults to `true`
 - `full_bib_command` - The syntax to render your entire bibliography, defaults to `\full_bibliography`
 - `csl_file` - The path or url to a bibtex CSL file, specifying your citation format. Defaults to `None`, which renders in a plain format. A registry of citation styles can be found here: https://github.com/citation-style-language/styles
-- `cite_inline` - Whether or not to render citations inline, requires `csl_file` to be specified. Defaults to `False`.
 
 ## Usage
 
 In your markdown files:
 
-1. Add your citations as you would if you used pandoc, IE: `[@first_cite;@second_cite]`
+1. Add your citations as you would if you used pandoc, IE: `[@first_cite;@second_cite]`.
 2. Add `\bibliography`, or the value of `bib_command`, to the doc you want your references rendered (if `bib_by_default` is set to true this is automatically applied for every page).
 3. (Optional) Add `\full_bibliography`, or the value of `full_bib_command`, to where you want the full bibliography rendered. *Note*: This is currently not working properly, since this plugin can't dictate the order in which files are processed. The best way to ensure the file with the full bibliography gets processed last is to use numbers in front of file/folder names to enforce the order of processing, IE: `01_my_first_file.md`
-4. (Optional) Configure the `csl_file` option to dictate the citation text formatting.
+4. (Optional) Configure the `csl_file` option to dictate the citation text formatting. This plugin automatically detects if the citation is an inline style and inserts that text when appropriate.
 
 ## Debugging
+
+You can run mkdocs with the `--strict` flag to fail building on any citations that don't exist in the bibtex file.
 
 You may wish to use the verbose flag in mkdocs (`-v`) to log debug messages. You should see something like this
 
 ```bash
 (...)
-DEBUG   -  Parsing bibtex file 'docs/bib/papers.bib'...
-INFO    -  SUCCESS Parsing bibtex file 'docs/bib/papers.bib'
-DEBUG   -  Downloading CSL file from URL https://raw.githubusercontent.com/citation-style-language/styles/master/apa-6th-edition.csl to temporary file...
-INFO    -  CSL file downladed from URL https://raw.githubusercontent.com/citation-style-language/styles/master/apa-6th-edition.csl to temporary file (<tempfile._TemporaryFileWrapper object at 0x00000203E4F2F650>)
+DEBUG   -  Reading markdown pages.
+DEBUG   -  Reading: index.md
+DEBUG   -  Running `page_markdown` event from plugin 'bibtex'
+WARNING -  Citing unknown reference key nonexistent
+DEBUG   -  Converting with pandoc:
+DEBUG   -   ---
+           link-citations: false
+           ---
+
+           0. [@test]
+
+           1. [@nonexistent]
+
+           2. [@test, see pp. 100]
+
+           3. [see @test, pp. 100, 200]
+
+           # References
+
+[WARNING] Citeproc: citation nonexistent not found
+
+DEBUG   -  Pandoc output:
+DEBUG   -  0.  ^1^
+
+           1.  ^**nonexistent?**^
+
+           2.  ^1,\ see\ pp. 100^
+
+           3.  ^see\ 1^
+
+           # References {#references .unnumbered}
+
+           :::: {#refs .references .csl-bib-body entry-spacing="0" line-spacing="2"}
+           ::: {#ref-test .csl-entry}
+           [1. ]{.csl-left-margin}[Author, F. & Author, S. Test title. *Testing
+           Journal* **1**, (2019).]{.csl-right-inline}
+           :::
+           ::::
+DEBUG   -  Inline cache: {'[@test]': '^1^', '[@nonexistent]': '^**nonexistent?**^', '[@test, see pp. 100]': '^1,\\ see\\ pp. 100^', '[see @test, pp. 100, 200]': '^see\\ 1^'}
+DEBUG   -  Reference cache: {'test': 'Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).'}
+WARNING -  Error formatting citation nonexistent: 'nonexistent'
+DEBUG   -  Markdown:
+           # This is an example of how to use the mkdocs-bibtex plugin
+
+           ## Citation
+
+           Citation [^test]
+
+           ## Non existing citation
+
+           This should fail on --strict mode
+
+           Citation
+
+           ## Citation with affix
+
+           Citation [^test]
+
+           ## Citation with multiple affixes
+
+           Citation [^test]
+
+
+           ## Bibliography
+
+           [^test]: Author, F. & Author, S. Test title. *Testing Journal* **1**, (2019).
+DEBUG   -  Reading: full_bib.md
 (...)
-DEBUG   -  Reading: publications.md
-DEBUG   -  Running 2 `page_markdown` events
-DEBUG   -  Formatting all bib entries...
-DEBUG   -  --Converting bibtex entry 'foo2019' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
-DEBUG   -  --SUCCESS Converting bibtex entry 'foo2019' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
-DEBUG   -  --Converting bibtex entry 'bar2024' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
-DEBUG   -  --SUCCESS Converting bibtex entry 'bar2024' with CSL file 'docs/bib/apa_verbose.csl' using pandoc>=2.11
-INFO    -  SUCCESS Formatting all bib entries
-DEBUG   -  Replacing citation keys with the generated ones...
-DEBUG   -  --Rendering citation inline for '[@foo2019]'...
-DEBUG   -  ----Converting pandoc citation key '[@foo2019]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'...
-DEBUG   -  ----SUCCESS Converting pandoc citation key '[@foo2019]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'
-DEBUG   -  --SUCCESS Rendering citation inline for '[@foo2019]'
-DEBUG   -  --Rendering citation inline for '[@bar2024]'...
-DEBUG   -  ----Converting pandoc citation key '[@bar2024]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'...
-DEBUG   -  ----SUCCESS Converting pandoc citation key '[@bar2024]' with CSL file 'docs/bib/apa_verbose.csl' and Bibliography file '(...)/tmpzt7t8p0y/temp.bib'
-DEBUG   -  --SUCCESS Rendering citation inline for '[@bar2024]'
-DEBUG   -  SUCCESS Replacing citation keys with the generated ones
 ```
