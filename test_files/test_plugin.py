@@ -86,7 +86,7 @@ def test_bibtex_loading_zotero(mock_zotero_api: responses.RequestsMock, number_o
     )
 
     plugin.on_config(plugin.config)
-    assert len(plugin.bib_data.entries) == number_of_entries
+    assert len(plugin.registry.bib_data.entries) == number_of_entries
 
 
 def generate_bibtex_entries(n: int) -> list[str]:
