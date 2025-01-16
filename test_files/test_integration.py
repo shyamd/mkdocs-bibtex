@@ -73,7 +73,7 @@ def test_pandoc_citation_rendering(pandoc_plugin):
     assert "(De Bivort and Van Swinderen 2016)" in result
 
     # Check bibliography formatting
-    assert "Author F, Author S (2019a)" in result
+    assert "Author F, Author S (2019)" in result
     assert "De Bivort BL, Van Swinderen B (2016)" in result
 
 
