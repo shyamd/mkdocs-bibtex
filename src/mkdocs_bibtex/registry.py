@@ -86,11 +86,21 @@ class PandocRegistry(ReferenceRegistry):
         # Cache for formatted citations
         self._inline_cache: dict[str, str] = {}
         self._reference_cache: dict[str, str] = {}
+        self._is_inline = self._check_csl_type(self.csl_file)
 
     def inline_text(self, citation_block: CitationBlock) -> str:
-        """Returns cached inline citation text"""
-        keys = [citation.key for citation in citation_block.citations if citation.key in self._reference_cache]
-        return self._inline_cache.get(str(citation_block), "") + "".join(f"[^{key}]" for key in keys)
+        """Get the inline text for a citation block"""
+        footnotes = " ".join(
+            f"[^{citation.key}]" for citation in citation_block.citations if citation.key in self._reference_cache
+        )
+
+        if self._is_inline:
+            # For inline styles, return both inline citation and footnote
+            inline_text = self._inline_cache.get(str(citation_block), str(citation_block))
+            return inline_text + footnotes
+        else:
+            # For footnote styles, just return footnote links
+            return footnotes
 
     def reference_text(self, citation: Citation) -> str:
         """Returns cached reference text"""
@@ -183,3 +193,21 @@ link-citations: false
         log.debug(f"Inline cache: {inline_cache}")
         log.debug(f"Reference cache: {reference_cache}")
         return inline_cache, reference_cache
+
+    def _check_csl_type(self, csl_file: str) -> bool:
+        """Check if CSL file is footnote or inline style"""
+        if not csl_file:
+            return False
+
+        try:
+            with open(csl_file) as f:
+                csl_content = f.read()
+                # Check if citation-format is "author-date"
+                # For "numeric" styles we default to footnotes
+                if 'citation-format="author-date"' in csl_content:
+                    return True
+                # Default to footnote style
+                return False
+        except Exception as e:
+            log.warning(f"Error reading CSL file: {e}")
+            return False

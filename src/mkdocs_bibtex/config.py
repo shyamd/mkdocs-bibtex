@@ -15,7 +15,6 @@ class BibTexConfig(base.Config):
                                by default, defaults to true
         full_bib_command (string): command to place a full bibliography of all references
         csl_file (string, optional): path or url to a CSL file, relative to mkdocs.yml.
-        cite_inline (bool): Whether or not to render inline citations, requires CSL, defaults to false
         footnote_format (string): format for the footnote number, defaults to "{number}"
     """
 
@@ -30,5 +29,4 @@ class BibTexConfig(base.Config):
 
     # Settings
     bib_by_default = config_options.Type(bool, default=True)
-    cite_inline = config_options.Type(bool, default=False)
     footnote_format = config_options.Type(str, default="{number}")

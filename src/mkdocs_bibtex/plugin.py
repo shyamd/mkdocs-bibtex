@@ -68,10 +68,6 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         else:
             self.csl_file = self.config.csl_file
 
-        # Toggle whether or not to render citations inline (Requires CSL)
-        if self.config.cite_inline and not self.csl_file:  # pragma: no cover
-            raise ConfigurationError("Must supply a CSL file in order to use cite_inline")
-
         if "{number}" not in self.config.footnote_format:
             raise ConfigurationError("Must include `{number}` placeholder in footnote_format")
 
