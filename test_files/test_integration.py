@@ -67,7 +67,7 @@ def test_pandoc_citation_rendering(pandoc_plugin):
     """Test citation rendering with Pandoc and CSL"""
     markdown = "Here is a citation [@test] and another [@Bivort2016].\n\n\\bibliography"
     result = pandoc_plugin.on_page_markdown(markdown, None, None, None)
-    
+
     # Check inline citations
     assert "(Author and Author 2019)" in result
     assert "(De Bivort and Van Swinderen 2016)" in result
@@ -179,4 +179,3 @@ def test_full_bib_command_with_pandoc(pandoc_plugin):
     assert "[^test2]: Author F, Author S (2019b)" in result
     assert "[^Bivort2016]: De Bivort BL, Van Swinderen B (2016)" in result
     assert "[^test_citavi]: Author F, Author S (2019c)" in result
-

@@ -110,7 +110,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             replacement = self.registry.inline_text(block)
             markdown = markdown.replace(str(block), replacement)
 
-        #4a. Esnure we have a bibliography if desired
+        # 4a. Esnure we have a bibliography if desired
         bib_command = self.config.bib_command
 
         if self.config.bib_by_default and markdown.count(bib_command) == 0:
@@ -130,7 +130,6 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
                 log.warning(f"Error formatting citation {citation.key}: {e}")
         bibliography = "\n".join(bibliography)
         markdown = markdown.replace(bib_command, bibliography)
-
 
         # 5. Build the full Bibliography and insert into the text
         full_bib_command = self.config.full_bib_command

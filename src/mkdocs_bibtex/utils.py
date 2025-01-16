@@ -5,6 +5,7 @@ import tempfile
 # Grab a logger
 log = logging.getLogger("mkdocs.plugins.mkdocs-bibtex")
 
+
 def tempfile_from_url(name, url, suffix):
     log.debug(f"Downloading {name} from URL {url} to temporary file...")
     for i in range(3):
