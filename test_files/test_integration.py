@@ -171,3 +171,13 @@ def test_bib_by_default(plugin):
     assert "[^test]:" in result
 
 
+def test_full_bib_command_with_pandoc(pandoc_plugin):
+    """Test full bibliography command with Pandoc"""
+    markdown = "Full bibliography\n\n\\full_bibliography"
+    result = pandoc_plugin.on_page_markdown(markdown, None, None, None)
+
+    assert "[^test]: Author F, Author S (2019a)" in result
+    assert "[^test2]: Author F, Author S (2019b)" in result
+    assert "[^Bivort2016]: De Bivort BL, Van Swinderen B (2016)" in result
+    assert "[^test_citavi]: Author F, Author S (2019c)" in result
+

@@ -137,6 +137,8 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         if markdown.count(full_bib_command) > 0:
             log.info("Building full bibliography")
             all_citations = [Citation(key=key) for key in self.registry.bib_data.entries]
+            blocks = [CitationBlock(citations=[cite]) for cite in all_citations]
+            self.registry.validate_citation_blocks(blocks)
             full_bibliography = []
             for citation in all_citations:
                 full_bibliography.append("[^{}]: {}".format(citation.key, self.registry.reference_text(citation)))
