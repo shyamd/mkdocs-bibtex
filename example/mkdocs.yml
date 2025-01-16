@@ -3,9 +3,8 @@ site_name: Example Mkdocs-bibtex
 plugins:
   - bibtex:
       bib_file: refs.bib
-      #csl_file: nature.csl
-      csl_file: springer-basic-author-date.csl
-      cite_inline: false
+      csl_file: nature.csl
+      #csl_file: springer-basic-author-date.csl
 
 markdown_extensions:
   - footnotes
