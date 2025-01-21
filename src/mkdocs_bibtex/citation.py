@@ -67,9 +67,9 @@ class CitationBlock:
         citation_blocks = []
         for match in CITATION_BLOCK_REGEX.finditer(markdown):
             try:
-                citation_blocks.append(
-                    CitationBlock(raw=match.group(1), citations=Citation.from_markdown(match.group(1)))
-                )
+                citations = Citation.from_markdown(match.group(1))
+                if len(citations) > 0:
+                    citation_blocks.append(CitationBlock(raw=match.group(1), citations=citations))
             except Exception as e:
                 print(f"Error extracting citations from block: {e}")
         return citation_blocks
