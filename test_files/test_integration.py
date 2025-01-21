@@ -187,3 +187,12 @@ def test_full_bib_command_with_pandoc(pandoc_plugin):
     assert "[^test2]: Author F, Author S (2019b)" in result
     assert "[^Bivort2016]: De Bivort BL, Van Swinderen B (2016)" in result
     assert "[^test_citavi]: Author F, Author S (2019c)" in result
+
+
+def test_leaving_non_citations(plugin):
+    """Test that non-citations are not parsed as citations"""
+    markdown = "This is not a citation [google](www.google.com). But this is a citation [@test]."
+    result = plugin.on_page_markdown(markdown, None, None, None)
+
+    assert "[^test]" in result
+    assert "[google](www.google.com)" in result
