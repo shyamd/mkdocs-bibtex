@@ -135,3 +135,10 @@ def test_citation_string():
     citations = [citation, citation]
     block = CitationBlock(citations)
     assert str(block) == "[Author @test 2020; Author @test 2020]"
+
+
+def test_links_not_citations():
+    """Test that non-citations are not parsed as citations"""
+    markdown = "This is [google](www.google.com)."
+    blocks = CitationBlock.from_markdown(markdown)
+    assert len(blocks) == 0
