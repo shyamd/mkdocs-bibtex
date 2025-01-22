@@ -6,6 +6,7 @@ import re
 CITATION_REGEX = re.compile(r"(?:(?P<prefix>[^@;]*?)\s*)?@(?P<key>[\w-]+)(?:,\s*(?P<suffix>[^;]+))?")
 CITATION_BLOCK_REGEX = re.compile(r"\[(.*?)\]")
 EMAIL_REGEX = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+INLINE_CITATION_REGEX = re.compile(r"(?<!\[)@(?P<key>[\w:-]+)(?![\w\s]*\])")
 
 
 @dataclass
@@ -47,6 +48,7 @@ class Citation:
 class CitationBlock:
     citations: List[Citation]
     raw: str = ""
+    inline: bool = False
 
     def __str__(self) -> str:
         """String representation of the citation block"""
@@ -63,13 +65,36 @@ class CitationBlock:
         2. For each cite block, try to extract the citations
             - if this errors there are no citations in this block and we move on
             - if this succeeds we have a list of citations
+        3. Extract inline citations and mark them as CitationBlocks with the inline option
         """
         citation_blocks = []
         for match in CITATION_BLOCK_REGEX.finditer(markdown):
             try:
                 citations = Citation.from_markdown(match.group(1))
-                if len(citations) > 0:
-                    citation_blocks.append(CitationBlock(raw=match.group(1), citations=citations))
+                citation_blocks.append(CitationBlock(raw=match.group(1), citations=citations))
             except Exception as e:
                 print(f"Error extracting citations from block: {e}")
-        return citation_blocks
+
+        markdown_without_blocks = markdown
+        for block in citation_blocks:
+            markdown_without_blocks = markdown_without_blocks.replace(str(block), "")
+
+        inline_citations = [
+            CitationBlock([Citation(key=match.group("key"))], inline=True)
+            for match in INLINE_CITATION_REGEX.finditer(markdown_without_blocks)
+            if match
+        ]
+
+        all_blocks = citation_blocks + inline_citations
+        return [block for block in all_blocks if block._is_valid]
+
+    @property
+    def _is_valid(self) -> bool:
+        """Internal validity method to perform basic sanity checks"""
+        # Citation blocks can't be empty
+        if len(self.citations) == 0:
+            return False
+        # Inline citation blocks can only have 1 citation
+        elif self.inline and len(self.citations) > 1:
+            return False
+        return True

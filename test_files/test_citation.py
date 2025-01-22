@@ -142,3 +142,24 @@ def test_links_not_citations():
     markdown = "This is [google](www.google.com)."
     blocks = CitationBlock.from_markdown(markdown)
     assert len(blocks) == 0
+
+
+def test_inline_citation():
+    markdown = """
+@citation	✅	No brackets around it
+[@citation1]	❌	Inside []
+Some text @cite123 more text	✅	No brackets
+[@cite-xyz1]	❌	Inside []
+(@cite-xyz)	✅	Parentheses are allowed
+    """
+    blocks = CitationBlock.from_markdown(markdown)
+    regular_blocks = [block for block in blocks if not block.inline]
+    inline_blocks = [block for block in blocks if block.inline]
+
+    assert len(blocks) == 5
+
+    assert {block.citations[0].key for block in regular_blocks} == {"citation1", "cite-xyz1"}
+    assert {block.citations[0].key for block in inline_blocks} == {"citation", "cite123", "cite-xyz"}
+
+    bad_inline_block = CitationBlock([Citation("@test"), Citation("@test2")], inline=True)
+    assert not bad_inline_block._is_valid
