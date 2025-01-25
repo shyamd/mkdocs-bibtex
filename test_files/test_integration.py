@@ -158,7 +158,6 @@ def test_full_bib_command(plugin):
     """Test full bibliography command"""
     markdown = "Full bibliography [@test]\n\n\\full_bibliography"
     result = plugin.on_page_markdown(markdown, None, None, None)
-
     assert "Full bibliography [^test]" in result
     assert "[^test]:" in result
     assert "[^test2]:" in result
@@ -196,3 +195,14 @@ def test_leaving_non_citations(plugin):
 
     assert "[^test]" in result
     assert "[google](www.google.com)" in result
+
+
+def test_inline_citations(plugin):
+    markdown = "This is notinline[@test]. But this is inline @test2\n\n\\bibliography"
+
+    result = plugin.on_page_markdown(markdown, None, None, None)
+    assert "[^test2]" not in result
+    assert "But this is inline First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019." in result
+
+    # Ensure we didn't break the regular citations
+    assert "[^test]" in result
