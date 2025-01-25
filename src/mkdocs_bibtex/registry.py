@@ -26,8 +26,8 @@ class ReferenceRegistry(ABC):
         self.footnote_format = footnote_format
 
     @abstractmethod
-    def validate_citation_blocks(self, citation_blocks: list[CitationBlock]) -> None:
-        """Validates all citation blocks. Throws an error if any citation block is invalid"""
+    def validate_citation_blocks(self, citation_blocks: list[CitationBlock]) -> list[CitationBlock]:
+        """Validates all citation blocks."""
 
     @abstractmethod
     def inline_text(self, citation_block: CitationBlock) -> str:
@@ -57,12 +57,16 @@ class SimpleRegistry(ReferenceRegistry):
                     log.warning(f"Affixes not supported in simple mode: {citation}")
 
     def inline_text(self, citation_block: CitationBlock) -> str:
-        keys = [
-            self.footnote_format.format(key=citation.key)
-            for citation in citation_block.citations
-            if citation.key in self.bib_data.entries
-        ]
-        return "".join(f"[^{key}]" for key in keys)
+        if citation_block.inline:
+            inline_text = self.reference_text(citation_block.citations[0])
+        else:
+            keys = [
+                self.footnote_format.format(key=citation.key)
+                for citation in citation_block.citations
+                if citation.key in self.bib_data.entries
+            ]
+            inline_text = "".join(f"[^{key}]" for key in keys)
+        return inline_text
 
     def reference_text(self, citation: Citation) -> str:
         entry = self.bib_data.entries[citation.key]
@@ -123,6 +127,22 @@ class PandocRegistry(ReferenceRegistry):
 
         # Pre-Process with appropriate pandoc version
         self._inline_cache, self._reference_cache = self._process_with_pandoc(citation_blocks)
+
+    def validate_inline_citations(self, inline_ciations):
+        valid_citations = []
+
+        for citation in inline_ciations:
+            if citation.key not in self.bib_data.entries:
+                log.warning(f"Citing unknown reference key {citation.key}")
+            else:
+                valid_citations.append(citation)
+        
+        _, _references = self._process_with_pandoc(
+            [CitationBlock(citations=[citation]) for citation in valid_citations]
+        )
+
+        self._reference_cache.update(_references)
+        return valid_citations
 
     @property
     def bib_data_bibtex(self) -> str:
