@@ -1,3 +1,4 @@
+from typing import Union
 from abc import ABC, abstractmethod
 from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
 from mkdocs_bibtex.utils import log
@@ -38,7 +39,7 @@ class ReferenceRegistry(ABC):
         """Retreives the inline citation text for a citation block"""
 
     @abstractmethod
-    def reference_text(self, citation: Citation | InlineReference) -> str:
+    def reference_text(self, citation: Union[Citation, InlineReference]) -> str:
         """Retreives the reference text for a citation or inline reference"""
 
 
@@ -78,7 +79,7 @@ class SimpleRegistry(ReferenceRegistry):
         ]
         return "".join(f"[^{key}]" for key in keys)
 
-    def reference_text(self, citation: Citation | InlineReference) -> str:
+    def reference_text(self, citation: Union[Citation, InlineReference]) -> str:
         entry = self.bib_data.entries[citation.key]
         log.debug(f"Converting bibtex entry {citation.key!r} without pandoc")
         formatted_entry = self.style.format_entry("", entry)
@@ -123,7 +124,7 @@ class PandocRegistry(ReferenceRegistry):
             # For footnote styles, just return footnote links
             return footnotes
 
-    def reference_text(self, citation: Citation | InlineReference) -> str:
+    def reference_text(self, citation: Union[Citation, InlineReference]) -> str:
         """Returns cached reference text"""
         return self._reference_cache[citation.key]
 
