@@ -196,3 +196,14 @@ def test_leaving_non_citations(plugin):
 
     assert "[^test]" in result
     assert "[google](www.google.com)" in result
+
+
+def test_inline_references(plugin):
+    markdown = "This is notinline[@test]. But this is inline @test2\n\n\\bibliography"
+
+    result = plugin.on_page_markdown(markdown, None, None, None)
+    assert "[^test2]" not in result
+    assert "But this is inline First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019." in result
+
+    # Ensure we didn't break the regular citations
+    assert "[^test]" in result
