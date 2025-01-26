@@ -2,7 +2,7 @@ import os
 import pytest
 import pypandoc
 from mkdocs_bibtex.registry import PandocRegistry
-from mkdocs_bibtex.citation import Citation, CitationBlock
+from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
 
 module_dir = os.path.dirname(os.path.abspath(__file__))
 test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
@@ -140,6 +140,11 @@ def test_reference_text(registry):
     # Update assertion to match Springer style
     assert "Author" in text and "Test title" in text
 
+    # Test inline reference
+    ref = InlineReference("test")
+    text = registry.reference_text(ref)
+    assert "Author" in text and "Test title" in text
+
 
 def test_pandoc_formatting(registry):
     """Test formatting with newer Pandoc versions"""
@@ -198,3 +203,11 @@ def test_complex_citation_formatting(registry):
     assert "chap. 2" in text
     assert "also" in text.lower()
     assert "fig. 3" in text
+
+
+def test_validate_inline_refs(registry):
+    ref = InlineReference("test")
+    bad_ref = InlineReference("bad_ref")
+    assert len(registry.validate_inline_references([ref])) == 1
+    assert len(registry.validate_inline_references([bad_ref])) == 0
+    assert len(registry.validate_inline_references([ref, bad_ref])) == 1

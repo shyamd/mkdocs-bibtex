@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from mkdocs_bibtex.citation import Citation, CitationBlock
+from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
 from mkdocs_bibtex.utils import log
 from pybtex.database import BibliographyData, parse_file
 from pybtex.backends.markdown import Backend as MarkdownBackend
@@ -30,12 +30,16 @@ class ReferenceRegistry(ABC):
         """Validates all citation blocks. Throws an error if any citation block is invalid"""
 
     @abstractmethod
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
+        """Validates inline references and returns only hte valid ones"""
+
+    @abstractmethod
     def inline_text(self, citation_block: CitationBlock) -> str:
         """Retreives the inline citation text for a citation block"""
 
     @abstractmethod
-    def reference_text(self, citation: Citation) -> str:
-        """Retreives the reference text for a citation"""
+    def reference_text(self, citation: Citation | InlineReference) -> str:
+        """Retreives the reference text for a citation or inline reference"""
 
 
 class SimpleRegistry(ReferenceRegistry):
@@ -56,6 +60,16 @@ class SimpleRegistry(ReferenceRegistry):
                 if citation.prefix != "" or citation.suffix != "":
                     log.warning(f"Affixes not supported in simple mode: {citation}")
 
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
+        valid_refs = [ref for ref in inline_references if ref.key in self.bib_data.entries]
+        invalid_refs = [ref for ref in inline_references if ref not in valid_refs]
+
+        if len(invalid_refs) > 0:
+            for ref in invalid_refs:
+                log.warning(f"Inline reference to unknown key {ref.key}")
+
+        return valid_refs
+
     def inline_text(self, citation_block: CitationBlock) -> str:
         keys = [
             self.footnote_format.format(key=citation.key)
@@ -64,7 +78,7 @@ class SimpleRegistry(ReferenceRegistry):
         ]
         return "".join(f"[^{key}]" for key in keys)
 
-    def reference_text(self, citation: Citation) -> str:
+    def reference_text(self, citation: Citation | InlineReference) -> str:
         entry = self.bib_data.entries[citation.key]
         log.debug(f"Converting bibtex entry {citation.key!r} without pandoc")
         formatted_entry = self.style.format_entry("", entry)
@@ -109,7 +123,7 @@ class PandocRegistry(ReferenceRegistry):
             # For footnote styles, just return footnote links
             return footnotes
 
-    def reference_text(self, citation: Citation) -> str:
+    def reference_text(self, citation: Citation | InlineReference) -> str:
         """Returns cached reference text"""
         return self._reference_cache[citation.key]
 
@@ -123,6 +137,22 @@ class PandocRegistry(ReferenceRegistry):
 
         # Pre-Process with appropriate pandoc version
         self._inline_cache, self._reference_cache = self._process_with_pandoc(citation_blocks)
+
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
+        valid_references = []
+
+        for ref in inline_references:
+            if ref.key not in self.bib_data.entries:
+                log.warning(f"Citing unknown reference key {ref.key}")
+            else:
+                valid_references.append(ref)
+
+        _, _references = self._process_with_pandoc(
+            [CitationBlock(citations=[Citation(key=ref.key)]) for ref in valid_references]
+        )
+
+        self._reference_cache.update(_references)
+        return valid_references
 
     @property
     def bib_data_bibtex(self) -> str:
