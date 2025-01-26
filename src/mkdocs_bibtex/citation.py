@@ -6,6 +6,7 @@ import re
 CITATION_REGEX = re.compile(r"(?:(?P<prefix>[^@;]*?)\s*)?@(?P<key>[\w-]+)(?:,\s*(?P<suffix>[^;]+))?")
 CITATION_BLOCK_REGEX = re.compile(r"\[(.*?)\]")
 EMAIL_REGEX = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+INLINE_REFERENCE_REGEX = re.compile(r"(?<!\[)@(?P<key>[\w:-]+)(?![\w\s]*\])")
 
 
 @dataclass
@@ -73,3 +74,20 @@ class CitationBlock:
             except Exception as e:
                 print(f"Error extracting citations from block: {e}")
         return citation_blocks
+
+
+@dataclass
+class InlineReference:
+    key: str
+
+    def __str__(self) -> str:
+        return f"@{self.key}"
+
+    @classmethod
+    def from_markdown(cls, markdown: str) -> List["InlineReference"]:
+        """Finds inline references in the markdown text. Only use this after processing all regular citations"""
+        inline_references = [
+            InlineReference(key=match.group("key")) for match in INLINE_REFERENCE_REGEX.finditer(markdown) if match
+        ]
+
+        return inline_references

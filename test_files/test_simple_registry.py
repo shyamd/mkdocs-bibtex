@@ -1,7 +1,7 @@
 import os
 import pytest
 from mkdocs_bibtex.registry import SimpleRegistry
-from mkdocs_bibtex.citation import Citation, CitationBlock
+from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
 
 module_dir = os.path.dirname(os.path.abspath(__file__))
 test_files_dir = os.path.abspath(os.path.join(module_dir, "..", "test_files"))
@@ -96,3 +96,15 @@ def test_reference_text(simple_registry):
     citation = Citation("test_citavi", "", "")
     expected = "First Author and Second Author. Test Title (TT). *Testing Journal (TJ)*, 2019. URL: [\\\\url\\{https://doi.org/10.21577/0103\\-5053.20190253\\}](\\url{https://doi.org/10.21577/0103-5053.20190253})."
     assert simple_registry.reference_text(citation) == expected
+
+    # Test inline reference
+    ref = InlineReference("test")
+    assert simple_registry.reference_text(ref) == "First Author and Second Author. Test title. *Testing Journal*, 2019."
+
+
+def test_validate_inline_refs(simple_registry):
+    ref = InlineReference("test")
+    bad_ref = InlineReference("bad_ref")
+    assert len(simple_registry.validate_inline_references([ref])) == 1
+    assert len(simple_registry.validate_inline_references([bad_ref])) == 0
+    assert len(simple_registry.validate_inline_references([ref, bad_ref])) == 1
