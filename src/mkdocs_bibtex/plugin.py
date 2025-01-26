@@ -5,7 +5,7 @@ from pathlib import Path
 
 from mkdocs.plugins import BasePlugin
 
-from mkdocs_bibtex.citation import CitationBlock, Citation
+from mkdocs_bibtex.citation import CitationBlock, Citation, InlineReference
 
 from mkdocs_bibtex.config import BibTexConfig
 from mkdocs_bibtex.registry import SimpleRegistry, PandocRegistry
@@ -97,18 +97,20 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         5. Insert the full bibliograph into the markdown
         """
 
-        # 1. Find all cite blocks in the markdown
+        # 1. Find and validate all cite blocks in the markdown
         cite_blocks = CitationBlock.from_markdown(markdown)
-
-        # 2. Validate the cite blocks
         self.registry.validate_citation_blocks(cite_blocks)
 
-        # 3. Replace the cite blocks with the inline citations
+        # 2. Replace the cite blocks with the inline citations
         for block in cite_blocks:
             replacement = self.registry.inline_text(block)
             markdown = markdown.replace(str(block), replacement)
 
-        # 4a. Esnure we have a bibliography if desired
+        # 3. Find and validate inline references
+        inline_refs = InlineReference.from_markdown(markdown)
+        inline_refs = self.registry.validate_inline_references(inline_refs)
+
+        # 4a. Ensure we have a bibliography if desired
         bib_command = self.config.bib_command
 
         if self.config.bib_by_default and markdown.count(bib_command) == 0:
@@ -149,6 +151,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
                 )
             full_bibliography = "\n".join(full_bibliography)
             markdown = markdown.replace(full_bib_command, full_bibliography)
+
+        # 6. Now add in any inline references
+        for ref in inline_refs:
+            replacement = self.registry.reference_text(ref)
+            markdown = markdown.replace(str(ref), replacement)
 
         log.debug(f"Markdown: \n{markdown}")
 
