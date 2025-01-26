@@ -3,7 +3,8 @@ This test file tests the citation module and ensures it is compatible with
 pybtex basic citations and pandoc citation formattting
 """
 
-from mkdocs_bibtex.citation import Citation, CitationBlock
+import pytest
+from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
 
 
 def test_basic_citation():
@@ -142,3 +143,33 @@ def test_links_not_citations():
     markdown = "This is [google](www.google.com)."
     blocks = CitationBlock.from_markdown(markdown)
     assert len(blocks) == 0
+
+
+def test_inline_citation():
+    markdown = "This is an inline citation @citation"
+
+    citations = InlineReference.from_markdown(markdown)
+    assert len(citations) == 1
+    assert citations[0].key == "citation"
+
+    markdown = "This is also a valid inline citation (@citation)."
+    citations = InlineReference.from_markdown(markdown)
+    assert len(citations) == 1
+    assert citations[0].key == "citation"
+
+    # Don't capture regular citations
+    bad_markdown = "This text contains unprocessed citation [@citation]"
+    citations = InlineReference.from_markdown(bad_markdown)
+    assert len(citations) == 0
+
+    # Don't capture citations with prefixes and affixes
+    bad_markdown = "This text contains unprocessed citation [see @citation p22]"
+    citations = InlineReference.from_markdown(bad_markdown)
+    assert len(citations) == 0
+
+
+@pytest.mark.xfail(reason="This is a hard case to not capture and is currently an expected failure")
+def test_inline_citation_on_block():
+    bad_markdown = "[see @test1, p. 123; @test2, p. 456; -@test3]"
+    citations = InlineReference.from_markdown(bad_markdown)
+    assert len(citations) == 0
