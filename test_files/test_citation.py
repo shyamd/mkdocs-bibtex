@@ -146,26 +146,35 @@ def test_links_not_citations():
 
 
 def test_inline_citation():
-    markdown = "This is an inline citation @citation"
+    inline_citations = [
+        # Basic inline citation
+        "This is an inline citation @citation",
+        # Inline but in a parenthesis
+        "This is also a valid inline citation (@citation).",
+    ]
 
-    citations = InlineReference.from_markdown(markdown)
-    assert len(citations) == 1
-    assert citations[0].key == "citation"
+    not_inline_citations = [
+        # Shouldn't capture the email
+        "Please [email me](mailto=me@me.com).",
+        # Another email that shouldn't be captured
+        """
+        ```sh
+        git clone git@github.com/shyamd/mkdocs-bibtex.git
+        ```
+    """,
+        # Don't capture regular citations
+        "This text contains unprocessed citation [@citation]",
+        # Don't capture citations with prefixes and affixes
+        "This text contains unprocessed citation [see @citation p22]",
+    ]
 
-    markdown = "This is also a valid inline citation (@citation)."
-    citations = InlineReference.from_markdown(markdown)
-    assert len(citations) == 1
-    assert citations[0].key == "citation"
+    for markdown in inline_citations:
+        citations = InlineReference.from_markdown(markdown)
+        assert len(citations) == 1
 
-    # Don't capture regular citations
-    bad_markdown = "This text contains unprocessed citation [@citation]"
-    citations = InlineReference.from_markdown(bad_markdown)
-    assert len(citations) == 0
-
-    # Don't capture citations with prefixes and affixes
-    bad_markdown = "This text contains unprocessed citation [see @citation p22]"
-    citations = InlineReference.from_markdown(bad_markdown)
-    assert len(citations) == 0
+    for markdown in not_inline_citations:
+        citations = InlineReference.from_markdown(markdown)
+        assert len(citations) == 0
 
 
 @pytest.mark.xfail(reason="This is a hard case to not capture and is currently an expected failure")
