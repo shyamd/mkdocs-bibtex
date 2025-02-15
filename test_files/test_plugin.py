@@ -44,3 +44,17 @@ def test_bibtex_loading_bibdir():
 
     plugin.on_config(plugin.config)
     assert len(plugin.registry.bib_data.entries) == 2
+
+
+def test_disable_inline_refs(plugin):
+    plugin = BibTexPlugin()
+    plugin.load_config(
+        options={"bib_dir": os.path.join(test_files_dir, "multi_bib"), "enable_inline_ciations": False},
+        config_file_path=test_files_dir,
+    )
+    plugin.on_config(plugin.config)
+
+    markdown = "This only has an @inline_cite."
+    new_markdown = plugin.on_page_markdown(markdown, plugin.config, None, None)
+
+    assert "@inline_cite" in new_markdown
