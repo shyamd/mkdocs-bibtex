@@ -137,7 +137,19 @@ class PandocRegistry(ReferenceRegistry):
                     log.warning(f"Citing unknown reference key {citation.key}")
 
         # Pre-Process with appropriate pandoc version
-        self._inline_cache, self._reference_cache = self._process_with_pandoc(citation_blocks)
+        if self._is_inline:
+            unprocessed_blocks = [block for block in citation_blocks if str(block) not in self._inline_cache]
+        else:
+            unprocessed_blocks = [
+                block
+                for block in citation_blocks
+                if not all(citation.key in self._reference_cache for citation in block.citations)
+            ]
+
+        if len(unprocessed_blocks) > 0:
+            _inline_cache, _reference_cache = self._process_with_pandoc(unprocessed_blocks)
+            self._inline_cache.update(_inline_cache)
+            self._reference_cache.update(_reference_cache)
 
     def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
         valid_references = []
