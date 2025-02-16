@@ -27,9 +27,7 @@ def test_bibtex_loading_bibfile(plugin):
 def test_bibtex_loading_bib_url():
     plugin = BibTexPlugin()
     plugin.load_config(
-        options={
-            "bib_file": "https://raw.githubusercontent.com/shyamd/mkdocs-bibtex/main/test_files/test.bib"
-        },
+        options={"bib_file": "https://raw.githubusercontent.com/shyamd/mkdocs-bibtex/main/test_files/test.bib"},
         config_file_path=test_files_dir,
     )
 
@@ -51,10 +49,7 @@ def test_bibtex_loading_bibdir():
 def test_disable_inline_refs(plugin):
     plugin = BibTexPlugin()
     plugin.load_config(
-        options={
-            "bib_dir": os.path.join(test_files_dir, "multi_bib"),
-            "enable_inline_citations": False,
-        },
+        options={"bib_dir": os.path.join(test_files_dir, "multi_bib"), "enable_inline_citations": False},
         config_file_path=test_files_dir,
     )
     plugin.on_config(plugin.config)
