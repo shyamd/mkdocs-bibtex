@@ -45,24 +45,17 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             is_url = validators.url(self.config.bib_file)
             # if bib_file is a valid URL, cache it with tempfile
             if is_url:
-                bibfiles.append(
-                    tempfile_from_url("bib file", self.config.bib_file, ".bib")
-                )
+                bibfiles.append(tempfile_from_url("bib file", self.config.bib_file, ".bib"))
             else:
                 bibfiles.append(self.config.bib_file)
         elif self.config.bib_dir is not None:
             bibfiles.extend(Path(self.config.bib_dir).rglob("*.bib"))
         else:  # pragma: no cover
-            raise ConfigurationError(
-                "Must supply a bibtex file or directory for bibtex files"
-            )
+            raise ConfigurationError("Must supply a bibtex file or directory for bibtex files")
 
         # Skip rebuilding bib data if all files are older than the initial config
         if self.last_configured is not None:
-            if all(
-                Path(bibfile).stat().st_mtime < self.last_configured
-                for bibfile in bibfiles
-            ):
+            if all(Path(bibfile).stat().st_mtime < self.last_configured for bibfile in bibfiles):
                 log.info("BibTexPlugin: No changes in bibfiles.")
                 return config
 
@@ -76,20 +69,14 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             self.csl_file = self.config.csl_file
 
         if "{key}" not in self.config.footnote_format:
-            raise ConfigurationError(
-                "Must include `{key}` placeholder in footnote_format"
-            )
+            raise ConfigurationError("Must include `{key}` placeholder in footnote_format")
 
         if self.csl_file:
             self.registry = PandocRegistry(
-                bib_files=bibfiles,
-                csl_file=self.csl_file,
-                footnote_format=self.config.footnote_format,
+                bib_files=bibfiles, csl_file=self.csl_file, footnote_format=self.config.footnote_format
             )
         else:
-            self.registry = SimpleRegistry(
-                bib_files=bibfiles, footnote_format=self.config.footnote_format
-            )
+            self.registry = SimpleRegistry(bib_files=bibfiles, footnote_format=self.config.footnote_format)
 
         self.last_configured = time.time()
         return config
@@ -136,8 +123,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             try:
                 bibliography.append(
                     "[^{}]: {}".format(
-                        self.registry.footnote_format.format(key=citation.key),
-                        self.registry.reference_text(citation),
+                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
                     )
                 )
             except Exception as e:
@@ -149,17 +135,14 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         full_bib_command = self.config.full_bib_command
         if markdown.count(full_bib_command) > 0:
             log.info("Building full bibliography")
-            all_citations = [
-                Citation(key=key) for key in self.registry.bib_data.entries
-            ]
+            all_citations = [Citation(key=key) for key in self.registry.bib_data.entries]
             blocks = [CitationBlock(citations=[cite]) for cite in all_citations]
             self.registry.validate_citation_blocks(blocks)
             full_bibliography = []
             for citation in all_citations:
                 full_bibliography.append(
                     "[^{}]: {}".format(
-                        self.registry.footnote_format.format(key=citation.key),
-                        self.registry.reference_text(citation),
+                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
                     )
                 )
             full_bibliography = "\n".join(full_bibliography)
