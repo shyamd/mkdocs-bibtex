@@ -149,7 +149,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             markdown = markdown.replace(full_bib_command, full_bibliography)
 
         # 6. Now process and add in inline references
-        if self.config.enable_inline_ciations:
+        if self.config.enable_inline_citations:
             inline_refs = InlineReference.from_markdown(markdown)
             inline_refs = self.registry.validate_inline_references(inline_refs)
 
