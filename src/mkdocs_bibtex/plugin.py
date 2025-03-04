@@ -112,7 +112,7 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         if self.config.bib_by_default and markdown.count(bib_command) == 0:
             markdown += f"\n{bib_command}"
 
-        # 4. Insert in the bibliopgrahy text into the markdown
+        # 4. Insert in the bibliography text into the markdown
         citations = OrderedDict()
         for block in cite_blocks:
             for citation in block.citations:

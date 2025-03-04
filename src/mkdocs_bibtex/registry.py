@@ -33,15 +33,15 @@ class ReferenceRegistry(ABC):
 
     @abstractmethod
     def validate_inline_references(self, inline_references: list[InlineReference]) -> set[InlineReference]:
-        """Validates inline references and returns only hte valid ones"""
+        """Validates inline references and returns only the valid ones"""
 
     @abstractmethod
     def inline_text(self, citation_block: CitationBlock) -> str:
-        """Retreives the inline citation text for a citation block"""
+        """Retrieves the inline citation text for a citation block"""
 
     @abstractmethod
     def reference_text(self, citation: Union[Citation, InlineReference]) -> str:
-        """Retreives the reference text for a citation or inline reference"""
+        """Retrieves the reference text for a citation or inline reference"""
 
 
 class SimpleRegistry(ReferenceRegistry):
