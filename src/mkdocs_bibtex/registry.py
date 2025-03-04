@@ -92,7 +92,16 @@ class SimpleRegistry(ReferenceRegistry):
 
 
 class PandocRegistry(ReferenceRegistry):
-    """A registry that uses Pandoc to format citations"""
+    """A registry that uses Pandoc to format citations
+
+    Args:
+        bib_files: List of bibtex files
+        csl_file: Path to CSL file. Leave empty for footnote style citations, and set
+            `footnote_format` to customize them.
+        footnote_format: Format string for footnotes. Defaults to "{key}". The key will
+            be replaced with the citation key in the bibliography. Other fields can be
+            `{prefix}` and `{suffix}`.
+    """
 
     def __init__(self, bib_files: list[str], csl_file: str, footnote_format: str = "{key}"):
         super().__init__(bib_files, footnote_format)
@@ -111,7 +120,7 @@ class PandocRegistry(ReferenceRegistry):
     def inline_text(self, citation_block: CitationBlock) -> str:
         """Get the inline text for a citation block"""
         footnotes = " ".join(
-            f"[^{self.footnote_format.format(key=citation.key)}]"
+            f"[^{self.footnote_format.format(key=citation.key, prefix=citation.prefix, suffix=citation.suffix)}]"
             for citation in citation_block.citations
             if citation.key in self._reference_cache
         )
@@ -193,7 +202,10 @@ link-citations: false
             with open(bib_path, "wt", encoding="utf-8") as bibfile:
                 bibfile.write(self.bib_data_bibtex)
 
-            args = ["--citeproc", "--bibliography", str(bib_path), "--csl", self.csl_file]
+            args = ["--citeproc", "--bibliography", str(bib_path)]
+            if self.csl_file:
+                args.extend(["--csl", self.csl_file])
+
             markdown = pypandoc.convert_text(
                 source=full_doc, to="markdown-citations", format="markdown", extra_args=args
             )
