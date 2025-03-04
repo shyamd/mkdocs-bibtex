@@ -61,13 +61,12 @@ class SimpleRegistry(ReferenceRegistry):
                 if citation.prefix != "" or citation.suffix != "":
                     log.warning(f"Affixes not supported in simple mode: {citation}")
 
-    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
-        valid_refs = [ref for ref in inline_references if ref.key in self.bib_data.entries]
-        invalid_refs = [ref for ref in inline_references if ref not in valid_refs]
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> set[InlineReference]:
+        valid_refs = {ref for ref in inline_references if ref.key in self.bib_data.entries}
+        invalid_refs = {ref for ref in inline_references if ref not in valid_refs}
 
-        if len(invalid_refs) > 0:
-            for ref in invalid_refs:
-                log.warning(f"Inline reference to unknown key {ref.key}")
+        for ref in invalid_refs:
+            log.warning(f"Inline reference to unknown key {ref.key}")
 
         return valid_refs
 
@@ -146,25 +145,26 @@ class PandocRegistry(ReferenceRegistry):
                 if not all(citation.key in self._reference_cache for citation in block.citations)
             ]
 
-        if len(unprocessed_blocks) > 0:
+        if unprocessed_blocks:
             _inline_cache, _reference_cache = self._process_with_pandoc(unprocessed_blocks)
             self._inline_cache.update(_inline_cache)
             self._reference_cache.update(_reference_cache)
 
-    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
-        valid_references = []
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> set[InlineReference]:
+        valid_references = set()
 
         for ref in inline_references:
             if ref.key not in self.bib_data.entries:
                 log.warning(f"Citing unknown reference key {ref.key}")
             else:
-                valid_references.append(ref)
+                valid_references |= {ref}
 
-        _, _references = self._process_with_pandoc(
-            [CitationBlock(citations=[Citation(key=ref.key)]) for ref in valid_references]
-        )
+        if valid_references:
+            _, _references = self._process_with_pandoc(
+                [CitationBlock(citations=[Citation(key=ref.key)]) for ref in valid_references]
+            )
 
-        self._reference_cache.update(_references)
+            self._reference_cache.update(_references)
         return valid_references
 
     @property
