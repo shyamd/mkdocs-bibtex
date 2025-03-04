@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Union
 from abc import ABC, abstractmethod
 from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
@@ -31,7 +32,7 @@ class ReferenceRegistry(ABC):
         """Validates all citation blocks. Throws an error if any citation block is invalid"""
 
     @abstractmethod
-    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> set[InlineReference]:
         """Validates inline references and returns only hte valid ones"""
 
     @abstractmethod
@@ -167,7 +168,7 @@ class PandocRegistry(ReferenceRegistry):
             self._reference_cache.update(_references)
         return valid_references
 
-    @property
+    @cached_property
     def bib_data_bibtex(self) -> str:
         """Convert bibliography data to BibTeX format"""
         return self.bib_data.to_string("bibtex")
