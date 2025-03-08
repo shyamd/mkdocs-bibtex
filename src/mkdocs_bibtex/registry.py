@@ -146,7 +146,7 @@ class PandocRegistry(ReferenceRegistry):
                 if not all(citation.key in self._reference_cache for citation in block.citations)
             ]
 
-        if unprocessed_blocks:
+        if len(unprocessed_blocks) > 0:
             _inline_cache, _reference_cache = self._process_with_pandoc(unprocessed_blocks)
             self._inline_cache.update(_inline_cache)
             self._reference_cache.update(_reference_cache)
