@@ -90,6 +90,17 @@ def test_validate_citation_blocks_invalid(registry):
         registry.validate_citation_blocks([block])
 
 
+def test_not_inline_text(bib_file):
+    registry = PandocRegistry([bib_file], "", footnote_format="{prefix} {key} {suffix}")
+    citations = [Citation("test", "citation-", "-footnote")]
+    block = CitationBlock(citations)
+    registry.validate_citation_blocks([block])
+    text = registry.inline_text(block)
+    assert text
+    assert text.startswith("[^citation-")
+    assert text.endswith("-footnote]")
+
+
 def test_inline_text_basic(registry):
     """Test basic inline citation formatting with different styles"""
     citations = [Citation("test", "", "")]

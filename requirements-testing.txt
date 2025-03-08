@@ -4,3 +4,5 @@ pytest-pretty==1.2.0
 mypy==1.15.0
 ruff==0.9.9
 types-requests~=2.32.0
+pypandoc; sys_platform == 'darwin'
+pypandoc_binary; sys_platform != 'darwin'
