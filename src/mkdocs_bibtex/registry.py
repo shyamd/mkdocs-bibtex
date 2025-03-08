@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Union
 from abc import ABC, abstractmethod
 from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
@@ -31,16 +32,16 @@ class ReferenceRegistry(ABC):
         """Validates all citation blocks. Throws an error if any citation block is invalid"""
 
     @abstractmethod
-    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
-        """Validates inline references and returns only hte valid ones"""
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> set[InlineReference]:
+        """Validates inline references and returns only the valid ones"""
 
     @abstractmethod
     def inline_text(self, citation_block: CitationBlock) -> str:
-        """Retreives the inline citation text for a citation block"""
+        """Retrieves the inline citation text for a citation block"""
 
     @abstractmethod
     def reference_text(self, citation: Union[Citation, InlineReference]) -> str:
-        """Retreives the reference text for a citation or inline reference"""
+        """Retrieves the reference text for a citation or inline reference"""
 
 
 class SimpleRegistry(ReferenceRegistry):
@@ -61,13 +62,12 @@ class SimpleRegistry(ReferenceRegistry):
                 if citation.prefix != "" or citation.suffix != "":
                     log.warning(f"Affixes not supported in simple mode: {citation}")
 
-    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
-        valid_refs = [ref for ref in inline_references if ref.key in self.bib_data.entries]
-        invalid_refs = [ref for ref in inline_references if ref not in valid_refs]
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> set[InlineReference]:
+        valid_refs = {ref for ref in inline_references if ref.key in self.bib_data.entries}
+        invalid_refs = {ref for ref in inline_references if ref not in valid_refs}
 
-        if len(invalid_refs) > 0:
-            for ref in invalid_refs:
-                log.warning(f"Inline reference to unknown key {ref.key}")
+        for ref in invalid_refs:
+            log.warning(f"Inline reference to unknown key {ref.key}")
 
         return valid_refs
 
@@ -151,23 +151,24 @@ class PandocRegistry(ReferenceRegistry):
             self._inline_cache.update(_inline_cache)
             self._reference_cache.update(_reference_cache)
 
-    def validate_inline_references(self, inline_references: list[InlineReference]) -> list[InlineReference]:
-        valid_references = []
+    def validate_inline_references(self, inline_references: list[InlineReference]) -> set[InlineReference]:
+        valid_references = set()
 
         for ref in inline_references:
             if ref.key not in self.bib_data.entries:
                 log.warning(f"Citing unknown reference key {ref.key}")
             else:
-                valid_references.append(ref)
+                valid_references |= {ref}
 
-        _, _references = self._process_with_pandoc(
-            [CitationBlock(citations=[Citation(key=ref.key)]) for ref in valid_references]
-        )
+        if valid_references:
+            _, _references = self._process_with_pandoc(
+                [CitationBlock(citations=[Citation(key=ref.key)]) for ref in valid_references]
+            )
 
-        self._reference_cache.update(_references)
+            self._reference_cache.update(_references)
         return valid_references
 
-    @property
+    @cached_property
     def bib_data_bibtex(self) -> str:
         """Convert bibliography data to BibTeX format"""
         return self.bib_data.to_string("bibtex")

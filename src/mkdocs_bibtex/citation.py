@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 import re
 
 
@@ -28,7 +27,7 @@ class Citation:
         return " ".join(parts)
 
     @classmethod
-    def from_markdown(cls, markdown: str) -> List["Citation"]:
+    def from_markdown(cls, markdown: str) -> list["Citation"]:
         """Extracts citations from a markdown string"""
         citations = []
 
@@ -46,7 +45,7 @@ class Citation:
 
 @dataclass
 class CitationBlock:
-    citations: List[Citation]
+    citations: list[Citation]
     raw: str = ""
 
     def __str__(self) -> str:
@@ -56,7 +55,7 @@ class CitationBlock:
         return "[" + "; ".join(str(citation) for citation in self.citations) + "]"
 
     @classmethod
-    def from_markdown(cls, markdown: str) -> List["CitationBlock"]:
+    def from_markdown(cls, markdown: str) -> list["CitationBlock"]:
         """Extracts citation blocks from a markdown string"""
         """
         Given a markdown string
@@ -83,8 +82,11 @@ class InlineReference:
     def __str__(self) -> str:
         return f"@{self.key}"
 
+    def __hash__(self) -> int:
+        return hash(self.key)
+
     @classmethod
-    def from_markdown(cls, markdown: str) -> List["InlineReference"]:
+    def from_markdown(cls, markdown: str) -> list["InlineReference"]:
         """Finds inline references in the markdown text. Only use this after processing all regular citations"""
         inline_references = [
             InlineReference(key=match.group("key")) for match in INLINE_REFERENCE_REGEX.finditer(markdown) if match
