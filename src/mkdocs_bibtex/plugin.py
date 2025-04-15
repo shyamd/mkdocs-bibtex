@@ -15,6 +15,7 @@ from mkdocs.exceptions import ConfigurationError
 from mkdocs_bibtex.utils import (
     tempfile_from_url,
     log,
+    get_path_relative_to_mkdocs_yaml,
 )
 
 
@@ -47,9 +48,11 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             if is_url:
                 bibfiles.append(tempfile_from_url("bib file", self.config.bib_file, ".bib"))
             else:
-                bibfiles.append(self.config.bib_file)
+                bib_file = get_path_relative_to_mkdocs_yaml(self.config.bib_file, config)
+                bibfiles.append(bib_file)
         elif self.config.bib_dir is not None:
-            bibfiles.extend(Path(self.config.bib_dir).rglob("*.bib"))
+            bib_dir = get_path_relative_to_mkdocs_yaml(self.config.bib_dir, config)
+            bibfiles.extend(Path(bib_dir).rglob("*.bib"))
         else:  # pragma: no cover
             raise ConfigurationError("Must supply a bibtex file or directory for bibtex files")
 
