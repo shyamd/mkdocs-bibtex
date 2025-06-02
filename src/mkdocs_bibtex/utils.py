@@ -1,7 +1,9 @@
+import os
 import logging
 import requests
 import tempfile
 import urllib.parse
+from mkdocs.config.defaults import MkDocsConfig
 
 
 # Grab a logger
@@ -85,3 +87,8 @@ def sanitize_zotero_query(url: str) -> str:
         query=urllib.parse.urlencode(query={**query_params, **updated_query_params}),
         fragment=parsed_url.fragment,
     ).geturl()
+
+def get_path_relative_to_mkdocs_yaml(path: str, config: MkDocsConfig) -> str:
+    """Get the relative path of a file to the mkdocs.yaml file."""
+    mkdocs_rel_path = os.path.normpath(os.path.join(os.path.dirname(config.config_file_path), path))
+    return mkdocs_rel_path
