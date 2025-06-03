@@ -18,6 +18,11 @@ def csl():
     """Provide the Springer CSL file for testing"""
     return os.path.join(test_files_dir, "springer-basic-author-date.csl")
 
+@pytest.fixture
+def bristol_csl():
+    """Provide the Springer CSL file for testing csl encoding support"""
+    return os.path.join(test_files_dir, "bristol-university-press.csl")
+
 
 @pytest.fixture
 def numeric_csl():
@@ -28,13 +33,21 @@ def numeric_csl():
 @pytest.fixture
 def registry(bib_file, csl):
     """Create a registry with Springer style for testing"""
-    return PandocRegistry([bib_file], csl)
+    return PandocRegistry(bib_files=[bib_file], csl_file=csl, csl_file_encoding='windows-1252')
+
+def test_csl_encoding_support(bib_file, bristol_csl):
+    """Create a registry with Bristol style for testing, forcing windows default encoding."""
+
+    assert PandocRegistry(bib_files=[bib_file], csl_file=bristol_csl, csl_file_encoding='utf-8')._is_inline
+
+    # _is_inline fallbacks to False because of reading failure using windows encoding
+    assert not PandocRegistry(bib_files=[bib_file], csl_file=bristol_csl, csl_file_encoding='windows-1252')._is_inline
 
 
 @pytest.fixture
 def numeric_registry(bib_file, nature_csl):
     """Create a registry with Nature style for testing"""
-    return PandocRegistry([bib_file], nature_csl)
+    return PandocRegistry(bib_files=[bib_file], csl_file=nature_csl, csl_file_encoding=None)
 
 
 def test_bad_pandoc_registry(bib_file):
@@ -54,7 +67,7 @@ def test_multiple_bib_files(csl):
     bib1 = os.path.join(test_files_dir, "multi_bib", "bib1.bib")
     bib2 = os.path.join(test_files_dir, "multi_bib", "multi_bib_child_dir", "bib2.bib")
 
-    registry = PandocRegistry([bib1, bib2], csl)
+    registry = PandocRegistry(bib_files=[bib1, bib2], csl_file=csl, csl_file_encoding=None)
     assert "test1" in registry.bib_data.entries
     assert "test2" in registry.bib_data.entries
 
