@@ -1,6 +1,7 @@
 import pytest
 
-from mkdocs_bibtex.utils import sanitize_zotero_query, tempfile_from_zotero_url
+from mkdocs_bibtex.utils import sanitize_zotero_query, tempfile_from_zotero_url, get_path_relative_to_mkdocs_yaml
+from unittest.mock import MagicMock
 import collections.abc
 import os
 import random
@@ -99,3 +100,16 @@ def generate_bibtex_entries(n: int) -> list[str]:
     year = {{{year}}},
 """)
     return entries
+
+def test_get_path_relative_to_mkdocs_yaml():
+    """Test the get_path_relative_to_mkdocs_yaml function."""
+    # Set path
+    path = 'example/path/to/bibtex.bib'
+    # Set mock mkdocs config file path
+    mock_mkdocs_config = MagicMock()
+    mock_mkdocs_config.config_file_path = '/path/to/mkdocs.yaml'
+    # Check that the function returns the expected path
+    expected_output = '/path/to/example/path/to/bibtex.bib'
+    output = get_path_relative_to_mkdocs_yaml(path, mock_mkdocs_config)
+    
+    assert output == expected_output
