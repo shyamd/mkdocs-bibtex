@@ -3,7 +3,6 @@ This test file tests the citation module and ensures it is compatible with
 pybtex basic citations and pandoc citation formattting
 """
 
-import pytest
 from mkdocs_bibtex.citation import Citation, CitationBlock, InlineReference
 
 

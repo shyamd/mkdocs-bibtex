@@ -111,5 +111,5 @@ def test_get_path_relative_to_mkdocs_yaml():
     # Check that the function returns the expected path
     expected_output = '/path/to/example/path/to/bibtex.bib'
     output = get_path_relative_to_mkdocs_yaml(path, mock_mkdocs_config)
-    
+
     assert output == expected_output
