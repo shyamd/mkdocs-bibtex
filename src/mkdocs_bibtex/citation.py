@@ -5,7 +5,7 @@ import re
 CITATION_REGEX = re.compile(r"(?:(?P<prefix>[^@;]*?)\s*)?@(?P<key>[\w-]+)(?:,\s*(?P<suffix>[^;]+))?")
 CITATION_BLOCK_REGEX = re.compile(r"\[(.*?)\]")
 EMAIL_REGEX = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
-INLINE_REFERENCE_REGEX = re.compile(r"(?<![\[\w])@(?P<key>[\w:-]+)(?![\w\s]*\])")
+INLINE_REFERENCE_REGEX = re.compile(r"(?<!\\)(?<![\[\w])@(?P<key>[\w:-]+)(?![^\[\]]*\])")
 
 
 @dataclass
