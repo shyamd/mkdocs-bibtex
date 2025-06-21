@@ -166,6 +166,8 @@ def test_inline_citation():
         "This text contains unprocessed citation [@citation]",
         # Don't capture citations with prefixes and affixes
         "This text contains unprocessed citation [see @citation p22]",
+        # This shouldn't be considered inline
+        "This is not an inline citation \@mystuff"
     ]
 
     for markdown in inline_citations:
@@ -176,8 +178,6 @@ def test_inline_citation():
         citations = InlineReference.from_markdown(markdown)
         assert len(citations) == 0
 
-
-@pytest.mark.xfail(reason="This is a hard case to not capture and is currently an expected failure")
 def test_inline_citation_on_block():
     bad_markdown = "[see @test1, p. 123; @test2, p. 456; -@test3]"
     citations = InlineReference.from_markdown(bad_markdown)
