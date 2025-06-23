@@ -41,7 +41,9 @@ The footnotes extension is how citations are linked for now.
 - `bib_command` - The syntax to render your bibliography, defaults to `\bibliography`
 - `bib_by_default` - Automatically append the `bib_command` at the end of every markdown document, defaults to `true`
 - `full_bib_command` - The syntax to render your entire bibliography, defaults to `\full_bibliography`
+- `footnote_format` - The footnote key formatting template. Must contain the `{key}` substring.
 - `csl_file` - The path or url to a bibtex CSL file, specifying your citation format. Defaults to `None`, which renders in a plain format. A registry of citation styles can be found here: https://github.com/citation-style-language/styles
+- `csl_file_encoding` - The csl file encoding. Defaults to `None`, which uses the platform encoding defaults. Note the remote (URL-based) CSL files are temporarily written using the `utf-8` encoding.
 - `enable_inline_citations` - enable inline citations, defaults to `true`
 
 ## Usage

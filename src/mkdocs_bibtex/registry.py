@@ -94,7 +94,11 @@ class SimpleRegistry(ReferenceRegistry):
 class PandocRegistry(ReferenceRegistry):
     """A registry that uses Pandoc to format citations"""
 
-    def __init__(self, bib_files: list[str], csl_file: str, footnote_format: str = "{key}"):
+    def __init__(self,
+                 bib_files: list[str],
+                 csl_file: str,
+                 csl_file_encoding: Union[str, None],
+                 footnote_format: str = "{key}"):
         super().__init__(bib_files, footnote_format)
         self.csl_file = csl_file
 
@@ -106,7 +110,7 @@ class PandocRegistry(ReferenceRegistry):
         # Cache for formatted citations
         self._inline_cache: dict[str, str] = {}
         self._reference_cache: dict[str, str] = {}
-        self._is_inline = self._check_csl_type(self.csl_file)
+        self._is_inline = self._check_csl_type(csl_file=self.csl_file, csl_file_encoding=csl_file_encoding)
 
     def inline_text(self, citation_block: CitationBlock) -> str:
         """Get the inline text for a citation block"""
@@ -156,7 +160,7 @@ class PandocRegistry(ReferenceRegistry):
 
         for ref in inline_references:
             if ref.key not in self.bib_data.entries:
-                log.warning(f"Citing unknown reference key {ref.key}")
+                log.warning("Citing unknown reference key %s", ref.key)
             else:
                 valid_references |= {ref}
 
@@ -242,17 +246,17 @@ link-citations: false
                 citation = match.group("citation").replace("\n", " ").strip()
                 reference_cache[key] = citation
 
-        log.debug(f"Inline cache: {inline_cache}")
-        log.debug(f"Reference cache: {reference_cache}")
+        log.debug("Inline cache: %s", inline_cache)
+        log.debug("Reference cache: %s", reference_cache)
         return inline_cache, reference_cache
 
-    def _check_csl_type(self, csl_file: str) -> bool:
+    def _check_csl_type(self, csl_file: str, csl_file_encoding: Union[str, None]) -> bool:
         """Check if CSL file is footnote or inline style"""
         if not csl_file:
             return False
 
         try:
-            with open(csl_file) as f:
+            with open(csl_file, encoding=csl_file_encoding) as f:
                 csl_content = f.read()
                 # Check if citation-format is "author-date"
                 # For "numeric" styles we default to footnotes
@@ -261,5 +265,5 @@ link-citations: false
                 # Default to footnote style
                 return False
         except Exception as e:
-            log.warning(f"Error reading CSL file: {e}")
+            log.warning("Error reading CSL file: ", exc_info=e)
             return False
