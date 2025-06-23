@@ -97,7 +97,7 @@ class PandocRegistry(ReferenceRegistry):
     def __init__(self,
                  bib_files: list[str],
                  csl_file: str,
-                 csl_file_encoding: str | None,
+                 csl_file_encoding: Union[str, None],
                  footnote_format: str = "{key}"):
         super().__init__(bib_files, footnote_format)
         self.csl_file = csl_file
@@ -250,7 +250,7 @@ link-citations: false
         log.debug("Reference cache: %s", reference_cache)
         return inline_cache, reference_cache
 
-    def _check_csl_type(self, csl_file: str, csl_file_encoding: str | None) -> bool:
+    def _check_csl_type(self, csl_file: str, csl_file_encoding: Union[str, None]) -> bool:
         """Check if CSL file is footnote or inline style"""
         if not csl_file:
             return False
