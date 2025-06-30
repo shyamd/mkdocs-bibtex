@@ -23,6 +23,7 @@ class BibTexConfig(base.Config):
     bib_file = config_options.Optional(config_options.Type(str))
     bib_dir = config_options.Optional(config_options.Dir(exists=True))
     csl_file = config_options.Optional(config_options.Type(str))
+    csl_file_encoding = config_options.Optional(config_options.Type(str))
 
     # Commands
     bib_command = config_options.Type(str, default="\\bibliography")

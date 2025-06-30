@@ -68,6 +68,9 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
         # Set CSL from either url or path (or empty)
         if self.config.csl_file is not None and validators.url(self.config.csl_file):
             self.csl_file = tempfile_from_url("CSL file", self.config.csl_file, ".csl")
+
+            if self.config.csl_file_encoding is not None:
+                log.warning("A CSL encoding is defined, but the temporary CSL file is UTF-8 encoded.")
         else:
             self.csl_file = self.config.csl_file
 
@@ -76,7 +79,10 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
 
         if self.csl_file:
             self.registry = PandocRegistry(
-                bib_files=bibfiles, csl_file=self.csl_file, footnote_format=self.config.footnote_format
+                bib_files=bibfiles,
+                csl_file=self.csl_file,
+                csl_file_encoding=self.config.csl_file_encoding,
+                footnote_format=self.config.footnote_format
             )
         else:
             self.registry = SimpleRegistry(bib_files=bibfiles, footnote_format=self.config.footnote_format)
@@ -126,11 +132,16 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             try:
                 bibliography.append(
                     "[^{}]: {}".format(
-                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
+                        self.registry.footnote_format.format(key=citation.key),
+                        self.registry.reference_text(citation)
                     )
                 )
             except Exception as e:
-                log.warning(f"Error formatting citation {citation.key}: {e}")
+                log.warning("Error formatting citation %s into footnote format %s",
+                            citation.key,
+                            self.registry.footnote_format,
+                            exc_info=e)
+
         bibliography = "\n".join(bibliography)
         markdown = markdown.replace(bib_command, bibliography)
 
@@ -145,7 +156,8 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
             for citation in all_citations:
                 full_bibliography.append(
                     "[^{}]: {}".format(
-                        self.registry.footnote_format.format(key=citation.key), self.registry.reference_text(citation)
+                        self.registry.footnote_format.format(key=citation.key),
+                        self.registry.reference_text(citation)
                     )
                 )
             full_bibliography = "\n".join(full_bibliography)
@@ -160,6 +172,6 @@ class BibTexPlugin(BasePlugin[BibTexConfig]):
                 replacement = self.registry.reference_text(ref)
                 markdown = markdown.replace(str(ref), replacement)
 
-        log.debug(f"Markdown: \n{markdown}")
+        log.debug("Markdown: \n%s", markdown)
 
         return markdown
