@@ -3,4 +3,4 @@ pytest-cov==6.1.1
 pytest-pretty==1.3.0
 mypy==1.16.0
 ruff==0.12.1
-types-requests~=2.32.0
+types-requests~=2.32.4
