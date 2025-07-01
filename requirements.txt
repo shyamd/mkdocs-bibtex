@@ -1,5 +1,5 @@
 mkdocs==1.6.1
-pybtex==0.24.0
+pybtex==0.25.1
 pypandoc==1.15
 requests==2.32.4
 validators==0.35.0
