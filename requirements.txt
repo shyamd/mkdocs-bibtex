@@ -3,4 +3,4 @@ pybtex==0.25.1
 pypandoc==1.15
 requests==2.32.4
 validators==0.35.0
-responses==0.25.7
+responses==0.25.8
